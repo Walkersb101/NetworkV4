@@ -2,7 +2,6 @@
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 #include "Bonds.hpp"
 
-// clang-format off
 TEST_CASE("WLC Bond class", "[bond]")
 {
     SECTION("Default constructor")
@@ -68,13 +67,12 @@ TEST_CASE("WLC Bond class", "[bond]")
     SECTION("Force")
     {
         network::WLCBond bond(1, 2, true, network::bondType::sacrificial, 1.0, 1.0);
-        REQUIRE_THAT(bond.force(1.0), Catch::Matchers::WithinAbs(0.0, 1e-12));
+        REQUIRE_THAT(bond.force(1.0), Catch::Matchers::WithinRel(0.0));
     }
 
     SECTION("Energy")
     {
         network::WLCBond bond(1, 2, true, network::bondType::sacrificial, 1.0, 1.0);
-        REQUIRE_THAT(bond.energy(1.0), Catch::Matchers::WithinAbs(0.0, 1e-12));
+        REQUIRE_THAT(bond.energy(1.0), Catch::Matchers::WithinRel(0.0));
     }
 }
-// clang-format on

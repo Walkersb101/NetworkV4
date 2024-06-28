@@ -17,7 +17,8 @@ include(cmake/variables.cmake)
 
 add_library(
     NetworkV4_lib OBJECT
-    source/lib.cpp
+    source/Bonds.cpp
+    source/Vec2.cpp
 )
 
 target_include_directories(
@@ -27,6 +28,17 @@ target_include_directories(
 )
 
 target_compile_features(NetworkV4_lib PUBLIC cxx_std_20)
+
+# ---- FetchContent ----
+
+include(FetchContent)
+
+FetchContent_Declare(
+    toml11
+    GIT_REPOSITORY https://github.com/ToruNiina/toml11.git
+)
+
+FetchContent_MakeAvailable(toml11)
 
 # ---- Declare executable ----
 
@@ -38,6 +50,8 @@ set_property(TARGET NetworkV4_exe PROPERTY OUTPUT_NAME NetworkV4)
 target_compile_features(NetworkV4_exe PRIVATE cxx_std_20)
 
 target_link_libraries(NetworkV4_exe PRIVATE NetworkV4_lib)
+
+target_link_libraries(NetworkV4_exe PRIVATE toml11::toml11)
 
 # ---- Install rules ----
 

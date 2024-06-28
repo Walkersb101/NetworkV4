@@ -22,7 +22,7 @@ include(Catch)
 
 # ---- Tests ----
 
-add_executable(NetworkV4_tests source/BondsTest.cpp)
+add_executable(NetworkV4_tests source/BondsTest.cpp source/Vec2Test.cpp)
 target_link_libraries(NetworkV4_tests PRIVATE NetworkV4_lib)
 target_compile_features(NetworkV4_tests PRIVATE cxx_std_20)
 
