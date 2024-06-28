@@ -13,7 +13,7 @@ public:
   virtual ~intergrator();
 
 public:
-  virtual void intergrate(network& _network);
+  virtual void integrate(network& _network);
 };
 
 class overdampedEuler : public intergrator
@@ -24,7 +24,7 @@ public:
   ~overdampedEuler();
 
 public:
-  void intergrate(network& _network) override;
+  void integrate(network& _network) override;
 
 private:
   double m_dt;
@@ -38,7 +38,7 @@ public:
   ~OverdampedEulerHeun();
 
 public:
-  void intergrate(network& _network) override;
+  void integrate(network& _network) override;
 
 private:
   double m_dt;

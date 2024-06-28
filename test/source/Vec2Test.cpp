@@ -111,7 +111,7 @@ TEST_CASE("Vec2d Vector Operators", "[Vec2]")
   }
 }
 
-TEST_CASE("Vec2d Scalar Operator Assigment", "[Vec2]")
+TEST_CASE("Vec2d Scalar Operator Assignment", "[Vec2]")
 {
   SECTION("Scalar Addition Assignment")
   {
@@ -146,7 +146,7 @@ TEST_CASE("Vec2d Scalar Operator Assigment", "[Vec2]")
   }
 }
 
-TEST_CASE("Vec2d Vector Operator Assigment", "[Vec2]")
+TEST_CASE("Vec2d Vector Operator Assignment", "[Vec2]")
 {
   SECTION("Addition Assignment")
   {
@@ -378,7 +378,7 @@ TEST_CASE("Vec2f Vector Operators", "[Vec2]")
         REQUIRE_THAT(result.y, Catch::Matchers::WithinRel(4.0f));
     }
 }
-TEST_CASE("Vec2f Scalar Operator Assigment", "[Vec2]")
+TEST_CASE("Vec2f Scalar Operator Assignment", "[Vec2]")
 {
     SECTION("Scalar Addition Assignment")
     {
@@ -412,7 +412,7 @@ TEST_CASE("Vec2f Scalar Operator Assigment", "[Vec2]")
         REQUIRE_THAT(v.y, Catch::Matchers::WithinRel(6.0f));
     }
 }
-TEST_CASE("Vec2f Vector Operator Assigment", "[Vec2]")
+TEST_CASE("Vec2f Vector Operator Assignment", "[Vec2]")
 {
     SECTION("Addition Assignment")
     {

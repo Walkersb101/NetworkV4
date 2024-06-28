@@ -8,7 +8,7 @@ network::intergrator::intergrator() {}
 
 network::intergrator::~intergrator() {}
 
-void network::intergrator::intergrate(network& _network) {}
+void network::intergrator::integrate(network& _network) {}
 
 network::overdampedEuler::overdampedEuler()
     : m_dt(defaultConfig.default_dt)
@@ -22,7 +22,7 @@ network::overdampedEuler::overdampedEuler(double _dt)
 
 network::overdampedEuler::~overdampedEuler() {}
 
-void network::overdampedEuler::intergrate(network& _network)
+void network::overdampedEuler::integrate(network& _network)
 {
   nodes& networkNodes = _network.getNodes();
   networkNodes.clearForces();
@@ -47,7 +47,7 @@ network::OverdampedEulerHeun::OverdampedEulerHeun(double _dt)
 
 network::OverdampedEulerHeun::~OverdampedEulerHeun() {}
 
-void network::OverdampedEulerHeun::intergrate(network& _network)
+void network::OverdampedEulerHeun::integrate(network& _network)
 {
   nodes& networkNodes = _network.getNodes();
   networkNodes.clearForces();
