@@ -303,7 +303,7 @@ double norm(const std::vector<vec2d>& _vec)
   for (const auto& v : _vec) {
     norm += v.lengthSquared();
   }
-  return norm;
+  return std::sqrt(norm);
 }
 
 double maxComponent(const std::vector<vec2d>& _vec)
