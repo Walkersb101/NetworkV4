@@ -156,16 +156,14 @@ auto networkV4::bonds::empty() const -> bool
   return m_bonds.empty();
 }
 
-template<typename T>
-void networkV4::bonds::add(const T& _bond)
+void networkV4::bonds::add(const bond& _bond)
 {
-  m_bonds.emplace_back(std::make_unique<T>(_bond));
+  m_bonds.emplace_back(_bond);
 }
 
-template<typename T>
-void networkV4::bonds::set(std::size_t _index, const T& _bond)
+void networkV4::bonds::set(std::size_t _index, const bond& _bond)
 {
-  m_bonds[_index] = std::make_unique<T>(_bond);
+  m_bonds[_index] = _bond;
 }
 
 void networkV4::bonds::remove(std::size_t _index)
@@ -209,8 +207,7 @@ void networkV4::bonds::sort()
             { return srcDestOrder(_lhs, _rhs); });
 }
 
-auto networkV4::bonds::begin()
-    -> std::vector<networkV4::bond>::iterator
+auto networkV4::bonds::begin() -> std::vector<networkV4::bond>::iterator
 {
   return m_bonds.begin();
 }
@@ -221,14 +218,12 @@ auto networkV4::bonds::begin() const
   return m_bonds.begin();
 }
 
-auto networkV4::bonds::cbegin() const
-    -> std::vector<bond>::const_iterator
+auto networkV4::bonds::cbegin() const -> std::vector<bond>::const_iterator
 {
   return m_bonds.cbegin();
 }
 
-auto networkV4::bonds::end()
-    -> std::vector<networkV4::bond>::iterator
+auto networkV4::bonds::end() -> std::vector<networkV4::bond>::iterator
 {
   return m_bonds.end();
 }

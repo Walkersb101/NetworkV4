@@ -95,7 +95,7 @@ void networkV4::network::loadFromBinV2(const std::filesystem::path& _filename)
   }
 
   m_bonds.reserve(B);
-  for (auto& b : m_bonds) {
+  for (size_t i = 0; i < B; ++i) {
     std::size_t index1;
     std::size_t index2;
     bool connected;
@@ -118,7 +118,7 @@ void networkV4::network::loadFromBinV2(const std::filesystem::path& _filename)
     }
 
     const bondType type = matrix ? bondType::matrix : bondType::sacrificial;
-    b = bond(index1, index2, connected, type, naturalLength, constant, lambda);
+    m_bonds.add(bond(index1, index2, connected, type, naturalLength, constant, lambda));
   }
 }
 

@@ -1,8 +1,14 @@
 #pragma once
 
+#include <cstddef>
+#include <cstdint>
+#include <unordered_map>
+#include <vector>
+
 #include "Network.hpp"
 #include "Nodes.hpp"
 #include "Tensor2.hpp"
+#include "Vec2.hpp"
 
 namespace networkV4
 {
@@ -77,6 +83,24 @@ private:
   std::vector<vec2d> m_tempForces;
   std::vector<vec2d> m_tempPositions;
   std::unordered_map<bondType, tensor2d> m_tempStresses;
+};
+
+class FireMinimizer : public intergrator
+{
+public:
+  FireMinimizer();
+    FireMinimizer(double _dt, double _esp);
+  ~FireMinimizer();
+
+public:
+    void integrate(network& _network) override;
+
+private:
+    auto power(const network& _network) -> double;
+
+private:
+    double m_dt;
+    double m_esp;
 };
 
 }  // namespace networkV4

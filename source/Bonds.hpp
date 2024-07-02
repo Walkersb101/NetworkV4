@@ -89,11 +89,9 @@ public:
   auto empty() const -> bool;
 
 public:
-  template<typename T>
-  void add(const T& _bond);
+  void add(const bond& _bond);
 
-  template<typename T>
-  void set(std::size_t _index, const T& _bond);
+  void set(std::size_t _index, const bond& _bond);
 
   void remove(std::size_t _index);
 

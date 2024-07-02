@@ -20,10 +20,24 @@ namespace adaptiveIntergrator
 {
 extern double esp;
 extern std::size_t maxIter;
-extern double qMin;
-extern double qMax;
 extern double dtMin;
 extern double dtMax;
 }  // namespace adaptiveIntergrator
+
+namespace adaptiveHeun
+{
+extern double qMin;
+extern double qMax;
+}  // namespace adaptiveHeun
+
+namespace fire2
+{
+extern double alpha0;
+extern size_t Ndelay;
+extern double finc;
+extern double fdec;
+extern double falpha;
+extern size_t Nnegmax;
+}  // namespace fire2
 
 }  // namespace config
