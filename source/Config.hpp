@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstddef>
+
 #define PARALLEL 0
 
 #if PARALLEL
@@ -9,9 +11,19 @@
 #  define PAR
 #endif
 
-struct Config
+namespace config
 {
-  double default_dt = 1e-3;
-};
 
-Config defaultConfig = Config();
+extern double default_dt;
+
+namespace adaptiveIntergrator
+{
+extern double esp;
+extern std::size_t maxIter;
+extern double qMin;
+extern double qMax;
+extern double dtMin;
+extern double dtMax;
+}  // namespace adaptiveIntergrator
+
+}  // namespace config

@@ -1,7 +1,8 @@
-#include "Nodes.hpp"
-#include "Bonds.hpp"
+#include "Network.hpp"
 
 auto main() -> int
 {
-  return 0;
+    networkV4::network net;
+    net.loadFromBin("network.bin", networkV4::loadVersion::binV2);
+    return 0;
 }

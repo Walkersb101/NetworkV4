@@ -4,7 +4,7 @@
 #include <memory>
 #include <vector>
 
-namespace network
+namespace networkV4
 {
 enum class bondType : std::uint8_t
 {
@@ -17,13 +17,23 @@ class bond
 {
 public:
   bond();
-  bond(std::size_t _src, std::size_t _dst, bool _connected);
-  bond(std::size_t _src, std::size_t _dst, bool _connected, bondType _type);
-  virtual ~bond() = default;
-  bond(const bond&) = default;
-  auto operator=(const bond&) -> bond& = default;
-  bond(bond&&) = default;
-  auto operator=(bond&&) -> bond& = default;
+  bond(std::size_t _src,
+       std::size_t _dst,
+       bool _connected,
+       double _l0,
+       double _mu,
+       double _lambda);
+  bond(std::size_t _src,
+       std::size_t _dst,
+       bool _connected,
+       bondType _type,
+       double _l0,
+       double _mu,
+       double _lambda);
+  // bond(const bond&) = default;
+  // auto operator=(const bond&) -> bond& = default;
+  // bond(bond&&) = default;
+  // auto operator=(bond&&) -> bond& = default;
 
   auto src() const -> std::size_t;
   auto dst() const -> std::size_t;
@@ -33,8 +43,17 @@ public:
 
   auto type() const -> bondType;
 
-  virtual auto force(double _r) const -> double = 0;
-  virtual auto energy(double _r) const -> double = 0;
+  auto naturalLength() const -> double;
+  auto naturalLength() -> double&;
+
+  auto mu() const -> double;
+  auto mu() -> double&;
+
+  auto lambda() const -> double;
+  auto lambda() -> double&;
+
+  auto force(double _r) const -> double;
+  auto energy(double _r) const -> double;
 
   // virtual void serialize(std::ostream& outStream) const = 0;
   // virtual void deserialize(std::istream& inStream) = 0;
@@ -44,33 +63,9 @@ private:
   std::size_t m_dst;
   bool m_connected;
   bondType m_type;
-};
-
-class WLCBond : public bond  // NOLINT
-{
-public:
-  WLCBond();
-  WLCBond(std::size_t _src,
-          std::size_t _dst,
-          bool _connected,
-          bondType _type,
-          double _l0,
-          double _mu);
-  ~WLCBond() override = default;
-  WLCBond(const WLCBond&) = default;
-  auto operator=(const WLCBond&) -> WLCBond& = default;
-  WLCBond(WLCBond&&) = default;
-  auto operator=(WLCBond&&) -> WLCBond& = default;
-
-  auto force(double _r) const -> double override;
-  auto energy(double _r) const -> double override;
-
-  // void serialize(std::ostream& outStream) const override;
-  // void deserialize(std::istream& inStream) override;
-
-private:
   double m_l0;
   double m_mu;
+  double m_lambda;
 };
 
 // ------------------------------------------------------------
@@ -80,6 +75,9 @@ class bonds
 public:
   bonds();
   ~bonds() = default;
+  bonds(const bonds&) = default;
+  auto operator=(const bonds&) -> bonds& = default;
+  bonds(bonds&&) = default;
 
 public:
   void clear();
@@ -91,11 +89,11 @@ public:
   auto empty() const -> bool;
 
 public:
-  void add(const bond& _bond);
-  void add(bond&& _bond);
+  template<typename T>
+  void add(const T& _bond);
 
-  void set(std::size_t _index, const bond& _bond);
-  void set(std::size_t _index, bond&& _bond);
+  template<typename T>
+  void set(std::size_t _index, const T& _bond);
 
   void remove(std::size_t _index);
 
@@ -124,6 +122,6 @@ private:
   inline bool srcDestOrder(const bond& _lhs, const bond& _rhs) const;
 
 private:
-  std::vector<std::unique_ptr<bond>> m_bonds;
+  std::vector<bond> m_bonds;
 };
-}  // namespace network
+}  // namespace networkV4

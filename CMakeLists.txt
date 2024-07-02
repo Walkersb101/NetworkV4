@@ -18,7 +18,10 @@ include(cmake/variables.cmake)
 add_library(
     NetworkV4_lib OBJECT
     source/Bonds.cpp
-    source/Vec2.cpp
+    source/Config.cpp
+    source/Intergrator.cpp
+    source/Network.cpp
+    source/Nodes.cpp
 )
 
 target_include_directories(

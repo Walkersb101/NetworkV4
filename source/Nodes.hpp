@@ -1,12 +1,13 @@
 #pragma once
 
 #include <cstdint>
+#include <ranges>
 #include <vector>
 
 #include "Config.hpp"
 #include "Vec2.hpp"
 
-namespace network
+namespace networkV4
 {
 class nodes
 {
@@ -40,22 +41,20 @@ public:
   void unfix(std::size_t _idx);
 
 public:
-    auto positions_begin() -> std::vector<vec2d>::iterator;
-    auto positions_end() -> std::vector<vec2d>::iterator;
+  auto positions() -> std::vector<vec2d>&;
+  auto velocities() -> std::vector<vec2d>&;
+  auto forces() -> std::vector<vec2d>&;
+  auto masses() -> std::vector<double>&;
+  auto fixed() -> std::vector<bool>&;
 
-    auto velocities_begin() -> std::vector<vec2d>::iterator;
-    auto velocities_end() -> std::vector<vec2d>::iterator;
-
-    auto forces_begin() -> std::vector<vec2d>::iterator;
-    auto forces_end() -> std::vector<vec2d>::iterator;
-
-    auto masses_begin() -> std::vector<double>::iterator;
-    auto masses_end() -> std::vector<double>::iterator;
-
-    auto fixed_begin() -> std::vector<bool>::iterator;
-    auto fixed_end() -> std::vector<bool>::iterator;
+  auto positions() const -> const std::vector<vec2d>&;
+  auto velocities() const -> const std::vector<vec2d>&;
+  auto forces() const -> const std::vector<vec2d>&;
+  auto masses() const -> const std::vector<double>&;
+  auto fixed() const -> const std::vector<bool>&;
 
 public:
+  void addNode(const vec2d& _position);
   void addNode(const vec2d& _position,
                const vec2d& _velocity,
                const vec2d& _force,
@@ -79,8 +78,9 @@ public:
                bool _fixed);
 
 public:
-    void clearVelocities();
-    void clearForces();
+  void clearVelocities();
+  void clearForces();
+  void zeroFixedForces();
 
 private:
   std::size_t m_count;
@@ -90,4 +90,13 @@ private:
   std::vector<double> m_masses;
   std::vector<bool> m_fixed;
 };
-}  // namespace network
+}  // namespace networkV4
+
+#pragma omp declare reduction( \
+        vec_vec2d_plus : std::vector<vec2d> : std::transform( \
+                omp_out.begin(), \
+                    omp_out.end(), \
+                    omp_in.begin(), \
+                    omp_out.begin(), \
+                    std::plus<vec2d>())) \
+    initializer(omp_priv = decltype(omp_orig)(omp_orig.size()))

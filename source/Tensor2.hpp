@@ -1,50 +1,178 @@
 #pragma once
 
-#include "Vec2.hpp"
+#include <cmath>
+
+// #include "Vec2.hpp"
 
 template<class T>
-struct tensor2{
+struct tensor2
+{
 public:
-    T xx;
-    T xy;
-    T yx;
-    T yy;
-    tensor2();
-    tensor2(T _xx, T _xy, T _yx, T _yy);
-    tensor2(const tensor2& _t);
+  T xx, xy, yx, yy;
+  tensor2()
+      : xx(0)
+      , xy(0)
+      , yx(0)
+      , yy(0)
+  {
+  }
+  tensor2(T _xx, T _xy, T _yx, T _yy)
+      : xx(_xx)
+      , xy(_xy)
+      , yx(_yx)
+      , yy(_yy)
+  {
+  }
+  tensor2(const tensor2& _t)
+      : xx(_t.xx)
+      , xy(_t.xy)
+      , yx(_t.yx)
+      , yy(_t.yy)
+  {
+  }
 
-    auto operator=(const tensor2& _t) -> tensor2&;
+public:
+  auto operator=(const tensor2& _t) -> tensor2&
+  {
+    xx = _t.xx;
+    xy = _t.xy;
+    yx = _t.yx;
+    yy = _t.yy;
+    return *this;
+  }
 
-    auto operator+(const T& _v) const -> const tensor2;
-    auto operator-(const T& _v) const -> const tensor2;
-    auto operator*(const T& _s) const -> const tensor2;
-    auto operator/(const T& _s) const -> const tensor2;
+  auto operator+(const T& _v) const -> const tensor2
+  {
+    return tensor2(xx + _v, xy + _v, yx + _v, yy + _v);
+  }
+  auto operator-(const T& _v) const -> const tensor2
+  {
+    return tensor2(xx - _v, xy - _v, yx - _v, yy - _v);
+  }
+  auto operator*(const T& _s) const -> const tensor2
+  {
+    return tensor2(xx * _s, xy * _s, yx * _s, yy * _s);
+  }
+  auto operator/(const T& _s) const -> const tensor2
+  {
+    return tensor2(xx / _s, xy / _s, yx / _s, yy / _s);
+  }
 
-    auto operator+(const tensor2& _v) const -> const tensor2;
-    auto operator-(const tensor2& _v) const -> const tensor2;
-    auto operator*(const tensor2& _v) const -> const tensor2;
-    auto operator/(const tensor2& _v) const -> const tensor2;
+  auto operator+(const tensor2& _v) const -> const tensor2
+  {
+    return tensor2(xx + _v.xx, xy + _v.xy, yx + _v.yx, yy + _v.yy);
+  }
+  auto operator-(const tensor2& _v) const -> const tensor2
+  {
+    return tensor2(xx - _v.xx, xy - _v.xy, yx - _v.yx, yy - _v.yy);
+  }
+  auto operator*(const tensor2& _v) const -> const tensor2
+  {
+    return tensor2(xx * _v.xx, xy * _v.xy, yx * _v.yx, yy * _v.yy);
+  }
+  auto operator/(const tensor2& _v) const -> const tensor2
+  {
+    return tensor2(xx / _v.xx, xy / _v.xy, yx / _v.yx, yy / _v.yy);
+  }
 
-    auto operator+=(const T& _v) -> tensor2&;
-    auto operator-=(const T& _v) -> tensor2&;
-    auto operator*=(const T& _s) -> tensor2&;
-    auto operator/=(const T& _s) -> tensor2&;
+  auto operator+=(const T& _v) -> tensor2&
+  {
+    xx += _v;
+    xy += _v;
+    yx += _v;
+    yy += _v;
+    return *this;
+  }
+  auto operator-=(const T& _v) -> tensor2&
+  {
+    xx -= _v;
+    xy -= _v;
+    yx -= _v;
+    yy -= _v;
+    return *this;
+  }
+  auto operator*=(const T& _s) -> tensor2&
+  {
+    xx *= _s;
+    xy *= _s;
+    yx *= _s;
+    yy *= _s;
+    return *this;
+  }
+  auto operator/=(const T& _s) -> tensor2&
+  {
+    xx /= _s;
+    xy /= _s;
+    yx /= _s;
+    yy /= _s;
+    return *this;
+  }
 
-    auto operator+=(const tensor2& _v) -> tensor2&;
-    auto operator-=(const tensor2& _v) -> tensor2&;
-    auto operator*=(const tensor2& _v) -> tensor2&;
-    auto operator/=(const tensor2& _v) -> tensor2&;
+  auto operator+=(const tensor2& _v) -> tensor2&
+  {
+    xx += _v.xx;
+    xy += _v.xy;
+    yx += _v.yx;
+    yy += _v.yy;
+    return *this;
+  }
+  auto operator-=(const tensor2& _v) -> tensor2&
+  {
+    xx -= _v.xx;
+    xy -= _v.xy;
+    yx -= _v.yx;
+    yy -= _v.yy;
+    return *this;
+  }
+  auto operator*=(const tensor2& _v) -> tensor2&
+  {
+    xx *= _v.xx;
+    xy *= _v.xy;
+    yx *= _v.yx;
+    yy *= _v.yy;
+    return *this;
+  }
+  auto operator/=(const tensor2& _v) -> tensor2&
+  {
+    xx /= _v.xx;
+    xy /= _v.xy;
+    yx /= _v.yx;
+    yy /= _v.yy;
+    return *this;
+  }
 
-    void set(const T& _xx, const T& _xy, const T& _yx, const T& _yy);
-    void set(const tensor2& _t);
-    void set(const T& _v);
+  void set(const T& _xx, const T& _xy, const T& _yx, const T& _yy)
+  {
+    xx = _xx;
+    xy = _xy;
+    yx = _yx;
+    yy = _yy;
+  }
+  void set(const tensor2& _t)
+  {
+    xx = _t.xx;
+    xy = _t.xy;
+    yx = _t.yx;
+    yy = _t.yy;
+  }
+  void set(const T& _v)
+  {
+    xx = _v;
+    xy = _v;
+    yx = _v;
+    yy = _v;
+  }
 };
 
 template<typename T>
-tensor2<T> outer(const vec2<T>& _v1, const vec2<T>& _v2);
+auto outer(const vec2<T>& _v1, const vec2<T>& _v2) -> tensor2<T> {
+  return tensor2<T>(_v1.x * _v2.x, _v1.x * _v2.y, _v1.y * _v2.x, _v1.y * _v2.y);
+}
 
 using tensor2f = tensor2<float>;
 using tensor2d = tensor2<double>;
 
-#pragma omp declare reduction (+: vec2f: omp_out += omp_in) initializer(omp_priv = vec2f(0, 0))
-#pragma omp declare reduction (+: vec2d: omp_out += omp_in) initializer(omp_priv = vec2d(0, 0))
+#pragma omp declare reduction(+ : tensor2f : omp_out += omp_in) \
+    initializer(omp_priv = tensor2f(0, 0, 0, 0))
+#pragma omp declare reduction(+ : tensor2d : omp_out += omp_in) \
+    initializer(omp_priv = tensor2d(0, 0, 0, 0))

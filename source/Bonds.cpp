@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cmath>
 #include <cstddef>
 #include <memory>
@@ -5,55 +6,103 @@
 
 #include "Bonds.hpp"
 
-network::bond::bond()
-    : m_src(0)
-    , m_dst(0)
-    , m_connected(false)
-    , m_type(network::bondType::single)
+networkV4::bond::bond()
+    : bond(0, 0, false, 0.0, 0.0, 0.0)
 {
 }
-network::bond::bond(std::size_t _src,
-                    std::size_t _dst,
-                    bool _connected)
-    : m_src(_src)
-    , m_dst(_dst)
-    , m_connected(_connected)
-    , m_type(network::bondType::single)
+networkV4::bond::bond(std::size_t _src,
+                      std::size_t _dst,
+                      bool _connected,
+                      double _l0,
+                      double _mu,
+                      double _lambda)
+    : bond(_src,
+           _dst,
+           _connected,
+           networkV4::bondType::single,
+           _l0,
+           _mu,
+           _lambda)
 {
 }
 
-network::bond::bond(std::size_t _src,
-                    std::size_t _dst,
-                    bool _connected,
-                    network::bondType _type)
+networkV4::bond::bond(std::size_t _src,
+                      std::size_t _dst,
+                      bool _connected,
+                      networkV4::bondType _type,
+                      double _l0,
+                      double _mu,
+                      double _lambda)
     : m_src(_src)
     , m_dst(_dst)
     , m_connected(_connected)
     , m_type(_type)
+    , m_l0(_l0)
+    , m_mu(_mu)
+    , m_lambda(_lambda)
 {
 }
 
-auto network::bond::src() const -> size_t
+auto networkV4::bond::src() const -> std::size_t
 {
   return m_src;
 }
-auto network::bond::dst() const -> size_t
+auto networkV4::bond::dst() const -> std::size_t
 {
   return m_dst;
 }
 
-auto network::bond::connected() const -> bool
+auto networkV4::bond::connected() const -> bool
 {
   return m_connected;
 }
-auto network::bond::connected() -> bool&
+auto networkV4::bond::connected() -> bool&
 {
   return m_connected;
 }
 
-auto network::bond::type() const -> network::bondType
+auto networkV4::bond::type() const -> networkV4::bondType
 {
   return m_type;
+}
+
+auto networkV4::bond::naturalLength() const -> double
+{
+  return m_l0;
+}
+
+auto networkV4::bond::naturalLength() -> double&
+{
+  return m_l0;
+}
+
+auto networkV4::bond::mu() const -> double
+{
+  return m_mu;
+}
+
+auto networkV4::bond::mu() -> double&
+{
+  return m_mu;
+}
+
+auto networkV4::bond::lambda() const -> double
+{
+  return m_lambda;
+}
+
+auto networkV4::bond::lambda() -> double&
+{
+  return m_lambda;
+}
+
+auto networkV4::bond::force(double _r) const -> double
+{
+  return m_mu * ((_r / m_l0) - 1.0);
+}
+auto networkV4::bond::energy(double _r) const -> double
+{
+  return 0.5 * m_mu * std::pow(_r - m_l0, 2) / m_l0;
 }
 
 /*
@@ -70,87 +119,135 @@ void bond::deserialize(std::istream& inStream) {
 }
 */
 
-network::WLCBond::WLCBond()
-    : m_l0(0.0)
-    , m_mu(0.0)
-{
-}
-
-network::WLCBond::WLCBond(std::size_t _src,
-                          std::size_t _dst,
-                          bool _connected,
-                          network::bondType _type,
-                          double _l0,
-                          double _mu)
-    : network::bond::bond(_src, _dst, _connected, _type)
-    , m_l0(_l0)
-    , m_mu(_mu)
-{
-}
-
-auto network::WLCBond::force(double _r) const -> double
-{
-  return m_mu * ((_r / m_l0) - 1.0);
-}
-auto network::WLCBond::energy(double _r) const -> double
-{
-  return 0.5 * m_mu * std::pow(_r - m_l0, 2) / m_l0;
-}
-
 // ----------------------------------------------------------------------------
 
-network::bonds::bonds()
+networkV4::bonds::bonds()
     : m_bonds()
 {
 }
 
-void network::bonds::clear()
+void networkV4::bonds::clear()
 {
   m_bonds.clear();
 }
 
-void network::bonds::resize(std::size_t _size)
+void networkV4::bonds::resize(std::size_t _size)
 {
   m_bonds.resize(_size);
 }
 
-void network::bonds::reserve(std::size_t _size)
+void networkV4::bonds::reserve(std::size_t _size)
 {
   m_bonds.reserve(_size);
 }
 
-void network::bonds::shrink_to_fit()
+void networkV4::bonds::shrink_to_fit()
 {
   m_bonds.shrink_to_fit();
 }
 
-auto network::bonds::size() const -> std::size_t
+auto networkV4::bonds::size() const -> std::size_t
 {
   return m_bonds.size();
 }
 
-auto network::bonds::empty() const -> bool
+auto networkV4::bonds::empty() const -> bool
 {
   return m_bonds.empty();
 }
-/*
-void network::bonds::add(const network::bond& _bond)
+
+template<typename T>
+void networkV4::bonds::add(const T& _bond)
 {
-  m_bonds.push_back(_bond);
+  m_bonds.emplace_back(std::make_unique<T>(_bond));
 }
 
-void network::bonds::add(bond&& _bond)
+template<typename T>
+void networkV4::bonds::set(std::size_t _index, const T& _bond)
 {
-  m_bonds.push_back(std::move(_bond));
+  m_bonds[_index] = std::make_unique<T>(_bond);
 }
 
-void network::bonds::set(std::size_t _index, const network::bond& _bond)
+void networkV4::bonds::remove(std::size_t _index)
 {
-  m_bonds[_index] = _bond;
+  m_bonds.erase(m_bonds.begin() + _index);
 }
 
-void network::bonds::set(std::size_t _index, network::bond&& _bond)
+auto networkV4::bonds::get(std::size_t _index) -> networkV4::bond&
 {
-  m_bonds[_index] = std::move(_bond);
+  return m_bonds[_index];
 }
-*/
+
+auto networkV4::bonds::get(std::size_t _index) const -> const networkV4::bond&
+{
+  return m_bonds[_index];
+}
+
+auto networkV4::bonds::operator[](std::size_t _index) -> networkV4::bond&
+{
+  return m_bonds[_index];
+}
+
+auto networkV4::bonds::operator[](std::size_t _index) const
+    -> const networkV4::bond&
+{
+  return m_bonds[_index];
+}
+
+auto networkV4::bonds::connectedCount() const -> std::size_t
+{
+  return std::count_if(m_bonds.begin(),
+                       m_bonds.end(),
+                       [](const auto& b) { return b.connected(); });
+}
+
+void networkV4::bonds::sort()
+{
+  std::sort(m_bonds.begin(),
+            m_bonds.end(),
+            [this](const auto& _lhs, const auto& _rhs)
+            { return srcDestOrder(_lhs, _rhs); });
+}
+
+auto networkV4::bonds::begin()
+    -> std::vector<networkV4::bond>::iterator
+{
+  return m_bonds.begin();
+}
+
+auto networkV4::bonds::begin() const
+    -> std::vector<networkV4::bond>::const_iterator
+{
+  return m_bonds.begin();
+}
+
+auto networkV4::bonds::cbegin() const
+    -> std::vector<bond>::const_iterator
+{
+  return m_bonds.cbegin();
+}
+
+auto networkV4::bonds::end()
+    -> std::vector<networkV4::bond>::iterator
+{
+  return m_bonds.end();
+}
+
+auto networkV4::bonds::end() const
+    -> std::vector<networkV4::bond>::const_iterator
+{
+  return m_bonds.end();
+}
+
+auto networkV4::bonds::cend() const
+    -> std::vector<networkV4::bond>::const_iterator
+{
+  return m_bonds.cend();
+}
+
+inline bool networkV4::bonds::srcDestOrder(const networkV4::bond& _lhs,
+                                           const networkV4::bond& _rhs) const
+{
+  return _lhs.src() < _rhs.src()
+      || (_lhs.src() == _rhs.src() && _lhs.dst() < _rhs.dst());
+}

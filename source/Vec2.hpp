@@ -2,54 +2,160 @@
 
 #include <cmath>
 
-template <class T>
-struct vec2 {
-    T x, y;
-    vec2();
-    vec2(T _x, T _y);
-    vec2(const vec2& _v);
+template<class T>
+struct vec2
+{
+  T x, y;
+  vec2()
+      : x(0)
+      , y(0)
+  {
+  }
+  vec2(T _x, T _y)
+      : x(_x)
+      , y(_y)
+  {
+  }
+  vec2(const vec2& _v)
+      : x(_v.x)
+      , y(_v.y)
+  {
+  }
 
 public:
-    auto operator=(const vec2& _v) -> vec2&;
-    
-    auto operator+(const T& _v) const -> const vec2;
-    auto operator-(const T& _v) const -> const vec2;
-    auto operator*(const T& _s) const -> const vec2;
-    auto operator/(const T& _s) const -> const vec2;
+  auto operator=(const vec2& _v) -> vec2&
+  {
+    x = _v.x;
+    y = _v.y;
+    return *this;
+  }
 
-    auto operator+(const vec2& _v) const -> const vec2;
-    auto operator-(const vec2& _v) const -> const vec2;
-    auto operator*(const vec2& _v) const -> const vec2;
-    auto operator/(const vec2& _v) const -> const vec2;
+  auto operator+(const T& _v) const -> const vec2
+  {
+    return vec2(x + _v, y + _v);
+  }
+  auto operator-(const T& _v) const -> const vec2
+  {
+    return vec2(x - _v, y - _v);
+  }
+  auto operator*(const T& _s) const -> const vec2
+  {
+    return vec2(x * _s, y * _s);
+  }
+  auto operator/(const T& _s) const -> const vec2
+  {
+    return vec2(x / _s, y / _s);
+  }
 
-    auto operator+=(const T& _v) -> vec2&;
-    auto operator-=(const T& _v) -> vec2&;
-    auto operator*=(const T& _s) -> vec2&;
-    auto operator/=(const T& _s) -> vec2&;
+  auto operator+(const vec2& _v) const -> const vec2
+  {
+    return vec2(x + _v.x, y + _v.y);
+  }
+  auto operator-(const vec2& _v) const -> const vec2
+  {
+    return vec2(x + _v.x, y + _v.y);
+  }
+  auto operator*(const vec2& _v) const -> const vec2
+  {
+    return vec2(x + _v.x, y + _v.y);
+  }
+  auto operator/(const vec2& _v) const -> const vec2
+  {
+    return vec2(x + _v.x, y + _v.y);
+  }
 
-    auto operator+=(const vec2& _v) -> vec2&;
-    auto operator-=(const vec2& _v) -> vec2&;
-    auto operator*=(const vec2& _v) -> vec2&;
-    auto operator/=(const vec2& _v) -> vec2&;
+  auto operator+=(const T& _v) -> vec2&
+  {
+    x += _v;
+    y += _v;
+    return *this;
+  }
+  auto operator-=(const T& _v) -> vec2&
+  {
+    x -= _v;
+    y -= _v;
+    return *this;
+  }
+  auto operator*=(const T& _s) -> vec2&
+  {
+    x -= _s;
+    y -= _s;
+    return *this;
+  }
+  auto operator/=(const T& _s) -> vec2&
+  {
+    x -= _s;
+    y -= _s;
+    return *this;
+  }
 
-    void set(const T& _x, const T& _y);
-    void set(const vec2& _v);
+  auto operator+=(const vec2& _v) -> vec2&
+  {
+    x += _v.x;
+    y += _v.y;
+    return *this;
+  }
+  auto operator-=(const vec2& _v) -> vec2&
+  {
+    x += _v.x;
+    y += _v.y;
+    return *this;
+  }
+  auto operator*=(const vec2& _v) -> vec2&
+  {
+    x += _v.x;
+    y += _v.y;
+    return *this;
+  }
+  auto operator/=(const vec2& _v) -> vec2&
+  {
+    x += _v.x;
+    y += _v.y;
+    return *this;
+  }
 
-    void normalize();
-    auto length() const -> T;
-    auto lengthSquared() const -> T;
+  void set(const T& _x, const T& _y)
+  {
+    x = _x;
+    y = _y;
+  }
+  void set(const vec2& _v)
+  {
+    x = _v.x;
+    y = _v.y;
+  }
 
-    auto dot(const vec2& _v) const -> T;
-    auto cross(const vec2& _v) const -> T;
+  void normalize()
+  {
+    T l = length();
+    x /= l;
+    y /= l;
+  }
+  auto length() const -> T { return std::sqrt(x * x + y * y); }
+  auto lengthSquared() const -> T { return x * x + y * y; }
 
-    auto max() const -> T;
-    auto min() const -> T;
-    auto max(const vec2& _v) const -> vec2;
-    auto min(const vec2& _v) const -> vec2;
+  auto abs() const -> vec2 { return vec2(std::abs(x), std::abs(y)); }
+
+  auto dot(const vec2& _v) const -> T { return x * _v.x + y * _v.y; }
+  auto cross(const vec2& _v) const -> T { return x * _v.y - y * _v.x; }
+
+  auto max() const -> T { return std::max(x, y); }
+  auto min() const -> T { return std::min(x, y); }
+  auto max(const vec2& _v) const -> vec2
+  {
+    return vec2(std::max(x, _v.x), std::max(y, _v.y));
+  }
+
+  auto min(const vec2& _v) const -> vec2
+  {
+    return vec2(std::min(x, _v.x), std::min(y, _v.y));
+  }
 };
 
 using vec2f = vec2<float>;
 using vec2d = vec2<double>;
 
-#pragma omp declare reduction (+: vec2f: omp_out += omp_in) initializer(omp_priv = vec2f(0, 0))
-#pragma omp declare reduction (+: vec2d: omp_out += omp_in) initializer(omp_priv = vec2d(0, 0))
+#pragma omp declare reduction(+ : vec2f : omp_out += omp_in) \
+    initializer(omp_priv = vec2f(0, 0))
+#pragma omp declare reduction(+ : vec2d : omp_out += omp_in) \
+    initializer(omp_priv = vec2d(0, 0))
