@@ -20,8 +20,11 @@ add_library(
     source/Bonds.cpp
     source/Config.cpp
     source/Intergrator.cpp
+    source/DataOut.cpp
     source/Network.cpp
     source/Nodes.cpp
+    source/Protocol.cpp
+    source/TomlLoad.cpp
 )
 
 target_include_directories(
@@ -37,11 +40,14 @@ target_compile_features(NetworkV4_lib PUBLIC cxx_std_20)
 include(FetchContent)
 
 FetchContent_Declare(
-    toml11
+    toml
     GIT_REPOSITORY https://github.com/ToruNiina/toml11.git
+    GIT_TAG v4.0.2
 )
 
-FetchContent_MakeAvailable(toml11)
+FetchContent_MakeAvailable(toml)
+
+target_link_libraries(NetworkV4_lib PUBLIC toml11::toml11)
 
 # ---- Declare executable ----
 
@@ -53,8 +59,6 @@ set_property(TARGET NetworkV4_exe PROPERTY OUTPUT_NAME NetworkV4)
 target_compile_features(NetworkV4_exe PRIVATE cxx_std_20)
 
 target_link_libraries(NetworkV4_exe PRIVATE NetworkV4_lib)
-
-target_link_libraries(NetworkV4_exe PRIVATE toml11::toml11)
 
 # ---- Install rules ----
 

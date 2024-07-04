@@ -1,6 +1,6 @@
-#include "Nodes.hpp"
-
 #include <algorithm>
+
+#include "Nodes.hpp"
 
 networkV4::nodes::nodes()
     : m_count(0)
@@ -23,6 +23,7 @@ void networkV4::nodes::resize(std::size_t _count)
   m_velocities.resize(_count);
   m_forces.resize(_count);
   m_masses.resize(_count);
+  m_fixed.resize(_count);
 }
 
 void networkV4::nodes::reserve(std::size_t _count)
@@ -31,6 +32,7 @@ void networkV4::nodes::reserve(std::size_t _count)
   m_velocities.reserve(_count);
   m_forces.reserve(_count);
   m_masses.reserve(_count);
+  m_fixed.reserve(_count);
 }
 
 void networkV4::nodes::shrink_to_fit()
@@ -39,6 +41,7 @@ void networkV4::nodes::shrink_to_fit()
   m_velocities.shrink_to_fit();
   m_forces.shrink_to_fit();
   m_masses.shrink_to_fit();
+  m_fixed.shrink_to_fit();
 }
 
 auto networkV4::nodes::size() const -> std::size_t
@@ -162,9 +165,9 @@ void networkV4::nodes::addNode(const vec2d& _position)
 }
 
 void networkV4::nodes::addNode(const vec2d& _position,
-                              const vec2d& _velocity,
-                              const vec2d& _force,
-                              double _mass)
+                               const vec2d& _velocity,
+                               const vec2d& _force,
+                               double _mass)
 {
   m_positions.push_back(_position);
   m_velocities.push_back(_velocity);
@@ -175,10 +178,10 @@ void networkV4::nodes::addNode(const vec2d& _position,
 }
 
 void networkV4::nodes::addNode(const vec2d& _position,
-                              const vec2d& _velocity,
-                              const vec2d& _force,
-                              double _mass,
-                              bool _fixed)
+                               const vec2d& _velocity,
+                               const vec2d& _force,
+                               double _mass,
+                               bool _fixed)
 {
   addNode(_position, _velocity, _force, _mass);
   m_fixed.back() = _fixed;
@@ -195,10 +198,10 @@ void networkV4::nodes::removeNode(std::size_t _idx)
 }
 
 void networkV4::nodes::setNode(std::size_t _idx,
-             const vec2d& _position,
-             const vec2d& _velocity,
-             const vec2d& _force,
-             double _mass)
+                               const vec2d& _position,
+                               const vec2d& _velocity,
+                               const vec2d& _force,
+                               double _mass)
 {
   m_positions[_idx] = _position;
   m_velocities[_idx] = _velocity;
@@ -207,11 +210,11 @@ void networkV4::nodes::setNode(std::size_t _idx,
 }
 
 void networkV4::nodes::setNode(std::size_t _idx,
-             const vec2d& _position,
-             const vec2d& _velocity,
-             const vec2d& _force,
-             double _mass,
-             bool _fixed)
+                               const vec2d& _position,
+                               const vec2d& _velocity,
+                               const vec2d& _force,
+                               double _mass,
+                               bool _fixed)
 {
   setNode(_idx, _position, _velocity, _force, _mass);
   m_fixed[_idx] = _fixed;
@@ -229,7 +232,9 @@ void networkV4::nodes::clearForces()
 
 void networkV4::nodes::zeroFixedForces()
 {
-  std::transform(PAR m_fixed.begin(), m_fixed.end(), m_forces.begin(),
+  std::transform(PAR m_fixed.begin(),
+                 m_fixed.end(),
+                 m_forces.begin(),
                  m_forces.begin(),
                  [](bool _fixed, const vec2d& _force)
                  { return _fixed ? vec2d(0.0, 0.0) : _force; });

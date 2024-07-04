@@ -53,15 +53,15 @@ public:
   }
   auto operator-(const vec2& _v) const -> const vec2
   {
-    return vec2(x + _v.x, y + _v.y);
+    return vec2(x - _v.x, y - _v.y);
   }
   auto operator*(const vec2& _v) const -> const vec2
   {
-    return vec2(x + _v.x, y + _v.y);
+    return vec2(x * _v.x, y * _v.y);
   }
   auto operator/(const vec2& _v) const -> const vec2
   {
-    return vec2(x + _v.x, y + _v.y);
+    return vec2(x / _v.x, y / _v.y);
   }
 
   auto operator+=(const T& _v) -> vec2&
@@ -78,14 +78,14 @@ public:
   }
   auto operator*=(const T& _s) -> vec2&
   {
-    x -= _s;
-    y -= _s;
+    x *= _s;
+    y *= _s;
     return *this;
   }
   auto operator/=(const T& _s) -> vec2&
   {
-    x -= _s;
-    y -= _s;
+    x /= _s;
+    y /= _s;
     return *this;
   }
 
@@ -97,20 +97,20 @@ public:
   }
   auto operator-=(const vec2& _v) -> vec2&
   {
-    x += _v.x;
-    y += _v.y;
+    x -= _v.x;
+    y -= _v.y;
     return *this;
   }
   auto operator*=(const vec2& _v) -> vec2&
   {
-    x += _v.x;
-    y += _v.y;
+    x *= _v.x;
+    y *= _v.y;
     return *this;
   }
   auto operator/=(const vec2& _v) -> vec2&
   {
-    x += _v.x;
-    y += _v.y;
+    x /= _v.x;
+    y /= _v.y;
     return *this;
   }
 

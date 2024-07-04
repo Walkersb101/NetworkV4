@@ -1,8 +1,22 @@
-#include "Network.hpp"
+#include <fstream>
 
-auto main() -> int
+#include "DataOut.hpp"
+#include "Intergrator.hpp"
+#include "Network.hpp"
+#include "Protocol.hpp"
+#include "TomlLoad.hpp"
+
+auto main(int argc, char* argv[]) -> int
 {
-    networkV4::network net;
-    net.loadFromBin("/home/sam/Documents/Code/NetworkV4/test/DoubleTest.bin", networkV4::loadVersion::binV2);
-    return 0;
+  std::filesystem::path path =
+      argc == 2 ? argv[1] : "/home/sam/Documents/Code/NetworkV4/test/test.toml";
+
+  tomlIn input(path);
+  auto net = input.readNetwork();
+  auto problem = input.readProblem();
+  auto out = input.readDataOut();
+
+  problem->initIO(net, out);
+
+  return 0;
 }

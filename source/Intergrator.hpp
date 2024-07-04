@@ -12,12 +12,13 @@
 
 namespace networkV4
 {
-    enum class intergratorType : std::uint8_t
-    {
-        overdampedEuler,
-        overdampedEulerHeun,
-        overdampedAdaptiveEulerHeun
-    };
+enum class intergratorType : std::uint8_t
+{
+  overdampedEuler,
+  overdampedEulerHeun,
+  overdampedAdaptiveEulerHeun,
+  FireMinimizer,
+};
 
 class intergrator
 {
@@ -28,6 +29,7 @@ public:
 
 public:
   virtual void integrate(network& _network);
+  virtual auto getDt() const -> double;
 };
 
 class overdampedEuler : public intergrator
@@ -39,6 +41,7 @@ public:
 
 public:
   void integrate(network& _network) override;
+  auto getDt() const -> double;
 
 private:
   double m_dt;
@@ -53,6 +56,7 @@ public:
 
 public:
   void integrate(network& _network) override;
+  auto getDt() const -> double;
 
 private:
   double m_dt;
@@ -70,6 +74,7 @@ public:
 
 public:
   void integrate(network& _network) override;
+  auto getDt() const -> double;
 
 private:
   auto forceErrorNorm(nodes& _network) -> double;
@@ -89,18 +94,35 @@ class FireMinimizer : public intergrator
 {
 public:
   FireMinimizer();
-    FireMinimizer(double _dt, double _esp);
+  FireMinimizer(double _tol);
+  FireMinimizer(double _dt, double _tol);
   ~FireMinimizer();
 
 public:
-    void integrate(network& _network) override;
+  void integrate(network& _network) override;
 
 private:
-    auto power(const network& _network) -> double;
+  auto power(const network& _network) -> double;
 
 private:
-    double m_dt;
-    double m_esp;
+  double m_dt;
+  double m_tol;
+};
+
+class OverdampedAdaptiveMinimizer : public intergrator
+{
+public:
+  OverdampedAdaptiveMinimizer();
+  OverdampedAdaptiveMinimizer(double _dt, double _esp, double _tol);
+  ~OverdampedAdaptiveMinimizer();
+
+public:
+  void integrate(network& _network) override;
+
+private:
+  OverdampedAdaptiveEulerHeun m_integrator;
+
+  double m_tol;
 };
 
 }  // namespace networkV4

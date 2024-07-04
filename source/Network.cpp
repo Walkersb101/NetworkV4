@@ -15,40 +15,33 @@
 networkV4::network::network()
     : m_nodes()
     , m_bonds()
+    , m_stresses()
+    , m_domain()
+    , m_shearStrain(0.0)
+    , m_elongationStrain(0.0)
+    , m_restSize()
 {
 }
 
 networkV4::network::~network() {}
 
-void checkCanOpen(const std::filesystem::path& _filename)
+void networkV4::network::loadFromBinV1(std::ifstream& _file, double _lambda)
 {
-  if (!std::filesystem::exists(_filename)) {
-    throw std::runtime_error("File does not exist: " + _filename.string());
-  }
-  std::ifstream file(_filename, std::ios::in);
-  if (!file.is_open()) {
-    throw std::runtime_error("Cannot open file: " + _filename.string());
-  }
-}
-
-void networkV4::network::loadFromBinV1(const std::filesystem::path& _filename,
-                                       double _lambda)
-{
-  checkCanOpen(_filename);
-  std::ifstream file(_filename, std::ios::in | std::ios::binary);
-
   std::size_t N;
   std::size_t B;
-  file.read(reinterpret_cast<char*>(&N), sizeof(std::size_t));
-  file.read(reinterpret_cast<char*>(&B), sizeof(std::size_t));
+  _file.read(reinterpret_cast<char*>(&N), sizeof(std::size_t));
+  _file.read(reinterpret_cast<char*>(&B), sizeof(std::size_t));
 
-  file.read(reinterpret_cast<char*>(&m_domain.x), sizeof(double));
+  _file.read(reinterpret_cast<char*>(&m_domain.x), sizeof(double));
   m_domain.y = m_domain.x;
-  file.read(reinterpret_cast<char*>(&m_shearStrain), sizeof(double));
+  _file.read(reinterpret_cast<char*>(&m_shearStrain), sizeof(double));
+  m_restSize = m_domain;
 
-  m_nodes.resize(N);
-  for (vec2d& pos : m_nodes.positions()) {
-    file.read(reinterpret_cast<char*>(&pos), sizeof(vec2d));
+  m_nodes.reserve(N);
+  for (size_t i = 0; i < N; ++i) {
+    vec2d pos;
+    _file.read(reinterpret_cast<char*>(&pos), sizeof(vec2d));
+    m_nodes.addNode(pos);
   }
 
   m_bonds.resize(B);
@@ -59,11 +52,11 @@ void networkV4::network::loadFromBinV1(const std::filesystem::path& _filename,
     double naturalLength;
     double constant;
 
-    file.read(reinterpret_cast<char*>(&connected), sizeof(bool));
-    file.read(reinterpret_cast<char*>(&index1), sizeof(std::size_t));
-    file.read(reinterpret_cast<char*>(&index2), sizeof(std::size_t));
-    file.read(reinterpret_cast<char*>(&naturalLength), sizeof(double));
-    file.read(reinterpret_cast<char*>(&constant), sizeof(double));
+    _file.read(reinterpret_cast<char*>(&connected), sizeof(bool));
+    _file.read(reinterpret_cast<char*>(&index1), sizeof(std::size_t));
+    _file.read(reinterpret_cast<char*>(&index2), sizeof(std::size_t));
+    _file.read(reinterpret_cast<char*>(&naturalLength), sizeof(double));
+    _file.read(reinterpret_cast<char*>(&constant), sizeof(double));
 
     b = bond(index1,
              index2,
@@ -73,25 +66,25 @@ void networkV4::network::loadFromBinV1(const std::filesystem::path& _filename,
              constant,
              _lambda);
   }
+  initStresses();
 }
 
-void networkV4::network::loadFromBinV2(const std::filesystem::path& _filename)
+void networkV4::network::loadFromBinV2(std::ifstream& _file)
 {
-  checkCanOpen(_filename);
-  std::ifstream file(_filename, std::ios::in | std::ios::binary);
-
   std::size_t N;
   std::size_t B;
-  file.read(reinterpret_cast<char*>(&N), sizeof(std::size_t));
-  file.read(reinterpret_cast<char*>(&B), sizeof(std::size_t));
+  _file.read(reinterpret_cast<char*>(&N), sizeof(std::size_t));
+  _file.read(reinterpret_cast<char*>(&B), sizeof(std::size_t));
 
-  file.read(reinterpret_cast<char*>(&m_domain.x), sizeof(double));
-  file.read(reinterpret_cast<char*>(&m_domain.y), sizeof(double));
-  file.read(reinterpret_cast<char*>(&m_shearStrain), sizeof(double));
+  _file.read(reinterpret_cast<char*>(&m_domain), sizeof(vec2d));
+  _file.read(reinterpret_cast<char*>(&m_shearStrain), sizeof(double));
+  m_restSize = m_domain;
 
-  m_nodes.resize(N);
-  for (vec2d& pos : m_nodes.positions()) {
-    file.read(reinterpret_cast<char*>(&pos), sizeof(vec2d));
+  m_nodes.reserve(N);
+  for (size_t i = 0; i < N; ++i) {
+    vec2d pos;
+    _file.read(reinterpret_cast<char*>(&pos), sizeof(vec2d));
+    m_nodes.addNode(pos);
   }
 
   m_bonds.reserve(B);
@@ -104,13 +97,13 @@ void networkV4::network::loadFromBinV2(const std::filesystem::path& _filename)
     double constant;
     double lambda;
 
-    file.read(reinterpret_cast<char*>(&index1), sizeof(std::size_t));
-    file.read(reinterpret_cast<char*>(&index2), sizeof(std::size_t));
-    file.read(reinterpret_cast<char*>(&connected), sizeof(bool));
-    file.read(reinterpret_cast<char*>(&matrix), sizeof(bool));
-    file.read(reinterpret_cast<char*>(&naturalLength), sizeof(double));
-    file.read(reinterpret_cast<char*>(&constant), sizeof(double));
-    file.read(reinterpret_cast<char*>(&lambda), sizeof(double));
+    _file.read(reinterpret_cast<char*>(&index1), sizeof(std::size_t));
+    _file.read(reinterpret_cast<char*>(&index2), sizeof(std::size_t));
+    _file.read(reinterpret_cast<char*>(&connected), sizeof(bool));
+    _file.read(reinterpret_cast<char*>(&matrix), sizeof(bool));
+    _file.read(reinterpret_cast<char*>(&naturalLength), sizeof(double));
+    _file.read(reinterpret_cast<char*>(&constant), sizeof(double));
+    _file.read(reinterpret_cast<char*>(&lambda), sizeof(double));
 
     if (index1 >= N || index2 >= N) {
       throw std::runtime_error("Invalid bond indices: " + std::to_string(index1)
@@ -118,26 +111,10 @@ void networkV4::network::loadFromBinV2(const std::filesystem::path& _filename)
     }
 
     const bondType type = matrix ? bondType::matrix : bondType::sacrificial;
-    m_bonds.add(bond(index1, index2, connected, type, naturalLength, constant, lambda));
+    m_bonds.add(
+        bond(index1, index2, connected, type, naturalLength, constant, lambda));
   }
-}
-
-void networkV4::network::loadFromBin(const std::filesystem::path& _filename,
-                                     loadVersion _version,
-                                     double _lambda)
-{
-  switch (_version) {
-    case loadVersion::binV1:
-      loadFromBinV1(_filename, _lambda);
-      break;
-    case loadVersion::binV2:
-      loadFromBinV2(_filename);
-      break;
-    default:
-      throw std::runtime_error(
-          "Unknown version: "
-          + std::to_string(static_cast<std::uint8_t>(_version)));
-  }
+  initStresses();
 }
 
 auto networkV4::network::getNodes() -> nodes&
@@ -150,10 +127,46 @@ auto networkV4::network::getNodes() const -> const nodes&
   return m_nodes;
 }
 
+auto networkV4::network::getBonds() -> bonds&
+{
+  return m_bonds;
+}
+
+auto networkV4::network::getBonds() const -> const bonds&
+{
+  return m_bonds;
+}
+
 auto networkV4::network::getStresses()
     -> std::unordered_map<bondType, tensor2d>&
 {
   return m_stresses;
+}
+
+auto networkV4::network::getStresses() const
+    -> const std::unordered_map<bondType, tensor2d>&
+{
+  return m_stresses;
+}
+
+auto networkV4::network::getShearStrain() const -> double
+{
+  return m_shearStrain;
+}
+
+auto networkV4::network::getElongationStrain() const -> double
+{
+  return m_elongationStrain;
+}
+
+auto networkV4::network::getShearStrain() -> double&
+{
+  return m_shearStrain;
+}
+
+auto networkV4::network::getElongationStrain() -> double&
+{
+  return m_elongationStrain;
 }
 
 void networkV4::network::applyBond(
@@ -192,21 +205,40 @@ void networkV4::network::computeForces()
   normalizeStresses();
 }
 
+void distBC(double& _x, double _domain)
+{
+  if (_x > _domain * 0.5) {
+    _x -= _domain;
+  } else if (_x < -_domain * 0.5) {
+    _x += _domain;
+  }
+}
+
 auto networkV4::network::minDist(const vec2d& _pos1,
                                  const vec2d& _pos2) const -> vec2d
 {
   vec2d dist = _pos2 - _pos1;
   dist.x -= std::round(dist.y / m_domain.y) * m_domain.x * m_shearStrain;
-  dist.x = std::remainder(dist.x, m_domain.x);
-  dist.y = std::remainder(dist.y, m_domain.y);
+  distBC(dist.x, m_domain.x);
+  distBC(dist.y, m_domain.y);
   return dist;
+}
+
+void BC(double& _x, double _domain)
+{
+  while (_x < 0.0) {
+    _x += _domain;
+  }
+  while (_x >= _domain) {
+    _x -= _domain;
+  }
 }
 
 void networkV4::network::wrapPosition(vec2d& _pos) const
 {
   _pos.x -= std::floor(_pos.y / m_domain.y) * m_domain.x * m_shearStrain;
-  _pos.x = std::remainder(_pos.x, m_domain.x);
-  _pos.y = std::remainder(_pos.y, m_domain.y);
+  BC(_pos.x, m_domain.x);
+  BC(_pos.y, m_domain.y);
 }
 
 auto networkV4::network::wrapedPosition(const vec2d& _pos) const -> vec2d
@@ -214,6 +246,56 @@ auto networkV4::network::wrapedPosition(const vec2d& _pos) const -> vec2d
   vec2d pos = _pos;
   wrapPosition(pos);
   return pos;
+}
+
+void networkV4::network::shear(double _step)
+{
+  m_shearStrain += _step;
+  double offset = _step * m_domain.y * 0.5;
+  // for (vec2d& pos : m_nodes.positions()) {
+  //   pos.x = std::remainder(pos.x + (_step * pos.y) - offset, m_domain.x);
+  // }
+
+  std::transform(
+      m_nodes.positions().begin(),
+      m_nodes.positions().end(),
+      m_nodes.positions().begin(),
+      [&](const vec2d& _pos)
+      {
+        return vec2d(
+            std::remainder(_pos.x + (_step * _pos.y) - offset, m_domain.x),
+            _pos.y);
+      });
+}
+
+void networkV4::network::elongate(double _step)
+{
+  m_elongationStrain += _step;
+  vec2d oldDomain = m_domain;
+  m_domain *= vec2d(1 / (1.0 + _step), 1.0 + _step);
+
+  // const vec2d offset1 = oldDomain * 0.5;
+  const vec2d scale = m_domain / oldDomain;
+  // const vec2d offset2 = m_domain * 0.5;
+
+  // for (auto& pos : m_nodes.positions()) {
+  //   pos = ((pos - offset1) * scale) + offset2;
+  // }
+
+  std::transform(m_nodes.positions().begin(),
+                 m_nodes.positions().end(),
+                 m_nodes.positions().begin(),
+                 [&](const vec2d& _pos) { return _pos * scale; });
+}
+
+void networkV4::network::initStresses()
+{
+  m_stresses.clear();
+  for (const auto& bond : m_bonds) {
+    if (m_stresses.find(bond.type()) == m_stresses.end()) {
+      m_stresses[bond.type()] = tensor2d();
+    }
+  }
 }
 
 void networkV4::network::clearStresses()
@@ -228,4 +310,52 @@ void networkV4::network::normalizeStresses()
   for (auto& stress : m_stresses) {
     stress.second /= m_domain.x * m_domain.y;
   }
+}
+
+auto networkV4::network::globalStress() const -> tensor2d
+{
+  tensor2d stress;
+  for (const auto& s : m_stresses) {
+    stress += s.second;
+  }
+  return stress;
+}
+
+auto networkV4::network::bondStrain(const bond& _bond) const -> double
+{
+  if (!_bond.connected()) {
+    return 0.0;
+  }
+  const vec2d dist =
+      minDist(m_nodes.position(_bond.src()), m_nodes.position(_bond.dst()));
+  const double r = dist.length();
+  return (r - _bond.naturalLength()) / _bond.naturalLength();
+}
+
+void networkV4::network::strainBreakData(double& _maxDistAbove,
+                                         std::size_t& _count) const
+{
+  _maxDistAbove = bondStrain(m_bonds[0]) - m_bonds[0].lambda();
+  _count = 0;
+#pragma omp parallel for reduction(max : _maxStrain) reduction(+ : _count)
+  for (const auto& bond : m_bonds) {
+    double strain = bondStrain(bond);
+    double distAbove = strain - bond.lambda();
+    _maxDistAbove = std::max(_maxDistAbove, distAbove);
+    if (strain >= bond.lambda()) {
+      ++_count;
+    }
+  }
+}
+
+auto networkV4::network::strainBreak() -> std::vector<std::size_t>
+{
+  std::vector<std::size_t> broken;
+  for (std::size_t i = 0; i < m_bonds.size(); ++i) {
+    if (bondStrain(m_bonds[i]) >= m_bonds[i].lambda()) {
+      m_bonds[i].connected() = false;
+      broken.push_back(i);
+    }
+  }
+  return broken;
 }
