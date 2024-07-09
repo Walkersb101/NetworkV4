@@ -15,7 +15,7 @@ double esp = 1e-3;
 std::size_t maxIter = 10;
 
 double dtMin = 1e-6;
-double dtMax = 5e-2;
+double dtMax = 5e-1;
 }  // namespace adaptiveIntergrator
 
 namespace adaptiveHeun
@@ -43,10 +43,10 @@ double dmax = 0.1;
 
 namespace ITPMethod
 {
-std::size_t n0 = 1;
+std::size_t n0 = 10;
 double k1Scale = 0.2;
 double k2 = 2.0;
-double tol = 1e-6;
+double tol = 1e-4;
 }  // namespace ITPMethod
 
 namespace IO
