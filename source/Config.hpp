@@ -21,7 +21,8 @@ extern double default_dt;
 namespace adaptiveIntergrator
 {
 extern double esp;
-extern size_t maxIter;
+extern std::size_t maxIter;
+
 extern double dtMin;
 extern double dtMax;
 }  // namespace adaptiveIntergrator
@@ -34,19 +35,19 @@ extern double qMax;
 
 namespace miminizer
 {
-extern size_t maxIter;
+extern std::size_t maxIter;
 extern double tol;
 }  // namespace miminizer
 
 namespace fire2
 {
 extern double alpha0;
-extern size_t Ndelay;
+extern std::size_t Ndelay;
 extern double finc;
 extern double fdec;
 extern double falpha;
-extern size_t Nnegmax;
-extern size_t maxIter;
+extern std::size_t Nnegmax;
+extern double dmax;
 }  // namespace fire2
 
 namespace ITPMethod
@@ -57,10 +58,12 @@ extern double k2;
 extern double tol;
 }  // namespace ITPMethod
 
-namespace IO{
-    extern std::string timeDataName;
-    extern std::string bondDataName;
-    extern std::string outputType;
-}
+namespace IO
+{
+extern std::string timeDataName;
+extern std::string bondDataName;
+extern std::string outputType;
+extern size_t precision;
+}  // namespace IO
 
 }  // namespace config

@@ -5,6 +5,8 @@
 #include "TomlLoad.hpp"
 
 #include "DataOut.hpp"
+#include "Enums.hpp"
+#include "Config.hpp"
 
 void checkCanOpen(const std::filesystem::path& _filename)
 {
@@ -131,10 +133,10 @@ auto tomlIn::readProblem() -> std::unique_ptr<networkV4::protocol>
   }
 }
 
-auto getOutput(const std::string& _str) -> dataOutType
+auto getOutput(const std::string& _str) -> networkV4::dataOutType
 {
   if (_str == "CSV") {
-    return dataOutType::CSV;
+    return networkV4::dataOutType::CSV;
   } else {
     throw std::runtime_error("No OutputType found in config file");
   }
@@ -170,7 +172,7 @@ auto tomlIn::readDataOut() -> std::unique_ptr<dataOut>
       outConfig, "BondDataName", config::IO::bondDataName);
 
   switch (getOutput(type)) {
-    case dataOutType::CSV: {
+    case networkV4::dataOutType::CSV : {
       return std::make_unique<CSVOut>(
           m_dataPath, m_bondPath, timeDataName, bondDataName);
     }

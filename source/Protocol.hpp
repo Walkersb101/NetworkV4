@@ -2,27 +2,12 @@
 
 #include <cstdint>
 
-#include "Network.hpp"
 #include "DataOut.hpp"
+#include "Network.hpp"
+#include "Enums.hpp"
 
 namespace networkV4
 {
-enum class StrainType : std::uint8_t
-{
-  Shear,
-  Elongation
-};
-
-enum class BreakType : std::uint8_t
-{
-  None,
-  Strain,
-};
-
-enum class protocolType : std::uint8_t
-{
-  QuasisaticStrain
-};
 
 class protocol
 {
@@ -71,8 +56,7 @@ public:
 
 public:
   void run(network& _network) override;
-
- void initIO(const network& _network, std::unique_ptr<dataOut>& _dataOut);
+  void initIO(const network& _network, std::unique_ptr<dataOut>& _dataOut);
 
 private:
   void evalStrain(network& _network,
@@ -82,6 +66,11 @@ private:
   auto findSingleBreak(network& _network) -> bool;
   auto relaxBreak(network& _network) -> std::size_t;
 
+  auto genTimeData(const network& _network,
+                   const std::string& _reason,
+                   std::size_t _breakCount) -> std::vector<writeableTypes>;
+  auto genBondData(const network& _network, size_t _bondIndex) -> std::vector<writeableTypes>;
+
 private:
   double m_maxStrain;
 
@@ -89,6 +78,8 @@ private:
   double m_tol;
 
   double m_t;
+
+  std::size_t m_strainCount;
 };
 
 }  // namespace networkV4

@@ -199,6 +199,13 @@ auto networkV4::bonds::connectedCount() const -> std::size_t
                        [](const auto& b) { return b.connected(); });
 }
 
+auto networkV4::bonds::connectedCount(bondType _type) const -> std::size_t
+{
+  return std::count_if(m_bonds.begin(),
+                       m_bonds.end(),
+                       [_type](const auto& b) { return b.connected() && b.type() == _type; });
+}
+
 void networkV4::bonds::sort()
 {
   std::sort(m_bonds.begin(),

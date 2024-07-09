@@ -5,18 +5,13 @@
 #include <vector>
 
 #include "Bonds.hpp"
+#include "Enums.hpp"
 #include "Nodes.hpp"
 #include "Tensor2.hpp"
 #include "Vec2.hpp"
 
 namespace networkV4
 {
-enum loadVersion : std::uint8_t
-{
-  binV1 = 1,
-  binV2 = 2
-};
-
 class network
 {
 public:
@@ -42,6 +37,12 @@ public:
 
   auto getShearStrain() -> double&;
   auto getElongationStrain() -> double&;
+
+  auto getRestSize() const -> vec2d;
+  auto getDomain() const -> vec2d;
+
+  auto getRestSize() -> vec2d&;
+  auto getDomain() -> vec2d&;
 
 public:
   void computeForces();
@@ -72,7 +73,7 @@ public:
   void initStresses();
   void clearStresses();
   void normalizeStresses();
-  auto globalStress() const -> tensor2d;
+  auto getGlobalStress() const -> tensor2d;
 
 private:
   vec2d m_restSize;
@@ -85,7 +86,6 @@ private:
   tensor2d m_avgStress;
 
   double m_shearStrain;
-
   double m_elongationStrain;
 };
 

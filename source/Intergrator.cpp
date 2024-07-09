@@ -9,27 +9,8 @@
 #include "Network.hpp"
 #include "Nodes.hpp"
 #include "Tensor2.hpp"
+#include "Tools.hpp"
 #include "Vec2.hpp"
-
-auto averageStresses(
-    const std::unordered_map<networkV4::bondType, tensor2d>& _stresses1,
-    const std::unordered_map<networkV4::bondType, tensor2d>& _stresses2)
-    -> std::unordered_map<networkV4::bondType, tensor2d>
-{
-  // Check if _stresses2 has the same keys as _stresses1
-  for (const auto& i : _stresses1) {
-    if (_stresses2.find(i.first) == _stresses2.end()) {
-      throw std::runtime_error(
-          "stresses2 does not have the same keys as stresses1");
-    }
-  }
-  std::unordered_map<networkV4::bondType, tensor2d> avgStresses = _stresses1;
-  for (auto& i : avgStresses) {
-    avgStresses[i.first] += _stresses2.at(i.first);
-    avgStresses[i.first] *= 0.5;
-  }
-  return avgStresses;
-}
 
 void overdampedMove(networkV4::network& _network, double _dt)
 {
@@ -84,35 +65,6 @@ void heunAverage(networkV4::network& _network,
     _network.wrapPosition(networkNodes.position(i));
     networkNodes.force(i) = (networkNodes.force(i) + _tempForces[i]) * 0.5;
   }
-}
-
-auto norm(const std::vector<vec2d>& _vec) -> double
-{
-  double sum = std::accumulate(_vec.begin(),
-                               _vec.end(),
-                               0.0,
-                               [](double _sum, const vec2d& _v)
-                               { return _sum + _v.lengthSquared(); });
-  return std::sqrt(sum);
-}
-
-auto maxAbsComponent(const std::vector<vec2d>& _vec) -> double
-{
-  return std::accumulate(_vec.begin(),
-                         _vec.end(),
-                         0.0,
-                         [](double _max, const vec2d& _v)
-                         { return std::max(_max, _v.abs().max()); });
-  /*
-    double max = 0.0;
-    for (size_t i = 0; i < _vec.size(); ++i) {
-      double val = _vec[i].abs().max();
-      if (val > max) {
-        max = val;
-      }
-    }
-    return max;
-  */
 }
 
 networkV4::intergrator::intergrator() {}
@@ -173,7 +125,7 @@ void networkV4::OverdampedEulerHeun::integrate(network& _network)
   heunAverage(_network, m_tempForces, m_dt);
 
   _network.getStresses() =
-      averageStresses(_network.getStresses(), m_tempStresses);
+      tools::averageMaps(_network.getStresses(), m_tempStresses);
 }
 
 auto networkV4::OverdampedEulerHeun::getDt() const -> double
@@ -235,7 +187,7 @@ void networkV4::OverdampedAdaptiveEulerHeun::integrate(network& _network)
   heunAverage(_network, m_tempForces, m_dt);
 
   _network.getStresses() =
-      averageStresses(_network.getStresses(), m_tempStresses);
+      tools::averageMaps(_network.getStresses(), m_tempStresses);
 
   m_nextdt = std::clamp(m_dt * q, dtMin, dtMax);
 }
@@ -290,6 +242,7 @@ void networkV4::FireMinimizer::integrate(network& _network)
   double falpha = config::fire2::falpha;
   size_t Ndelay = config::fire2::Ndelay;
   size_t Nnegmax = config::fire2::Nnegmax;
+  double dmax = config::fire2::dmax;
 
   size_t Npos = 0;
   size_t Nneg = 0;
@@ -299,12 +252,13 @@ void networkV4::FireMinimizer::integrate(network& _network)
   networkNodes.clearVelocities();
   _network.computeForces();
 
-  if (norm(networkNodes.forces()) < m_tol) {
+  if (tools::norm(networkNodes.forces()) < m_tol) {
     return;
   }
 
   size_t iters = 0;
-  while (iters < maxIter) {
+  double error = tools::maxAbsComponent(networkNodes.forces());
+  while (iters < maxIter && error > m_tol) {
     double P = power(_network);
 
     if (P >= 0.0) {
@@ -329,9 +283,8 @@ void networkV4::FireMinimizer::integrate(network& _network)
       networkNodes.clearVelocities();
     }
 
-    updateVelocities(_network, 0.5 * m_dt);
-    double fScale =
-        alpha * norm(networkNodes.velocities()) / norm(networkNodes.forces());
+    double fScale = alpha * tools::norm(networkNodes.velocities())
+        / tools::norm(networkNodes.forces());
     double vScale = 1.0 - alpha;
     for (std::size_t i = 0; i < networkNodes.size(); ++i) {
       if (networkNodes.fixed(i)) {
@@ -340,14 +293,12 @@ void networkV4::FireMinimizer::integrate(network& _network)
       networkNodes.velocity(i) *= vScale;
       networkNodes.velocity(i) += networkNodes.force(i) * fScale;
     }
+    double maxLength = tools::maxLength(networkNodes.velocities());
+    m_dt = std::min(m_dt, dmax / maxLength);
     move(_network, m_dt);
+    updateVelocities(_network, m_dt);
     _network.computeForces();
-    updateVelocities(_network, 0.5 * m_dt);
-
-    double error = maxAbsComponent(networkNodes.forces());
-    if (error < m_tol) {
-      break;
-    }
+    error = tools::maxAbsComponent(networkNodes.forces());
     ++iters;
   }
 }
@@ -384,10 +335,10 @@ void networkV4::OverdampedAdaptiveMinimizer::integrate(network& _network)
   size_t iters = 0;
   while (iters < maxIter) {
     m_integrator.integrate(_network);
-    double error = maxAbsComponent(_network.getNodes().forces());
+    double error = tools::maxAbsComponent(_network.getNodes().forces());
     if (error < m_tol) {
       break;
     }
     ++iters;
-  }
+  };
 }

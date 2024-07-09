@@ -4,15 +4,10 @@
 #include <memory>
 #include <vector>
 
+#include "Enums.hpp"
+
 namespace networkV4
 {
-enum class bondType : std::uint8_t
-{
-  single,
-  sacrificial,
-  matrix
-};
-
 class bond
 {
 public:
@@ -103,6 +98,7 @@ public:
 
 public:
   auto connectedCount() const -> std::size_t;
+  auto connectedCount(bondType _type) const -> std::size_t;
 
 public:
   void sort();

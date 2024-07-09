@@ -7,13 +7,10 @@
 #include <toml.hpp>
 
 #include "Network.hpp"
+#include "Enums.hpp"
 
 using writeableTypes = std::variant<std::string, double, std::size_t>;
 
-enum class dataOutType
-{
-  CSV
-};
 
 class dataOut
 {

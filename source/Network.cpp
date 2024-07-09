@@ -169,6 +169,24 @@ auto networkV4::network::getElongationStrain() -> double&
   return m_elongationStrain;
 }
 
+auto networkV4::network::getRestSize() const -> vec2d
+{
+  return m_restSize;
+}
+auto networkV4::network::getDomain() const -> vec2d
+{
+  return m_domain;
+}
+
+auto networkV4::network::getRestSize() -> vec2d&
+{
+  return m_restSize;
+}
+auto networkV4::network::getDomain() -> vec2d&
+{
+  return m_domain;
+}
+
 void networkV4::network::applyBond(
     const bond& _bond,
     const nodes& _nodes,
@@ -312,7 +330,7 @@ void networkV4::network::normalizeStresses()
   }
 }
 
-auto networkV4::network::globalStress() const -> tensor2d
+auto networkV4::network::getGlobalStress() const -> tensor2d
 {
   tensor2d stress;
   for (const auto& s : m_stresses) {
@@ -323,9 +341,6 @@ auto networkV4::network::globalStress() const -> tensor2d
 
 auto networkV4::network::bondStrain(const bond& _bond) const -> double
 {
-  if (!_bond.connected()) {
-    return 0.0;
-  }
   const vec2d dist =
       minDist(m_nodes.position(_bond.src()), m_nodes.position(_bond.dst()));
   const double r = dist.length();
@@ -339,6 +354,9 @@ void networkV4::network::strainBreakData(double& _maxDistAbove,
   _count = 0;
 #pragma omp parallel for reduction(max : _maxStrain) reduction(+ : _count)
   for (const auto& bond : m_bonds) {
+    if (!bond.connected()) {
+      continue;
+    }
     double strain = bondStrain(bond);
     double distAbove = strain - bond.lambda();
     _maxDistAbove = std::max(_maxDistAbove, distAbove);
@@ -352,7 +370,7 @@ auto networkV4::network::strainBreak() -> std::vector<std::size_t>
 {
   std::vector<std::size_t> broken;
   for (std::size_t i = 0; i < m_bonds.size(); ++i) {
-    if (bondStrain(m_bonds[i]) >= m_bonds[i].lambda()) {
+    if (m_bonds[i].connected() && bondStrain(m_bonds[i]) >= m_bonds[i].lambda()) {
       m_bonds[i].connected() = false;
       broken.push_back(i);
     }

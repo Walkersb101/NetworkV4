@@ -101,8 +101,9 @@ void CSVOut::writeTimeData(const std::vector<writeableTypes>& _data)
     if (!timeFile.is_open()) {
         throw std::runtime_error("Cannot open file: " + m_timeDataPath.string());
     }
+    timeFile << std::setprecision(config::IO::precision);
     for (std::size_t i = 0; i < _data.size() - 1; ++i) {
-        std::visit([&timeFile](const auto &x) { timeFile << x; }, _data[i]);
+        std::visit([&timeFile](const auto &x) { timeFile << x << ","; }, _data[i]);
     }
     std::visit([&timeFile](const auto &x) { timeFile << x << "\n"; }, _data.back());
     timeFile.close();
@@ -114,8 +115,9 @@ void CSVOut::writeBondData(const std::vector<writeableTypes>& _data)
     if (!bondFile.is_open()) {
         throw std::runtime_error("Cannot open file: " + m_bondDataPath.string());
     }
+    bondFile << std::setprecision(config::IO::precision);
     for (std::size_t i = 0; i < _data.size() - 1; ++i) {
-        std::visit([&bondFile](const auto &x) { bondFile << x; }, _data[i]);
+        std::visit([&bondFile](const auto &x) { bondFile << x << ","; }, _data[i]);
     }
     std::visit([&bondFile](const auto &x) { bondFile << x << "\n"; }, _data.back());
     bondFile.close();

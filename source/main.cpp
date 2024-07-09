@@ -17,6 +17,7 @@ auto main(int argc, char* argv[]) -> int
   auto out = input.readDataOut();
 
   problem->initIO(net, out);
+  problem->run(net);
 
   return 0;
 }

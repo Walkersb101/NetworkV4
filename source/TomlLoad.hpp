@@ -8,6 +8,7 @@
 #include "Network.hpp"
 #include "Protocol.hpp"
 #include "DataOut.hpp"
+#include "Enums.hpp"
 
 class tomlIn
 {

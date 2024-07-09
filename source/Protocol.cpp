@@ -8,32 +8,7 @@
 #include "DataOut.hpp"
 #include "Intergrator.hpp"
 #include "Network.hpp"
-
-auto uniqueBondTypes(const networkV4::bonds& _bonds)
-    -> std::vector<networkV4::bondType>
-{
-  std::vector<networkV4::bondType> types;
-  for (const auto& bond : _bonds) {
-    if (std::find(types.begin(), types.end(), bond.type()) == types.end()) {
-      types.push_back(bond.type());
-    }
-  }
-  return types;
-}
-
-auto typeString(const networkV4::bondType& _type) -> std::string
-{
-  switch (_type) {
-    case networkV4::bondType::single:
-      return "single";
-    case networkV4::bondType::matrix:
-      return "matrix";
-    case networkV4::bondType::sacrificial:
-      return "sacrificial";
-    default:
-      throw std::runtime_error("Unknown bond type");
-  }
-}
+#include "Tools.hpp"
 
 networkV4::protocol::protocol() {}
 
@@ -55,7 +30,6 @@ double networkV4::protocol::getStrain(const network& _network) const
       return _network.getElongationStrain();
     default:
       throw std::runtime_error("Unknown strain type");
-      break;
   }
 }
 
@@ -70,7 +44,6 @@ void networkV4::protocol::strain(network& _network, double _step)
       break;
     default:
       throw std::runtime_error("Unknown strain type");
-      break;
   }
 }
 
@@ -89,7 +62,6 @@ void networkV4::protocol::breakData(const network& _network,
       break;
     default:
       throw std::runtime_error("Unknown break type");
-      break;
   }
 }
 
@@ -103,7 +75,6 @@ auto networkV4::protocol::breakBonds(network& _network, BreakType _type) const
       return _network.strainBreak();
     default:
       throw std::runtime_error("Unknown break type");
-      break;
   }
 }
 
@@ -123,6 +94,8 @@ networkV4::quasiStaticStrain::quasiStaticStrain(double _maxStrain,
     , protocol(_strainType, _breakType)
     , m_esp(config::adaptiveIntergrator::esp)
     , m_tol(config::ITPMethod::tol)
+    , m_strainCount(0)
+    , m_t(0.0)
 {
 }
 
@@ -135,6 +108,8 @@ networkV4::quasiStaticStrain::quasiStaticStrain(double _maxStrain,
     , m_esp(_esp)
     , m_tol(_tol)
     , protocol(_strainType, _breakType)
+    , m_strainCount(0)
+    , m_t(0.0)
 {
 }
 
@@ -142,13 +117,16 @@ networkV4::quasiStaticStrain::~quasiStaticStrain() {}
 
 void networkV4::quasiStaticStrain::run(network& _network)
 {
+  m_dataOut->writeTimeData(genTimeData(_network, "Initial", 0));
   while (true) {
-    bool findBreak = findSingleBreak(_network);
-    if (!findBreak) {
+    if (!findSingleBreak(_network)) {
       return;
     }
+    m_strainCount++;
     m_t = 0.0;
+    m_dataOut->writeTimeData(genTimeData(_network, "Start", 0));
     size_t breakCount = relaxBreak(_network);
+    m_dataOut->writeTimeData(genTimeData(_network, "End", breakCount));
   }
 }
 
@@ -157,7 +135,10 @@ void networkV4::quasiStaticStrain::evalStrain(network& _network,
                                               double& _maxVal,
                                               std::size_t& _count)
 {
-  FireMinimizer minimizer(config::miminizer::tol);
+  //FireMinimizer minimizer(config::miminizer::tol);
+  OverdampedAdaptiveMinimizer minimizer(config::default_dt,
+                                        config::adaptiveIntergrator::esp,
+                                        config::miminizer::tol);
   strain(_network, _step);
   minimizer.integrate(_network);
   breakData(_network, m_breakType, _maxVal, _count);
@@ -201,9 +182,8 @@ auto networkV4::quasiStaticStrain::findSingleBreak(network& _network) -> bool
   size_t nmax = nhalf + n0;
 
   double k1 = k1Scale * (b - a);
-  std::size_t iters = 0;
 
-  while (iters < nmax) {
+  for (std::size_t iters = 0; iters < nmax; ++iters) {
     double xhalf = (a + b) * 0.5;
     double r = m_esp * std::pow(2, nmax - iters) - (b - a) * 0.5;
     double delta = k1 * std::pow(b - a, k2);
@@ -229,20 +209,14 @@ auto networkV4::quasiStaticStrain::findSingleBreak(network& _network) -> bool
       maxDistAboveA = maxDistAboveITP;
       breakCountA = breakCountITP;
     } else {
-      a = xITP;
-      b = xITP;
-      maxDistAboveA = 0.0;
-      maxDistAboveB = 0.0;
-      breakCountA = breakCountITP;
-      breakCountB = breakCountITP;
-      networkB = testNetwork;
+      _network = testNetwork;
+      return true;
     }
 
     if (std::abs(b - a) < 2 * m_tol && breakCountB == 1) {
       _network = networkB;
       return true;
     }
-    iters++;
   }
 
   return false;
@@ -259,88 +233,148 @@ auto networkV4::quasiStaticStrain::relaxBreak(network& _network) -> size_t
   if (breakCount == 0) {
     return 0;
   }
-  std::size_t iters = 0;
-  while (iters < maxIter) {
+  for (const auto& b : broken) {
+    m_dataOut->writeBondData(genBondData(_network, b));
+  }
+
+  for (size_t iter = 0; iter < maxIter; ++iter) {
     integrator.integrate(_network);
 
     broken = breakBonds(_network, m_breakType);
     breakCount += broken.size();
 
-    double error = std::accumulate(_network.getNodes().forces().begin(),
-                                   _network.getNodes().forces().end(),
-                                   0.0,
-                                   [](double _max, const vec2d& _v)
-                                   { return std::max(_max, _v.abs().max()); });
+    for (const auto& b : broken) {
+      m_dataOut->writeBondData(genBondData(_network, b));
+    }
+
+    double error = tools::maxAbsComponent(_network.getNodes().forces());
     if (error < m_tol && broken.size() == 0) {
       break;
     }
 
     m_t += integrator.getDt();
-    ++iters;
   }
   return breakCount;
 }
 
-
 void networkV4::quasiStaticStrain::initIO(const network& _network,
                                           std::unique_ptr<dataOut>& _dataOut)
 {
-  auto types = uniqueBondTypes(_network.getBonds());
+  auto types = tools::uniqueBondTypes(_network.getBonds());
 
-  std::vector<std::string> dataHeader = {"Reason",
-                                         "Time",
-                                         "dt",
-                                         "Domainx",
-                                         "Domainy",
-                                         "ElongationStrain",
-                                         "ShearStrain",
-                                         "RMSVel",
-                                         "MaxVel"};
+  std::vector<std::string> dataHeader = {
+      "Reason",
+      "StrainCount",
+      "BreakCount",
+      "Time",
+      "Domainx",
+      "Domainy",
+      enum2str::strainTypeString(m_strainType) + "Strain",
+  };
 
-  std::vector<std::string> bondHeader = {"Time",
-                                         "dt",
-                                         "BreakCount",
-                                         "Type",
-                                         "mu",
-                                         "lambda",
-                                         "NaturalLength",
-                                         "BondStrain",
-                                         "Index1",
-                                         "Index2",
-                                         "x1",
-                                         "y1",
-                                         "x2",
-                                         "y2",
-                                         "Domainx",
-                                         "Domainy",
-                                         "ElongationStrain",
-                                         "ShearStrain",
-                                         "RMSVel",
-                                         "MaxVel"};
+  std::vector<std::string> bondHeader = {
+      "StrainCount",
+      "Time",
+      "Type",
+      "mu",
+      "lambda",
+      "NaturalLength",
+      "BondStrain",
+      "Index1",
+      "Index2",
+      "x1",
+      "y1",
+      "x2",
+      "y2",
+      "Domainx",
+      "Domainy",
+      enum2str::strainTypeString(m_strainType) + "Strain",
+      "RMSForce",
+      "MaxForce"};
 
-  dataHeader.push_back("BondCount");
-  bondHeader.push_back("BondCount");
-  for (const auto& type : types) {
-    dataHeader.push_back(typeString(type) + "Count");
-    bondHeader.push_back(typeString(type) + "Count");
-  }
-  dataHeader.insert(dataHeader.end(),
-                    {"Stressxx", "Stressxy", "Stressyx", "Stressyy"});
-  bondHeader.insert(bondHeader.end(),
-                    {"Stressxx", "Stressxy", "Stressyx", "Stressyy"});
-  for (const auto& type : types) {
-    dataHeader.insert(dataHeader.end(),
-                      {typeString(type) + "Stressxx",
-                       typeString(type) + "Stressxy",
-                       typeString(type) + "Stressyx",
-                       typeString(type) + "Stressyy"});
-    bondHeader.insert(bondHeader.end(),
-                      {typeString(type) + "Stressxx",
-                       typeString(type) + "Stressxy",
-                       typeString(type) + "Stressyx",
-                       typeString(type) + "Stressyy"});
-  }
+  enum2str::addBondCountByTypeHeader(dataHeader, types);
+  enum2str::addBondCountByTypeHeader(bondHeader, types);
+
+  enum2str::addStressByTypeHeader(bondHeader, types);
+  enum2str::addStressByTypeHeader(dataHeader, types);
 
   _dataOut->initFiles(dataHeader, bondHeader);
   m_dataOut = _dataOut.get();
+}
+
+auto networkV4::quasiStaticStrain::genTimeData(const network& _network,
+                                               const std::string& _reason,
+                                               size_t _breakCount)
+    -> std::vector<writeableTypes>
+{
+  auto types = tools::uniqueBondTypes(_network.getBonds());
+  auto stresses = _network.getStresses();
+  auto globalStress = _network.getGlobalStress();
+
+  std::vector<writeableTypes> data;
+  data.reserve(12 + 5 * types.size());
+  data.push_back(_reason);
+  data.push_back(m_strainCount);
+  data.push_back(_breakCount);
+  data.push_back(m_t);
+  data.push_back(_network.getDomain().x);
+  data.push_back(_network.getDomain().y);
+  data.push_back(getStrain(_network));
+
+  data.push_back(_network.getBonds().connectedCount());
+  for (const auto& type : types) {
+    data.push_back(_network.getBonds().connectedCount(type));
+  }
+
+  data.insert(
+      data.end(),
+      {globalStress.xx, globalStress.xy, globalStress.yx, globalStress.yy});
+  for (const auto& type : types) {
+    tensor2 stress = stresses.at(type);
+    data.insert(data.end(), {stress.xx, stress.xy, stress.yx, stress.yy});
+  }
+  return data;
+}
+
+auto networkV4::quasiStaticStrain::genBondData(
+    const network& _network, size_t _bondIndex) -> std::vector<writeableTypes>
+{
+  auto types = tools::uniqueBondTypes(_network.getBonds());
+  auto stresses = _network.getStresses();
+  auto globalStress = _network.getGlobalStress();
+  auto& b = _network.getBonds().get(_bondIndex);
+
+  std::vector<writeableTypes> data;
+  data.reserve(23 + 5 * types.size());
+  data.push_back(m_strainCount);
+  data.push_back(m_t);
+  data.push_back(enum2str::bondTypeString(b.type()));
+  data.push_back(b.mu());
+  data.push_back(b.lambda());
+  data.push_back(b.naturalLength());
+  data.push_back(_network.bondStrain(b));
+  data.push_back(b.src());
+  data.push_back(b.dst());
+  data.push_back(_network.getNodes().position(b.src()).x);
+  data.push_back(_network.getNodes().position(b.src()).y);
+  data.push_back(_network.getNodes().position(b.dst()).x);
+  data.push_back(_network.getNodes().position(b.dst()).y);
+  data.push_back(_network.getDomain().x);
+  data.push_back(_network.getDomain().y);
+  data.push_back(getStrain(_network));
+  data.push_back(tools::norm(_network.getNodes().forces()));
+  data.push_back(tools::maxLength(_network.getNodes().forces()));
+  data.push_back(_network.getBonds().connectedCount());
+  for (const auto& type : types) {
+    data.push_back(_network.getBonds().connectedCount(type));
+  }
+
+  data.insert(
+      data.end(),
+      {globalStress.xx, globalStress.xy, globalStress.yx, globalStress.yy});
+  for (const auto& type : types) {
+    tensor2 stress = stresses.at(type);
+    data.insert(data.end(), {stress.xx, stress.xy, stress.yx, stress.yy});
+  }
+  return data;
 }

@@ -12,13 +12,6 @@
 
 namespace networkV4
 {
-enum class intergratorType : std::uint8_t
-{
-  overdampedEuler,
-  overdampedEulerHeun,
-  overdampedAdaptiveEulerHeun,
-  FireMinimizer,
-};
 
 class intergrator
 {
