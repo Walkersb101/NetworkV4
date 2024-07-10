@@ -81,7 +81,8 @@ auto networkV4::protocol::breakBonds(network& _network, BreakType _type) const
 void networkV4::protocol::run(network& _network) {}
 
 void networkV4::protocol::initIO(const network& _network,
-                                 std::unique_ptr<dataOut>& _dataOut)
+                                 std::unique_ptr<dataOut>& _dataOut,
+                                 std::unique_ptr<networkOut>& _networkOut)
 {
 }
 
@@ -124,9 +125,11 @@ void networkV4::quasiStaticStrain::run(network& _network)
     }
     m_strainCount++;
     m_t = 0.0;
+    m_networkOut->save(_network, "Start-" + std::to_string(m_strainCount)); 
     m_dataOut->writeTimeData(genTimeData(_network, "Start", 0));
     size_t breakCount = relaxBreak(_network);
     m_dataOut->writeTimeData(genTimeData(_network, "End", breakCount));
+    m_networkOut->save(_network, "End-" + std::to_string(m_strainCount));
   }
 }
 
@@ -135,7 +138,7 @@ void networkV4::quasiStaticStrain::evalStrain(network& _network,
                                               double& _maxVal,
                                               std::size_t& _count)
 {
-  //FireMinimizer minimizer(config::miminizer::tol);
+  // FireMinimizer minimizer(config::miminizer::tol);
   OverdampedAdaptiveMinimizer minimizer(config::default_dt,
                                         config::adaptiveIntergrator::esp,
                                         config::miminizer::tol);
@@ -257,8 +260,10 @@ auto networkV4::quasiStaticStrain::relaxBreak(network& _network) -> size_t
   return breakCount;
 }
 
-void networkV4::quasiStaticStrain::initIO(const network& _network,
-                                          std::unique_ptr<dataOut>& _dataOut)
+void networkV4::quasiStaticStrain::initIO(
+    const network& _network,
+    std::unique_ptr<dataOut>& _dataOut,
+    std::unique_ptr<networkOut>& _networkOut)
 {
   auto types = tools::uniqueBondTypes(_network.getBonds());
 
@@ -300,6 +305,7 @@ void networkV4::quasiStaticStrain::initIO(const network& _network,
 
   _dataOut->initFiles(dataHeader, bondHeader);
   m_dataOut = _dataOut.get();
+  m_networkOut = _networkOut.get();
 }
 
 auto networkV4::quasiStaticStrain::genTimeData(const network& _network,

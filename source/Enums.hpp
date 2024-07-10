@@ -16,6 +16,12 @@ enum class dataOutType : std::uint8_t
   CSV,
 };
 
+enum class networkOutType : std::uint8_t
+{
+  None,
+  BinV2,
+};
+
 enum class intergratorType : std::uint8_t
 {
   overdampedEuler,

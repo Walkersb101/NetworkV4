@@ -4,9 +4,9 @@
 
 #include "TomlLoad.hpp"
 
+#include "Config.hpp"
 #include "DataOut.hpp"
 #include "Enums.hpp"
-#include "Config.hpp"
 
 void checkCanOpen(const std::filesystem::path& _filename)
 {
@@ -152,14 +152,14 @@ auto tomlIn::readDataOut() -> std::unique_ptr<dataOut>
   auto type = toml::find_or<std::string>(
       outConfig, "OutputType", config::IO::outputType);
 
-  std::filesystem::path m_dataPath;
-  std::filesystem::path m_bondPath;
+  std::filesystem::path dataPath;
+  std::filesystem::path bondPath;
   if (outConfig.contains("OutputPath")) {
-    m_dataPath = toml::find<std::string>(outConfig, "OutputPath");
-    m_bondPath = toml::find<std::string>(outConfig, "OutputPath");
+    dataPath = toml::find<std::string>(outConfig, "OutputPath");
+    bondPath = toml::find<std::string>(outConfig, "OutputPath");
   } else if (outConfig.contains("DataPath") && outConfig.contains("BondPath")) {
-    m_dataPath = toml::find<std::string>(outConfig, "DataPath");
-    m_bondPath = toml::find<std::string>(outConfig, "BondPath");
+    dataPath = toml::find<std::string>(outConfig, "DataPath");
+    bondPath = toml::find<std::string>(outConfig, "BondPath");
   } else {
     throw std::runtime_error(
         "No OutputPath or DataPath and BondPath found in "
@@ -172,9 +172,51 @@ auto tomlIn::readDataOut() -> std::unique_ptr<dataOut>
       outConfig, "BondDataName", config::IO::bondDataName);
 
   switch (getOutput(type)) {
-    case networkV4::dataOutType::CSV : {
+    case networkV4::dataOutType::CSV: {
       return std::make_unique<CSVOut>(
-          m_dataPath, m_bondPath, timeDataName, bondDataName);
+          dataPath, bondPath, timeDataName, bondDataName);
+    }
+    default: {
+      throw std::runtime_error("OutputType not implemented");
+    }
+  }
+}
+
+auto getNetworkOut(const std::string& _str) -> networkV4::networkOutType
+{
+  if (_str == "BinV2") {
+    return networkV4::networkOutType::BinV2;
+  } else {
+    return networkV4::networkOutType::None;
+  }
+}
+
+auto tomlIn::readNetworkOut() -> std::unique_ptr<networkOut>
+{
+  if (!m_config.contains("Output")) {
+    throw std::runtime_error("No Output found in config file");
+  }
+  auto outConfig = toml::find(m_config, "Output");
+
+  auto type = toml::find_or<std::string>(
+      outConfig, "NetworkType", "None");
+
+  std::filesystem::path path;
+  if (outConfig.contains("NetworkPath")) {
+    path = toml::find<std::string>(outConfig, "NetworkPath");
+  } else if (outConfig.contains("OutputPath")) {
+    path = toml::find<std::string>(outConfig, "OutputPath");
+  } else {
+    throw std::runtime_error(
+        "No NetworkPath or OutputPath found in config file");
+  }
+
+  switch (getNetworkOut(type)) {
+    case networkV4::networkOutType::BinV2: {
+      return std::make_unique<networkOutBinV2>(path);
+    }
+    case networkV4::networkOutType::None: {
+      return std::make_unique<noNetworkOut>();
     }
     default: {
       throw std::runtime_error("OutputType not implemented");

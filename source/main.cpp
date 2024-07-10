@@ -14,9 +14,10 @@ auto main(int argc, char* argv[]) -> int
   tomlIn input(path);
   auto net = input.readNetwork();
   auto problem = input.readProblem();
-  auto out = input.readDataOut();
+  auto dataOut = input.readDataOut();
+  auto netOut = input.readNetworkOut();
 
-  problem->initIO(net, out);
+  problem->initIO(net, dataOut, netOut);
   problem->run(net);
 
   return 0;

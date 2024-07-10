@@ -22,6 +22,7 @@ add_library(
     source/Intergrator.cpp
     source/DataOut.cpp
     source/Network.cpp
+    source/NetworkOut.cpp
     source/Nodes.cpp
     source/Protocol.cpp
     source/TomlLoad.cpp

@@ -8,6 +8,7 @@
 #include "Network.hpp"
 #include "Protocol.hpp"
 #include "DataOut.hpp"
+#include "NetworkOut.hpp"
 #include "Enums.hpp"
 
 class tomlIn
@@ -19,6 +20,7 @@ public:
   auto readNetwork() -> networkV4::network;
   auto readProblem() -> std::unique_ptr<networkV4::protocol>;
   auto readDataOut() -> std::unique_ptr<dataOut>;
+  auto readNetworkOut() -> std::unique_ptr<networkOut>;
 
 private:
   toml::value m_config;

@@ -3,8 +3,9 @@
 #include <cstdint>
 
 #include "DataOut.hpp"
-#include "Network.hpp"
 #include "Enums.hpp"
+#include "Network.hpp"
+#include "NetworkOut.hpp"
 
 namespace networkV4
 {
@@ -32,12 +33,14 @@ public:
   virtual void run(network& _network);
 
   virtual void initIO(const network& _network,
-                      std::unique_ptr<dataOut>& _dataOut);
+                      std::unique_ptr<dataOut>& _dataOut,
+                      std::unique_ptr<networkOut>& _networkOut);
 
 protected:
   StrainType m_strainType;
   BreakType m_breakType;
   dataOut* m_dataOut;
+  networkOut* m_networkOut;
 };
 
 class quasiStaticStrain : public protocol
@@ -56,7 +59,9 @@ public:
 
 public:
   void run(network& _network) override;
-  void initIO(const network& _network, std::unique_ptr<dataOut>& _dataOut);
+  void initIO(const network& _network,
+              std::unique_ptr<dataOut>& _dataOut,
+              std::unique_ptr<networkOut>& _networkOut);
 
 private:
   void evalStrain(network& _network,
@@ -69,7 +74,8 @@ private:
   auto genTimeData(const network& _network,
                    const std::string& _reason,
                    std::size_t _breakCount) -> std::vector<writeableTypes>;
-  auto genBondData(const network& _network, size_t _bondIndex) -> std::vector<writeableTypes>;
+  auto genBondData(const network& _network,
+                   size_t _bondIndex) -> std::vector<writeableTypes>;
 
 private:
   double m_maxStrain;
