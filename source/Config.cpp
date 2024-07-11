@@ -43,10 +43,10 @@ double dmax = 0.1;
 
 namespace ITPMethod
 {
-std::size_t n0 = 10;
+std::size_t n0 = 20;
 double k1Scale = 0.2;
 double k2 = 2.0;
-double tol = 1e-4;
+double tol = 1e-12;
 }  // namespace ITPMethod
 
 namespace IO
