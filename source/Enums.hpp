@@ -54,4 +54,10 @@ enum class protocolType : std::uint8_t
   QuasisaticStrain
 };
 
+enum class rootMethod : std::uint8_t
+{
+  Bisection,
+  ITP
+};
+
 }  // namespace networkV4

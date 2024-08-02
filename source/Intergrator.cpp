@@ -79,7 +79,7 @@ auto networkV4::intergrator::getDt() const -> double
 }
 
 networkV4::overdampedEuler::overdampedEuler()
-    : m_dt(config::default_dt)
+    : m_dt(config::intergrators::default_dt)
 {
 }
 
@@ -102,7 +102,7 @@ auto networkV4::overdampedEuler::getDt() const -> double
 }
 
 networkV4::OverdampedEulerHeun::OverdampedEulerHeun()
-    : m_dt(config::default_dt)
+    : m_dt(config::intergrators::default_dt)
 {
 }
 
@@ -134,9 +134,9 @@ auto networkV4::OverdampedEulerHeun::getDt() const -> double
 }
 
 networkV4::OverdampedAdaptiveEulerHeun::OverdampedAdaptiveEulerHeun()
-    : m_dt(config::default_dt)
-    , m_nextdt(config::default_dt)
-    , m_esp(config::adaptiveIntergrator::esp)
+    : m_dt(config::intergrators::default_dt)
+    , m_nextdt(config::intergrators::default_dt)
+    , m_esp(config::intergrators::adaptiveIntergrator::esp)
 {
 }
 
@@ -157,11 +157,11 @@ void networkV4::OverdampedAdaptiveEulerHeun::integrate(network& _network)
 
   std::size_t iters = 0;
 
-  std::size_t maxIter = config::adaptiveIntergrator::maxIter;
-  double qMin = config::adaptiveHeun::qMin;
-  double qMax = config::adaptiveHeun::qMax;
-  double dtMin = config::adaptiveIntergrator::dtMin;
-  double dtMax = config::adaptiveIntergrator::dtMax;
+  std::size_t maxIter = config::intergrators::adaptiveIntergrator::maxIter;
+  double qMin = config::intergrators::adaptiveHeun::qMin;
+  double qMax = config::intergrators::adaptiveHeun::qMax;
+  double dtMin = config::intergrators::adaptiveIntergrator::dtMin;
+  double dtMax = config::intergrators::adaptiveIntergrator::dtMax;
 
   nodes& networkNodes = _network.getNodes();
 
@@ -211,13 +211,13 @@ auto networkV4::OverdampedAdaptiveEulerHeun::forceErrorNorm(nodes& _nodes)
 }
 
 networkV4::FireMinimizer::FireMinimizer()
-    : m_dt(config::default_dt)
-    , m_tol(config::miminizer::tol)
+    : m_dt(config::intergrators::default_dt)
+    , m_tol(config::intergrators::miminizer::tol)
 {
 }
 
 networkV4::FireMinimizer::FireMinimizer(double _tol)
-    : m_dt(config::default_dt)
+    : m_dt(config::intergrators::default_dt)
     , m_tol(_tol)
 {
 }
@@ -232,17 +232,17 @@ networkV4::FireMinimizer::~FireMinimizer() {}
 
 void networkV4::FireMinimizer::integrate(network& _network)
 {
-  size_t maxIter = config::miminizer::maxIter;
-  double dtMin = config::adaptiveIntergrator::dtMin;
-  double dtMax = config::adaptiveIntergrator::dtMax;
+  size_t maxIter = config::intergrators::miminizer::maxIter;
+  double dtMin = config::intergrators::adaptiveIntergrator::dtMin;
+  double dtMax = config::intergrators::adaptiveIntergrator::dtMax;
 
-  double alpha0 = config::fire2::alpha0;
-  double finc = config::fire2::finc;
-  double fdec = config::fire2::fdec;
-  double falpha = config::fire2::falpha;
-  size_t Ndelay = config::fire2::Ndelay;
-  size_t Nnegmax = config::fire2::Nnegmax;
-  double dmax = config::fire2::dmax;
+  double alpha0 = config::intergrators::fire2::alpha0;
+  double finc = config::intergrators::fire2::finc;
+  double fdec = config::intergrators::fire2::fdec;
+  double falpha = config::intergrators::fire2::falpha;
+  size_t Ndelay = config::intergrators::fire2::Ndelay;
+  size_t Nnegmax = config::intergrators::fire2::Nnegmax;
+  double dmax = config::intergrators::fire2::dmax;
 
   size_t Npos = 0;
   size_t Nneg = 0;
@@ -330,7 +330,7 @@ networkV4::OverdampedAdaptiveMinimizer::~OverdampedAdaptiveMinimizer() {}
 
 void networkV4::OverdampedAdaptiveMinimizer::integrate(network& _network)
 {
-  size_t maxIter = config::miminizer::maxIter;
+  size_t maxIter = config::intergrators::miminizer::maxIter;
 
   size_t iters = 0;
   while (iters < maxIter) {

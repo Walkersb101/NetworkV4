@@ -121,12 +121,16 @@ auto tomlIn::readProblem() -> std::unique_ptr<networkV4::protocol>
       networkV4::BreakType breakType = getBreakType(
           toml::find_or<std::string>(quasiConfig, "BreakType", "None"));
       double ESP = toml::find_or<double>(
-          quasiConfig, "ESP", config::adaptiveIntergrator::esp);
+          quasiConfig, "ESP", config::intergrators::adaptiveIntergrator::esp);
       double tol =
-          toml::find_or<double>(quasiConfig, "Tol", config::ITPMethod::tol);
+          toml::find_or<double>(quasiConfig, "Tol", config::rootMethods::targetTol);
+      bool errorOnNotSingleBreak = toml::find_or<bool>(
+          quasiConfig,
+          "ErrorOnNotSingleBreak",
+          config::protocols::quasiStaticStrain::errorOnNotSingleBreak);
 
       return std::make_unique<networkV4::quasiStaticStrain>(
-          maxStrain, strainType, breakType, ESP, tol);
+          maxStrain, strainType, breakType, ESP, tol, errorOnNotSingleBreak);
     }
     default:
       throw std::runtime_error("Protocol not implemented");
@@ -198,8 +202,7 @@ auto tomlIn::readNetworkOut() -> std::unique_ptr<networkOut>
   }
   auto outConfig = toml::find(m_config, "Output");
 
-  auto type = toml::find_or<std::string>(
-      outConfig, "NetworkType", "None");
+  auto type = toml::find_or<std::string>(outConfig, "NetworkType", "None");
 
   std::filesystem::path path;
   if (outConfig.contains("NetworkPath")) {

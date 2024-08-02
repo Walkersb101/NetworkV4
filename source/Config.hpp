@@ -16,6 +16,8 @@
 namespace config
 {
 
+namespace intergrators
+{
 extern double default_dt;
 
 namespace adaptiveIntergrator
@@ -49,14 +51,28 @@ extern double falpha;
 extern std::size_t Nnegmax;
 extern double dmax;
 }  // namespace fire2
+}  // namespace intergrators
+
+namespace rootMethods
+{
+extern double targetTol;
+extern double minTol;
 
 namespace ITPMethod
 {
 extern size_t n0;
 extern double k1Scale;
 extern double k2;
-extern double tol;
 }  // namespace ITPMethod
+}  // namespace rootMethods
+
+namespace protocols
+{
+namespace quasiStaticStrain
+{
+extern bool errorOnNotSingleBreak;
+}
+}  // namespace protocols
 
 namespace IO
 {

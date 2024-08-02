@@ -36,7 +36,7 @@ networkOutBinV2::~networkOutBinV2() {}
 
 void networkOutBinV2::save(const networkV4::network& _net, const std::string& _name) const
 {
-  std::ofstream file(m_path / _name, std::ios_base::out | std::ios_base::binary);
+  std::ofstream file(m_path / (_name + ".v2.bin"), std::ios_base::out | std::ios_base::binary);
   if (!file.is_open()) {
     std::runtime_error("Could not open file for writing");
   }

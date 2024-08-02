@@ -25,6 +25,7 @@ add_library(
     source/NetworkOut.cpp
     source/Nodes.cpp
     source/Protocol.cpp
+    source/Roots.cpp
     source/TomlLoad.cpp
 )
 

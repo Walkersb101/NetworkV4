@@ -54,7 +54,8 @@ public:
                     StrainType _strainType,
                     BreakType _breakType,
                     double _esp,
-                    double _tol);
+                    double _tol,
+                    bool _errorOnNotSingleBreak);
   ~quasiStaticStrain();
 
 public:
@@ -68,9 +69,19 @@ private:
                   double _step,
                   double& _maxVal,
                   std::size_t& _count);
-  auto findSingleBreak(network& _network) -> bool;
+  auto converge(network& _baseNetwork,
+                network& _networkB,
+                double& _a,
+                double& _b,
+                double& _fa,
+                double& _fb,
+                size_t& _breakCountB,
+                double _tol) -> bool;
+  auto findSingleBreak(network& _network) -> size_t;
+
   auto relaxBreak(network& _network) -> std::size_t;
 
+private:
   auto genTimeData(const network& _network,
                    const std::string& _reason,
                    std::size_t _breakCount) -> std::vector<writeableTypes>;
@@ -82,6 +93,7 @@ private:
 
   double m_esp;
   double m_tol;
+  bool m_errorOnNotSingleBreak;
 
   double m_t;
 

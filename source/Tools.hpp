@@ -3,6 +3,8 @@
 #include <filesystem>
 #include <unordered_map>
 #include <vector>
+#include <numeric>
+#include <algorithm>
 
 #include "Bonds.hpp"
 #include "Enums.hpp"
@@ -82,6 +84,12 @@ inline auto maxAbsComponent(const std::vector<vec2<T>>& _vec) -> T
                          { return std::max(_max, _v.abs().max()); });
 }
 
+template<typename T>
+inline auto sign(const T& _val) -> T
+{
+  return _val < 0 ? -1 : 1;
+}
+
 }  // namespace tools
 
 namespace enum2str
@@ -136,6 +144,5 @@ inline void addStressByTypeHeader(std::vector<std::string>& _header,
                     enum2str::bondTypeString(type) + "Stressyy"});
   }
 }
-
-}  // namespace enum2str
+} // namespace enum2str
 }  // namespace networkV4
