@@ -4,6 +4,11 @@
 
 // #include "Vec2.hpp"
 
+#pragma omp declare reduction(+ : tensor2f : omp_out += omp_in) \
+    initializer(omp_priv = tensor2f(0, 0, 0, 0))
+#pragma omp declare reduction(+ : tensor2d : omp_out += omp_in) \
+    initializer(omp_priv = tensor2d(0, 0, 0, 0))
+
 template<class T>
 struct tensor2
 {
@@ -171,8 +176,3 @@ auto outer(const vec2<T>& _v1, const vec2<T>& _v2) -> tensor2<T> {
 
 using tensor2f = tensor2<float>;
 using tensor2d = tensor2<double>;
-
-#pragma omp declare reduction(+ : tensor2f : omp_out += omp_in) \
-    initializer(omp_priv = tensor2f(0, 0, 0, 0))
-#pragma omp declare reduction(+ : tensor2d : omp_out += omp_in) \
-    initializer(omp_priv = tensor2d(0, 0, 0, 0))

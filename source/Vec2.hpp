@@ -1,6 +1,12 @@
 #pragma once
 
 #include <cmath>
+#include <algorithm>
+
+#pragma omp declare reduction(+ : vec2f : omp_out += omp_in) \
+    initializer(omp_priv = vec2f(0, 0))
+#pragma omp declare reduction(+ : vec2d : omp_out += omp_in) \
+    initializer(omp_priv = vec2d(0, 0))
 
 template<class T>
 struct vec2
@@ -150,12 +156,12 @@ public:
   {
     return vec2(std::min(x, _v.x), std::min(y, _v.y));
   }
+
+  auto clamp(const vec2& _min, const vec2& _max) const -> vec2
+  {
+    return vec2(std::clamp(x, _min.x, _max.x), std::clamp(y, _min.y, _max.y));
+  }
 };
 
 using vec2f = vec2<float>;
 using vec2d = vec2<double>;
-
-#pragma omp declare reduction(+ : vec2f : omp_out += omp_in) \
-    initializer(omp_priv = vec2f(0, 0))
-#pragma omp declare reduction(+ : vec2d : omp_out += omp_in) \
-    initializer(omp_priv = vec2d(0, 0))

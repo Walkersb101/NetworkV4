@@ -2,6 +2,8 @@
 
 #include <cstdint>
 
+#include <bzlib.h>
+
 namespace networkV4
 {
 enum class bondType : std::uint8_t

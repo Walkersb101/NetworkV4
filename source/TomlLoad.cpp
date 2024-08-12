@@ -4,6 +4,8 @@
 
 #include "TomlLoad.hpp"
 
+#include <bxzstr.hpp>
+
 #include "Config.hpp"
 #include "DataOut.hpp"
 #include "Enums.hpp"
@@ -122,8 +124,8 @@ auto tomlIn::readProblem() -> std::unique_ptr<networkV4::protocol>
           toml::find_or<std::string>(quasiConfig, "BreakType", "None"));
       double ESP = toml::find_or<double>(
           quasiConfig, "ESP", config::intergrators::adaptiveIntergrator::esp);
-      double tol =
-          toml::find_or<double>(quasiConfig, "Tol", config::rootMethods::targetTol);
+      double tol = toml::find_or<double>(
+          quasiConfig, "Tol", config::rootMethods::targetTol);
       bool errorOnNotSingleBreak = toml::find_or<bool>(
           quasiConfig,
           "ErrorOnNotSingleBreak",
@@ -195,6 +197,31 @@ auto getNetworkOut(const std::string& _str) -> networkV4::networkOutType
   }
 }
 
+auto getCompression(const std::string& _str) -> bxz::Compression
+{
+#if BXZSTR_Z_SUPPORT
+  if (_str == "Z") {
+    return bxz::Compression::z;
+  }
+#endif
+#if BXZSTR_BZ2_SUPPORT
+  if (_str == "BZ2") {
+    return bxz::Compression::bz2;
+  }
+#endif
+#if BXZSTR_LZMA_SUPPORT
+  if (_str == "LZMA") {
+    return bxz::Compression::lzma;
+  }
+#endif
+#if BXZSTR_ZSTD_SUPPORT
+  if (_str == "ZSTD") {
+    return bxz::Compression::zstd;
+  }
+#endif
+  return bxz::Compression::plaintext;
+}
+
 auto tomlIn::readNetworkOut() -> std::unique_ptr<networkOut>
 {
   if (!m_config.contains("Output")) {
@@ -203,6 +230,8 @@ auto tomlIn::readNetworkOut() -> std::unique_ptr<networkOut>
   auto outConfig = toml::find(m_config, "Output");
 
   auto type = toml::find_or<std::string>(outConfig, "NetworkType", "None");
+  auto compression =
+      toml::find_or<std::string>(outConfig, "Compression", "plaintext");
 
   std::filesystem::path path;
   if (outConfig.contains("NetworkPath")) {
@@ -216,7 +245,7 @@ auto tomlIn::readNetworkOut() -> std::unique_ptr<networkOut>
 
   switch (getNetworkOut(type)) {
     case networkV4::networkOutType::BinV2: {
-      return std::make_unique<networkOutBinV2>(path);
+      return std::make_unique<networkOutBinV2>(path, getCompression(compression));
     }
     case networkV4::networkOutType::None: {
       return std::make_unique<noNetworkOut>();

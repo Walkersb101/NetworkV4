@@ -95,7 +95,8 @@ public:
   void integrate(network& _network) override;
 
 private:
-  auto power(const network& _network) -> double;
+  auto xdoty(const std::vector<vec2d>& _x,
+             const std::vector<vec2d>& _y) -> double;
 
 private:
   double m_dt;

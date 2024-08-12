@@ -248,67 +248,73 @@ void networkV4::FireMinimizer::integrate(network& _network)
   size_t Nneg = 0;
   double alpha = alpha0;
 
+  double scale1, scale2, abc, vdotf, vdotv, fdotf;
+
   nodes& networkNodes = _network.getNodes();
   networkNodes.clearVelocities();
   _network.computeForces();
+  updateVelocities(_network, -0.5 * m_dt);
 
-  if (tools::norm(networkNodes.forces()) < m_tol) {
-    return;
-  }
-
-  size_t iters = 0;
-  double error = tools::maxAbsComponent(networkNodes.forces());
-  while (iters < maxIter && error > m_tol) {
-    double P = power(_network);
-
-    if (P >= 0.0) {
+  for (size_t iter = 0; iter < maxIter; ++iter) {
+    vdotf = xdoty(networkNodes.velocities(), networkNodes.forces());
+    if (vdotf > 0.0) {
       Npos++;
       Nneg = 0;
+      vdotv = xdoty(networkNodes.velocities(), networkNodes.velocities());
+      fdotf = xdoty(networkNodes.forces(), networkNodes.forces());
+
+      alpha = std::max(alpha, 1e-10);
+      abc = (1.0 - std::pow(1.0 - alpha, Npos));
+      scale1 = (1.0 - alpha) / abc;
+      scale2 = fdotf <= 1e-20 ? 0.0 : (alpha * std::sqrt(vdotv / fdotf)) / abc;
+
       if (Npos > Ndelay) {
         m_dt = std::min(m_dt * finc, dtMax);
         alpha *= falpha;
       }
     } else {
-      Npos = 0;
       Nneg++;
+      Npos = 0;
+
       if (Nneg > Nnegmax) {
         break;
       }
-      if (iters > Ndelay) {
+      if (iter > Ndelay) {
         m_dt = std::max(m_dt * fdec, dtMin);
         alpha = alpha0;
       }
       move(_network, -0.5 * m_dt);
-      _network.computeForces();
       networkNodes.clearVelocities();
     }
 
-    double fScale = alpha * tools::norm(networkNodes.velocities())
-        / tools::norm(networkNodes.forces());
-    double vScale = 1.0 - alpha;
-    for (std::size_t i = 0; i < networkNodes.size(); ++i) {
-      if (networkNodes.fixed(i)) {
-        continue;
-      }
-      networkNodes.velocity(i) *= vScale;
-      networkNodes.velocity(i) += networkNodes.force(i) * fScale;
-    }
-    double maxLength = tools::maxLength(networkNodes.velocities());
-    m_dt = std::min(m_dt, dmax / maxLength);
-    move(_network, m_dt);
     updateVelocities(_network, m_dt);
+    if (vdotf > 0.0) {
+      auto& vels = networkNodes.velocities();
+      auto& forces = networkNodes.forces();
+      double vmax = dmax / m_dt;
+      for (size_t i = 0; i < vels.size(); ++i) {
+        vels[i] = (vels[i] * scale1) + (forces[i] * scale2);
+        vels[i] = vels[i].clamp(vec2d(-vmax, -vmax), vec2d(vmax, vmax));
+      }
+    }
+    move(_network, m_dt);
     _network.computeForces();
-    error = tools::maxAbsComponent(networkNodes.forces());
-    ++iters;
+
+    double error = tools::maxAbsComponent(networkNodes.forces());
+    if (error < m_tol) {
+      break;
+    }
   }
 }
 
-auto networkV4::FireMinimizer::power(const network& _network) -> double
+auto networkV4::FireMinimizer::xdoty(const std::vector<vec2d>& _x,
+                                     const std::vector<vec2d>& _y) -> double
 {
-  const nodes& networkNodes = _network.getNodes();
+  size_t N = std::min(_x.size(), _y.size());
   double power = 0.0;
-  for (std::size_t i = 0; i < networkNodes.size(); ++i) {
-    power += networkNodes.force(i).dot(networkNodes.velocity(i));
+#pragma omp parallel for reduction(+ : power)
+  for (std::size_t i = 0; i < N; ++i) {
+    power += _x[i].dot(_y[i]);
   }
   return power;
 }

@@ -38,15 +38,53 @@ double networkV4::protocol::getStrain(const network& _network) const
 void networkV4::protocol::strain(network& _network, double _step)
 {
   switch (m_strainType) {
-    case StrainType::Shear:
+    case StrainType::Shear: {
       _network.shear(_step);
       break;
-    case StrainType::Elongation:
+    }
+    case StrainType::Elongation: {
       _network.elongate(_step);
       break;
+    }
     default:
       throw std::runtime_error("Unknown strain type");
   }
+}
+
+void networkV4::protocol::strainBreakData(const network& _network,
+                                          double& _maxDistAbove,
+                                          std::size_t& _count) const
+{
+  const auto& bonds = _network.getBonds();
+#pragma omp parallel for reduction(max : _maxStrain) reduction(+ : _count)
+  for (const auto& b : bonds) {
+    if (!b.connected()) {
+      continue;
+    }
+    double strain = _network.bondStrain(b);
+    double distAbove = strain - b.lambda();
+    _maxDistAbove = std::max(_maxDistAbove, distAbove);
+    if (strain >= b.lambda()) {
+      ++_count;
+    }
+  }
+}
+
+auto networkV4::protocol::strainBreak(network& _network) const
+    -> std::vector<std::size_t>
+{
+  auto& bonds = _network.getBonds();
+  std::vector<std::size_t> broken;
+#pragma omp parallel for reduction(networkV4::merge : broken)
+  for (std::size_t i = 0; i < bonds.size(); ++i) {
+    auto& b = bonds.get(i);
+    if (!b.connected() || _network.bondStrain(b) < b.lambda()) {
+      continue;
+    }
+    b.connected() = false;
+    broken.push_back(i);
+  }
+  return broken;
 }
 
 void networkV4::protocol::breakData(const network& _network,
@@ -55,13 +93,15 @@ void networkV4::protocol::breakData(const network& _network,
                                     std::size_t& _count)
 {
   switch (_type) {
-    case BreakType::None:
+    case BreakType::None: {
       _maxDistAbove = 0.0;
       _count = 0;
       break;
-    case BreakType::Strain:
-      _network.strainBreakData(_maxDistAbove, _count);
+    }
+    case BreakType::Strain: {
+      strainBreakData(_network, _maxDistAbove, _count);
       break;
+    }
     default:
       throw std::runtime_error("Unknown break type");
   }
@@ -71,10 +111,12 @@ auto networkV4::protocol::breakBonds(network& _network, BreakType _type) const
     -> std::vector<std::size_t>
 {
   switch (_type) {
-    case BreakType::None:
+    case BreakType::None: {
       return std::vector<std::size_t>();
-    case BreakType::Strain:
-      return _network.strainBreak();
+    }
+    case BreakType::Strain: {
+      return strainBreak(_network);
+    }
     default:
       throw std::runtime_error("Unknown break type");
   }
@@ -152,11 +194,11 @@ void networkV4::quasiStaticStrain::evalStrain(network& _network,
                                               double& _maxVal,
                                               std::size_t& _count)
 {
-  // FireMinimizer minimizer(config::miminizer::tol);
-  OverdampedAdaptiveMinimizer minimizer(
-      config::intergrators::default_dt,
-      config::intergrators::adaptiveIntergrator::esp,
-      config::intergrators::miminizer::tol);
+  FireMinimizer minimizer(config::intergrators::miminizer::tol);
+  // OverdampedAdaptiveMinimizer minimizer(
+  //     config::intergrators::default_dt,
+  //     config::intergrators::adaptiveIntergrator::esp,
+  //     config::intergrators::miminizer::tol);
   strain(_network, _step);
   minimizer.integrate(_network);
   breakData(_network, m_breakType, _maxVal, _count);

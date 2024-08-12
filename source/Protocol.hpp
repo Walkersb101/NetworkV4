@@ -22,6 +22,12 @@ public:
   void strain(network& _network, double _step);
 
 public:
+    void strainBreakData(const network& _network,
+                    double& _maxVal,
+                    std::size_t& _count) const;
+    auto strainBreak(network& _network) const -> std::vector<std::size_t>;
+
+public:
   void breakData(const network& _network,
                  BreakType _type,
                  double& _maxVal,

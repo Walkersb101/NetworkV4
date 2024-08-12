@@ -1,10 +1,12 @@
 #pragma once
 
+#include <algorithm>
 #include <filesystem>
+#include <numeric>
 #include <unordered_map>
 #include <vector>
-#include <numeric>
-#include <algorithm>
+
+#include <bxzstr.hpp>
 
 #include "Bonds.hpp"
 #include "Enums.hpp"
@@ -16,7 +18,7 @@ namespace tools
 {
 template<typename T, typename U>
 inline auto averageMaps(const std::unordered_map<T, U>& _map1,
-                 const std::unordered_map<T, U>& _map2)
+                        const std::unordered_map<T, U>& _map2)
     -> std::unordered_map<T, U>
 {
   std::unordered_map<T, U> averageMap;
@@ -120,8 +122,9 @@ inline auto strainTypeString(const networkV4::StrainType& _type) -> std::string
   }
 }
 
-inline void addBondCountByTypeHeader(std::vector<std::string>& _header,
-                              const std::vector<networkV4::bondType>& _types)
+inline void addBondCountByTypeHeader(
+    std::vector<std::string>& _header,
+    const std::vector<networkV4::bondType>& _types)
 {
   _header.reserve(_header.size() + _types.size() + 1);
   _header.push_back("BondCount");
@@ -130,8 +133,9 @@ inline void addBondCountByTypeHeader(std::vector<std::string>& _header,
   }
 }
 
-inline void addStressByTypeHeader(std::vector<std::string>& _header,
-                           const std::vector<networkV4::bondType>& _types)
+inline void addStressByTypeHeader(
+    std::vector<std::string>& _header,
+    const std::vector<networkV4::bondType>& _types)
 {
   _header.reserve(_header.size() + (_types.size() + 1) * 4);
   _header.insert(_header.end(),
@@ -144,5 +148,41 @@ inline void addStressByTypeHeader(std::vector<std::string>& _header,
                     enum2str::bondTypeString(type) + "Stressyy"});
   }
 }
-} // namespace enum2str
+
+inline auto compressionExt(const bxz::Compression _type) -> std::string
+{
+  // z, bz2, lzma, zstd, plaintext
+  switch (_type) {
+    case (bxz::Compression::z):
+      return ".zz";
+    case (bxz::Compression::bz2):
+      return ".bz2";
+    case (bxz::Compression::lzma):
+      return ".lzma";
+    case (bxz::Compression::zstd):
+      return ".zst";
+    case (bxz::Compression::plaintext):
+      return "";
+    default:
+      throw std::runtime_error("Unknown compression type");
+  }
+}
+
+inline auto outputExt(const networkOutType _type) -> std::string
+{
+  // z, bz2, lzma, zstd, plaintext
+  switch (_type) {
+    case (networkOutType::BinV2):
+      return ".v2.bin";
+    case (networkOutType::None):
+      return "";
+    default:
+      throw std::runtime_error("Unknown compression type");
+  }
+}
+
+}  // namespace enum2str
+
+#pragma omp declare reduction (vec_merge : std::vector<int> : omp_out.insert(omp_out.end(), omp_in.begin(), omp_in.end()))
+#pragma omp declare reduction (vec_merge : std::vector<std::size_t> : omp_out.insert(omp_out.end(), omp_in.begin(), omp_in.end()))
 }  // namespace networkV4

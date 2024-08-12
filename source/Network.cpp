@@ -17,9 +17,9 @@ networkV4::network::network()
     , m_bonds()
     , m_stresses()
     , m_domain()
+    , m_restSize()
     , m_shearStrain(0.0)
     , m_elongationStrain(0.0)
-    , m_restSize()
 {
 }
 
@@ -223,40 +223,49 @@ void networkV4::network::computeForces()
   normalizeStresses();
 }
 
-void distBC(double& _x, double _domain)
-{
-  if (_x > _domain * 0.5) {
-    _x -= _domain;
-  } else if (_x < -_domain * 0.5) {
-    _x += _domain;
-  }
-}
-
 auto networkV4::network::minDist(const vec2d& _pos1,
                                  const vec2d& _pos2) const -> vec2d
 {
+  const vec2d hDomain = m_domain * 0.5;
+  const vec2d yShift = vec2d(m_domain.x * m_shearStrain, m_domain.y);
   vec2d dist = _pos2 - _pos1;
-  dist.x -= std::round(dist.y / m_domain.y) * m_domain.x * m_shearStrain;
-  distBC(dist.x, m_domain.x);
-  distBC(dist.y, m_domain.y);
+  while (dist.y > hDomain.y) {
+    dist -= yShift;
+  }
+  while (dist.y <= -hDomain.y) {
+    dist += yShift;
+  }
+  while (dist.x > hDomain.x) {
+    dist.x -= m_domain.x;
+  }
+  while (dist.x < -hDomain.x) {
+    dist.x += m_domain.x;
+  }
+  // vec2d dist2 = _pos2 - _pos1;
+  // dist2.x -= std::round(dist2.y / m_domain.y) * m_domain.x * m_shearStrain;
+  // distBC(dist2.x, m_domain.x);
+  // distBC(dist2.y, m_domain.y);
   return dist;
-}
-
-void BC(double& _x, double _domain)
-{
-  while (_x < 0.0) {
-    _x += _domain;
-  }
-  while (_x >= _domain) {
-    _x -= _domain;
-  }
 }
 
 void networkV4::network::wrapPosition(vec2d& _pos) const
 {
-  _pos.x -= std::floor(_pos.y / m_domain.y) * m_domain.x * m_shearStrain;
-  BC(_pos.x, m_domain.x);
-  BC(_pos.y, m_domain.y);
+  const vec2d yShift = vec2d(m_domain.x * m_shearStrain, m_domain.y);
+  while (_pos.y > m_domain.y) {
+    _pos -= yShift;
+  }
+  while (_pos.y <= -m_domain.y) {
+    _pos += yShift;
+  }
+  while (_pos.x > m_domain.x) {
+    _pos.x -= m_domain.x;
+  }
+  while (_pos.x < -m_domain.x) {
+    _pos.x += m_domain.x;
+  }
+  //_pos.x -= std::floor(_pos.y / m_domain.y) * m_domain.x * m_shearStrain;
+  // BC(_pos.x, m_domain.x);
+  // BC(_pos.y, m_domain.y);
 }
 
 auto networkV4::network::wrapedPosition(const vec2d& _pos) const -> vec2d
@@ -269,37 +278,22 @@ auto networkV4::network::wrapedPosition(const vec2d& _pos) const -> vec2d
 void networkV4::network::shear(double _step)
 {
   m_shearStrain += _step;
-  double offset = _step * m_domain.y * 0.5;
-  // for (vec2d& pos : m_nodes.positions()) {
-  //   pos.x = std::remainder(pos.x + (_step * pos.y) - offset, m_domain.x);
-  // }
-
+  const double offset = _step * m_domain.y * 0.5;
   std::transform(
       m_nodes.positions().begin(),
       m_nodes.positions().end(),
       m_nodes.positions().begin(),
       [&](const vec2d& _pos)
-      {
-        return vec2d(
-            std::remainder(_pos.x + (_step * _pos.y) - offset, m_domain.x),
-            _pos.y);
-      });
+      { return wrapedPosition(_pos + vec2d((_step * _pos.y) - offset, 0.0)); });
 }
 
 void networkV4::network::elongate(double _step)
 {
   m_elongationStrain += _step;
-  vec2d oldDomain = m_domain;
+  const vec2d oldDomain = m_domain;
   m_domain *= vec2d(1 / (1.0 + _step), 1.0 + _step);
 
-  // const vec2d offset1 = oldDomain * 0.5;
   const vec2d scale = m_domain / oldDomain;
-  // const vec2d offset2 = m_domain * 0.5;
-
-  // for (auto& pos : m_nodes.positions()) {
-  //   pos = ((pos - offset1) * scale) + offset2;
-  // }
-
   std::transform(m_nodes.positions().begin(),
                  m_nodes.positions().end(),
                  m_nodes.positions().begin(),
@@ -345,35 +339,4 @@ auto networkV4::network::bondStrain(const bond& _bond) const -> double
       minDist(m_nodes.position(_bond.src()), m_nodes.position(_bond.dst()));
   const double r = dist.length();
   return (r - _bond.naturalLength()) / _bond.naturalLength();
-}
-
-void networkV4::network::strainBreakData(double& _maxDistAbove,
-                                         std::size_t& _count) const
-{
-  _maxDistAbove = bondStrain(m_bonds[0]) - m_bonds[0].lambda();
-  _count = 0;
-#pragma omp parallel for reduction(max : _maxStrain) reduction(+ : _count)
-  for (const auto& bond : m_bonds) {
-    if (!bond.connected()) {
-      continue;
-    }
-    double strain = bondStrain(bond);
-    double distAbove = strain - bond.lambda();
-    _maxDistAbove = std::max(_maxDistAbove, distAbove);
-    if (strain >= bond.lambda()) {
-      ++_count;
-    }
-  }
-}
-
-auto networkV4::network::strainBreak() -> std::vector<std::size_t>
-{
-  std::vector<std::size_t> broken;
-  for (std::size_t i = 0; i < m_bonds.size(); ++i) {
-    if (m_bonds[i].connected() && bondStrain(m_bonds[i]) >= m_bonds[i].lambda()) {
-      m_bonds[i].connected() = false;
-      broken.push_back(i);
-    }
-  }
-  return broken;
 }

@@ -66,18 +66,14 @@ public:
   auto bondStrain(const bond& _bond) const -> double;
 
 public:
-  void strainBreakData(double& _maxDistAbove, std::size_t& _count) const;
-  auto strainBreak() -> std::vector<std::size_t>;
-
-public:
   void initStresses();
   void clearStresses();
   void normalizeStresses();
   auto getGlobalStress() const -> tensor2d;
 
 private:
-  vec2d m_restSize;
   vec2d m_domain;
+  vec2d m_restSize;
 
   nodes m_nodes;
   bonds m_bonds;
@@ -90,11 +86,3 @@ private:
 };
 
 }  // namespace networkV4
-
-//#pragma omp declare reduction( \
-//        stresses_plus : std::unordered_map<bondType, tensor2d> : std:: \
-//        transform(omp_out.begin(), \
-//                      omp_out.end(), \
-//                      omp_in.begin(), \
-//                      omp_out.begin(), \
-//                      std::plus<tensor2d>())) initializer(omp_priv = omp_orig)

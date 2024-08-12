@@ -51,6 +51,24 @@ FetchContent_MakeAvailable(toml)
 
 target_link_libraries(NetworkV4_lib PUBLIC toml11::toml11)
 
+FetchContent_Declare(
+    bxzstr
+    GIT_REPOSITORY https://github.com/tmaklin/bxzstr.git
+    GIT_TAG v1.2.2
+)
+
+FetchContent_MakeAvailable(bxzstr)
+
+target_link_libraries(NetworkV4_lib PUBLIC bxzstr)
+
+FetchContent_Declare(xoshiro
+    URL https://gitlab.com/nssn/xoshiro/-/releases/current/downloads/xoshiro.zip
+    DOWNLOAD_EXTRACT_TIMESTAMP true)
+
+FetchContent_MakeAvailable(xoshiro)
+
+target_link_directories(NetworkV4_lib PUBLIC xoshiro)
+
 # ---- Declare executable ----
 
 add_executable(NetworkV4_exe source/main.cpp)
