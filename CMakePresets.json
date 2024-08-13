@@ -41,6 +41,16 @@
             "hidden": true,
             "cacheVariables": {
                 "CMAKE_CXX_CLANG_TIDY": "clang-tidy;--header-filter=^${sourceDir}/"
+            } 
+        },
+        {
+            "name": "flags-gcc-clang",
+            "description": "These flags are supported by both GCC and Clang",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_CXX_FLAGS": "-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3 -D_GLIBCXX_ASSERTIONS=1 -fstack-protector-strong -fcf-protection=full -fstack-clash-protection -Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion -Wcast-qual -Wformat=2 -Wundef -Werror=float-equal -Wshadow -Wcast-align -Wunused -Wnull-dereference -Wdouble-promotion -Wimplicit-fallthrough -Wextra-semi -Woverloaded-virtual -Wnon-virtual-dtor -Wold-style-cast",
+                "CMAKE_EXE_LINKER_FLAGS": "-Wl,--allow-shlib-undefined,--as-needed,-z,noexecstack,-z,relro,-z,now,-z,nodlopen",
+                "CMAKE_SHARED_LINKER_FLAGS": "-Wl,--allow-shlib-undefined,--as-needed,-z,noexecstack,-z,relro,-z,now,-z,nodlopen"
             }
         },
         {
@@ -51,16 +61,6 @@
                 "CMAKE_CXX_EXTENSIONS": "OFF",
                 "CMAKE_CXX_STANDARD": "20",
                 "CMAKE_CXX_STANDARD_REQUIRED": "ON"
-            }
-        },
-        {
-            "name": "flags-gcc-clang",
-            "description": "These flags are supported by both GCC and Clang",
-            "hidden": true,
-            "cacheVariables": {
-                "CMAKE_CXX_FLAGS": "-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3 -D_GLIBCXX_ASSERTIONS=1 -fstack-protector-strong -fcf-protection=full -fstack-clash-protection -Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion -Wcast-qual -Wformat=2 -Wundef -Werror=float-equal -Wshadow -Wcast-align -Wunused -Wnull-dereference -Wdouble-promotion -Wimplicit-fallthrough -Wextra-semi -Woverloaded-virtual -Wnon-virtual-dtor -Wold-style-cast",
-                "CMAKE_EXE_LINKER_FLAGS": "-Wl,--allow-shlib-undefined,--as-needed,-z,noexecstack,-z,relro,-z,now,-z,nodlopen",
-                "CMAKE_SHARED_LINKER_FLAGS": "-Wl,--allow-shlib-undefined,--as-needed,-z,noexecstack,-z,relro,-z,now,-z,nodlopen"
             }
         },
         {
@@ -116,22 +116,31 @@
             "hidden": true
         },
         {
-            "name": "ci-multi-config",
-            "description": "Speed up multi-config generators by generating only one configuration instead of the defaults",
+            "name": "dev-common",
             "hidden": true,
+            "inherits": ["dev-mode", "clang-tidy", "cppcheck"],
             "cacheVariables": {
-                "CMAKE_CONFIGURATION_TYPES": "Release"
+              "BUILD_MCSS_DOCS": "ON"
             }
         },
         {
-            "name": "ci-ubuntu",
-            "inherits": [
-                "ci-build",
-                "ci-linux",
-                "clang-tidy",
-                "cppcheck",
-                "dev-mode"
-            ]
+            "name": "dev-linux",
+            "binaryDir": "${sourceDir}/build/dev-linux",
+            "inherits": ["dev-common", "ci-linux"],
+            "cacheVariables": {
+              "CMAKE_BUILD_TYPE": "Debug",
+              "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+            }
+        },
+        {
+            "name": "release-flags",
+            "description": "These flags are supported by both GCC and Clang",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_CXX_FLAGS": "-O2 -fstack-clash-protection",
+                "CMAKE_EXE_LINKER_FLAGS": "-Wl,--allow-shlib-undefined,--as-needed,-z,noexecstack,-z,relro,-z,now,-z,nodlopen",
+                "CMAKE_SHARED_LINKER_FLAGS": "-Wl,--allow-shlib-undefined,--as-needed,-z,noexecstack,-z,relro,-z,now,-z,nodlopen"
+            }
         }
     ]
 }

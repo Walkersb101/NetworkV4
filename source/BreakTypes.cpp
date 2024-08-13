@@ -1,6 +1,5 @@
 #include "BreakTypes.hpp"
 
-#include <omp.h>
 #include <random>
 #include <iostream>
 
