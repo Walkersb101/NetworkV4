@@ -9,6 +9,7 @@
 #include <bxzstr.hpp>
 
 #include "Bonds.hpp"
+#include "EnumString.hpp"
 #include "Enums.hpp"
 #include "Vec2.hpp"
 
@@ -92,44 +93,36 @@ inline auto sign(const T& _val) -> T
   return _val < 0 ? -1 : 1;
 }
 
+template<typename T>
+inline auto contains(const std::vector<T>& _vec, const T& _val) -> bool
+{
+  return std::find(_vec.begin(), _vec.end(), _val) != _vec.end();
+}
+
+inline void checkCanOpen(const std::filesystem::path& _filename)
+{
+  if (!std::filesystem::exists(_filename)) {
+    throw std::runtime_error("File does not exist: " + _filename.string());
+  }
+  std::ifstream file(_filename, std::ios::in);
+  if (!file.is_open()) {
+    throw std::runtime_error("Cannot open file: " + _filename.string());
+  }
+}
+
 }  // namespace tools
 
-namespace enum2str
+namespace tensorData
 {
-inline auto bondTypeString(const networkV4::bondType& _type) -> std::string
-{
-  switch (_type) {
-    case networkV4::bondType::single:
-      return "Single";
-    case networkV4::bondType::matrix:
-      return "Matrix";
-    case networkV4::bondType::sacrificial:
-      return "Sacrificial";
-    default:
-      throw std::runtime_error("Unknown bond type");
-  }
-}
-
-inline auto strainTypeString(const networkV4::StrainType& _type) -> std::string
-{
-  switch (_type) {
-    case networkV4::StrainType::Shear:
-      return "Shear";
-    case networkV4::StrainType::Elongation:
-      return "Elongation";
-    default:
-      throw std::runtime_error("Unknown strain type");
-  }
-}
-
 inline void addBondCountByTypeHeader(
     std::vector<std::string>& _header,
     const std::vector<networkV4::bondType>& _types)
 {
   _header.reserve(_header.size() + _types.size() + 1);
-  _header.push_back("BondCount");
+  _header.emplace_back("BondCount");
   for (const auto& type : _types) {
-    _header.push_back(enum2str::bondTypeString(type) + "Count");
+    const std::string bondType = enumString::bondType2Str.at(type);
+    _header.emplace_back(bondType + "Count");
   }
 }
 
@@ -137,52 +130,23 @@ inline void addStressByTypeHeader(
     std::vector<std::string>& _header,
     const std::vector<networkV4::bondType>& _types)
 {
+  const std::vector<std::string> header = {
+      "Stressxx", "Stressxy", "Stressyx", "Stressyy"};
   _header.reserve(_header.size() + (_types.size() + 1) * 4);
-  _header.insert(_header.end(),
-                 {"Stressxx", "Stressxy", "Stressyx", "Stressyy"});
+  _header.insert(_header.end(), header.begin(), header.end());
   for (const auto& type : _types) {
-    _header.insert(_header.end(),
-                   {enum2str::bondTypeString(type) + "Stressxx",
-                    enum2str::bondTypeString(type) + "Stressxy",
-                    enum2str::bondTypeString(type) + "Stressyx",
-                    enum2str::bondTypeString(type) + "Stressyy"});
+    const std::string bondType = enumString::bondType2Str.at(type);
+    for (const auto& col : header) {
+      _header.emplace_back(bondType + col);
+    }
   }
 }
 
-inline auto compressionExt(const bxz::Compression _type) -> std::string
-{
-  // z, bz2, lzma, zstd, plaintext
-  switch (_type) {
-    case (bxz::Compression::z):
-      return ".zz";
-    case (bxz::Compression::bz2):
-      return ".bz2";
-    case (bxz::Compression::lzma):
-      return ".lzma";
-    case (bxz::Compression::zstd):
-      return ".zst";
-    case (bxz::Compression::plaintext):
-      return "";
-    default:
-      throw std::runtime_error("Unknown compression type");
-  }
-}
+} // namespace tensorData
 
-inline auto outputExt(const networkOutType _type) -> std::string
-{
-  // z, bz2, lzma, zstd, plaintext
-  switch (_type) {
-    case (networkOutType::BinV2):
-      return ".v2.bin";
-    case (networkOutType::None):
-      return "";
-    default:
-      throw std::runtime_error("Unknown compression type");
-  }
-}
-
-}  // namespace enum2str
-
-#pragma omp declare reduction (vec_merge : std::vector<int> : omp_out.insert(omp_out.end(), omp_in.begin(), omp_in.end()))
-#pragma omp declare reduction (vec_merge : std::vector<std::size_t> : omp_out.insert(omp_out.end(), omp_in.begin(), omp_in.end()))
+#pragma omp declare reduction(vec_merge : std::vector<int> : omp_out.insert( \
+        omp_out.end(), omp_in.begin(), omp_in.end()))
+#pragma omp declare reduction( \
+        vec_merge : std::vector<std::size_t> : omp_out.insert( \
+                omp_out.end(), omp_in.begin(), omp_in.end()))
 }  // namespace networkV4

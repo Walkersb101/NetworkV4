@@ -65,7 +65,7 @@ void networkOutBinV2::save(const networkV4::network& _net,
                            const std::string& _name) const
 {
   const auto path = m_path
-      / (_name + networkV4::enum2str::compressionExt(m_compression)
+      / (_name + networkV4::enumString::compressionExt.at(m_compression)
          + ".v2.bin");
 
   std::stringstream ss;

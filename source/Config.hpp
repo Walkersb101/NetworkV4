@@ -72,6 +72,13 @@ namespace quasiStaticStrain
 {
 extern bool errorOnNotSingleBreak;
 }
+
+namespace stepStrain
+{
+extern double stressScale;
+extern double timeScale;
+}  // namespace stepStrain
+
 }  // namespace protocols
 
 namespace IO

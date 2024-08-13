@@ -222,17 +222,17 @@ void networkV4::nodes::setNode(std::size_t _idx,
 
 void networkV4::nodes::clearVelocities()
 {
-  std::fill(PAR m_velocities.begin(), m_velocities.end(), vec2d(0.0, 0.0));
+  std::fill(m_velocities.begin(), m_velocities.end(), vec2d(0.0, 0.0));
 }
 
 void networkV4::nodes::clearForces()
 {
-  std::fill(PAR m_forces.begin(), m_forces.end(), vec2d(0.0, 0.0));
+  std::fill(m_forces.begin(), m_forces.end(), vec2d(0.0, 0.0));
 }
 
 void networkV4::nodes::zeroFixedForces()
 {
-  std::transform(PAR m_fixed.begin(),
+  std::transform(m_fixed.begin(),
                  m_fixed.end(),
                  m_forces.begin(),
                  m_forces.begin(),

@@ -64,6 +64,7 @@ private:
 
 public:
   auto bondStrain(const bond& _bond) const -> double;
+  auto bondEnergy(const bond& _bond) const -> double;
 
 public:
   void initStresses();

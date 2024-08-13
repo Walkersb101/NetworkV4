@@ -104,6 +104,18 @@ public:
   void sort();
 
 public:
+    auto getConnectedVector() const -> std::vector<bool>;
+    auto getNaturalLengthVector() const -> std::vector<double>;
+    auto getMuVector() const -> std::vector<double>;
+    auto getLambdaVector() const -> std::vector<double>;
+
+public:
+    void setConnectedVector(const std::vector<bool>& _connected);
+    void setNaturalLengthVector(const std::vector<double>& _l0);
+    void setMuVector(const std::vector<double>& _mu);
+    void setLambdaVector(const std::vector<double>& _lambda);
+
+public:
   auto begin() -> std::vector<bond>::iterator;
   auto begin() const -> std::vector<bond>::const_iterator;
   auto cbegin() const -> std::vector<bond>::const_iterator;

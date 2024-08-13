@@ -18,15 +18,17 @@ include(cmake/variables.cmake)
 add_library(
     NetworkV4_lib OBJECT
     source/Bonds.cpp
+    source/BreakTypes.cpp
     source/Config.cpp
     source/Intergrator.cpp
     source/DataOut.cpp
+    source/EnumString.cpp
     source/Network.cpp
     source/NetworkOut.cpp
     source/Nodes.cpp
     source/Protocol.cpp
     source/Roots.cpp
-    source/TomlLoad.cpp
+    source/Simulation.cpp
 )
 
 target_include_directories(
@@ -61,13 +63,13 @@ FetchContent_MakeAvailable(bxzstr)
 
 target_link_libraries(NetworkV4_lib PUBLIC bxzstr)
 
-FetchContent_Declare(xoshiro
-    URL https://gitlab.com/nssn/xoshiro/-/releases/current/downloads/xoshiro.zip
-    DOWNLOAD_EXTRACT_TIMESTAMP true)
+FetchContent_Declare(
+  trng4
+  GIT_REPOSITORY https://github.com/rabauke/trng4.git
+  GIT_TAG 1ef58a7)
+FetchContent_MakeAvailable(trng4)
 
-FetchContent_MakeAvailable(xoshiro)
-
-target_link_directories(NetworkV4_lib PUBLIC xoshiro)
+target_link_libraries(NetworkV4_lib PUBLIC trng4)
 
 # ---- Declare executable ----
 

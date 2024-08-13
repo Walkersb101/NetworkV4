@@ -35,25 +35,29 @@ enum class intergratorType : std::uint8_t
 
 enum loadVersion : std::uint8_t
 {
-  binV1 = 1,
-  binV2 = 2
+  BinV1,
+  BinV2,
 };
+
 
 enum class StrainType : std::uint8_t
 {
   Shear,
-  Elongation
+  Elongation,
 };
 
 enum class BreakType : std::uint8_t
 {
   None,
   Strain,
+  Energy,
+  SGR,
 };
 
 enum class protocolType : std::uint8_t
 {
-  QuasisaticStrain
+  QuasisaticStrain,
+  StepStrain
 };
 
 enum class rootMethod : std::uint8_t

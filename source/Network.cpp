@@ -340,3 +340,9 @@ auto networkV4::network::bondStrain(const bond& _bond) const -> double
   const double r = dist.length();
   return (r - _bond.naturalLength()) / _bond.naturalLength();
 }
+
+auto networkV4::network::bondEnergy(const bond& _bond) const -> double
+{
+  const double strain = bondStrain(_bond);
+  return 0.5 * _bond.mu() * strain * strain;
+}

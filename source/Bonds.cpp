@@ -214,6 +214,74 @@ void networkV4::bonds::sort()
             { return srcDestOrder(_lhs, _rhs); });
 }
 
+auto networkV4::bonds::getConnectedVector() const -> std::vector<bool>
+{
+  std::vector<bool> connected(m_bonds.size());
+  std::transform(m_bonds.begin(),
+                 m_bonds.end(),
+                 connected.begin(),
+                 [](const auto& b) { return b.connected(); });
+  return connected;
+}
+
+auto networkV4::bonds::getNaturalLengthVector() const -> std::vector<double>
+{
+  std::vector<double> l0(m_bonds.size());
+  std::transform(m_bonds.begin(),
+                 m_bonds.end(),
+                 l0.begin(),
+                 [](const auto& b) { return b.naturalLength(); });
+  return l0;
+}
+
+auto networkV4::bonds::getMuVector() const -> std::vector<double>
+{
+  std::vector<double> mu(m_bonds.size());
+  std::transform(m_bonds.begin(),
+                 m_bonds.end(),
+                 mu.begin(),
+                 [](const auto& b) { return b.mu(); });
+  return mu;
+}
+
+auto networkV4::bonds::getLambdaVector() const -> std::vector<double>
+{
+  std::vector<double> lambda(m_bonds.size());
+  std::transform(m_bonds.begin(),
+                 m_bonds.end(),
+                 lambda.begin(),
+                 [](const auto& b) { return b.lambda(); });
+  return lambda;
+}
+
+void networkV4::bonds::setConnectedVector(const std::vector<bool>& _connected)
+{
+  for (std::size_t i = 0; i < m_bonds.size(); ++i) {
+    m_bonds[i].connected() = _connected[i];
+  }
+}
+
+void networkV4::bonds::setNaturalLengthVector(const std::vector<double>& _l0)
+{
+  for (std::size_t i = 0; i < m_bonds.size(); ++i) {
+    m_bonds[i].naturalLength() = _l0[i];
+  }
+}
+
+void networkV4::bonds::setMuVector(const std::vector<double>& _mu)
+{
+  for (std::size_t i = 0; i < m_bonds.size(); ++i) {
+    m_bonds[i].mu() = _mu[i];
+  }
+}
+
+void networkV4::bonds::setLambdaVector(const std::vector<double>& _lambda)
+{
+  for (std::size_t i = 0; i < m_bonds.size(); ++i) {
+    m_bonds[i].lambda() = _lambda[i];
+  }
+}
+
 auto networkV4::bonds::begin() -> std::vector<networkV4::bond>::iterator
 {
   return m_bonds.begin();
