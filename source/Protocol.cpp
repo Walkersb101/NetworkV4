@@ -346,7 +346,7 @@ auto networkV4::quasiStaticStrain::genBondData(
   data.reserve(23 + 5 * types.size());
   data.emplace_back(m_strainCount);
   data.emplace_back(m_t);
-  data.emplace_back(enumString::strainType2Str.at(m_strainType));
+  data.emplace_back(enumString::bondType2Str.at(b.type()));
   data.emplace_back(b.mu());
   data.emplace_back(b.lambda());
   data.emplace_back(b.naturalLength());
