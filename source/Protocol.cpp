@@ -168,7 +168,7 @@ auto networkV4::quasiStaticStrain::converge(network& _baseNetwork,
       _maxDistAboveA = maxDistAboveITP;
     }
 
-    if (std::abs(_b - _a) < 2 * m_tol) {
+    if (std::abs(_b - _a) < m_tol) {
       return true;
     }
   }
@@ -188,13 +188,27 @@ auto networkV4::quasiStaticStrain::findSingleBreak(network& _network) -> size_t
 
   network testNetwork = _network;
   evalStrain(testNetwork, a, maxDistAboveA, breakCountA);
+
+  if (maxDistAboveA >= 0.0) {
+    return 0;
+  }
+
+  double guessStrain =
+      std::abs(maxDistAboveA) * config::protocols::quasiStaticStrain::strainGuessScale;
+
   network networkB = _network;
-  evalStrain(networkB, b, maxDistAboveB, breakCountB);
+  evalStrain(networkB, guessStrain, maxDistAboveB, breakCountB);
 
-  // TODO: Print the results
-  bool converged = false;
+  if (maxDistAboveA * maxDistAboveB > 0.0) {  // guess was not big enough
+    a = guessStrain;
+    maxDistAboveA = maxDistAboveB;
+    networkB = _network;
+    evalStrain(networkB, b, maxDistAboveB, breakCountB);
+  } else {
+    b = guessStrain;
+  }
 
-  converged = converge(_network,
+  bool converged = converge(_network,
                        networkB,
                        a,
                        b,

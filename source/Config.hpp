@@ -71,7 +71,8 @@ namespace protocols
 namespace quasiStaticStrain
 {
 extern bool errorOnNotSingleBreak;
-}
+extern double strainGuessScale;
+}  // namespace quasiStaticStrain
 
 namespace stepStrain
 {

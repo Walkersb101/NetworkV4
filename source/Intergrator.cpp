@@ -200,14 +200,14 @@ auto networkV4::OverdampedAdaptiveEulerHeun::getDt() const -> double
 auto networkV4::OverdampedAdaptiveEulerHeun::forceErrorNorm(nodes& _nodes)
     -> double
 {
-  double maxForce = 0.0;
-#pragma omp parallel for reduction(std::max : max)
+  double sum = 0.0;
+#pragma omp parallel for reduction(+ : sum)
   for (std::size_t i = 0; i < _nodes.size(); ++i) {
     double force =
-        _nodes.fixed(i) ? 0.0 : (m_tempForces[i] - _nodes.force(i)).abs().max();
-    maxForce = force > maxForce ? force : maxForce;
+        _nodes.fixed(i) ? 0.0 : (m_tempForces[i] - _nodes.force(i)).lengthSquared();
+    sum += force;
   }
-  return maxForce;
+  return sqrt(sum);
 }
 
 networkV4::FireMinimizer::FireMinimizer()

@@ -46,9 +46,8 @@ double dmax = 0.1;
 
 namespace rootMethods
 {
-double targetTol = 1e-6;
-double minTol = 1e-12;
-
+double targetTol = 1e-4;
+double minTol = 1e-10;
 namespace ITPMethod
 {
 std::size_t n0 = 10;
@@ -63,6 +62,7 @@ namespace protocols
 namespace quasiStaticStrain
 {
 bool errorOnNotSingleBreak = false;
+double strainGuessScale = 2.0;
 }  // namespace quasiStaticStrain
 
 namespace stepStrain
