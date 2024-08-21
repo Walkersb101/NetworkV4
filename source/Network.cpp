@@ -254,13 +254,13 @@ void networkV4::network::wrapPosition(vec2d& _pos) const
   while (_pos.y > m_domain.y) {
     _pos -= yShift;
   }
-  while (_pos.y <= -m_domain.y) {
+  while (_pos.y <= 0.0) {
     _pos += yShift;
   }
   while (_pos.x > m_domain.x) {
     _pos.x -= m_domain.x;
   }
-  while (_pos.x < -m_domain.x) {
+  while (_pos.x < 0.0) {
     _pos.x += m_domain.x;
   }
   //_pos.x -= std::floor(_pos.y / m_domain.y) * m_domain.x * m_shearStrain;
