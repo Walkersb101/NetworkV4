@@ -68,7 +68,8 @@ private:
                 double& _fa,
                 double& _fb,
                 size_t& _breakCountB,
-                double _tol) -> bool;
+                double _tol,
+                bool _earlyExit = false) -> bool;
   auto findSingleBreak(network& _network) -> size_t;
 
   auto relaxBreak(network& _network) -> std::size_t;

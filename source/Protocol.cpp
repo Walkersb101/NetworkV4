@@ -141,7 +141,8 @@ auto networkV4::quasiStaticStrain::converge(network& _baseNetwork,
                                             double& _maxDistAboveA,
                                             double& _maxDistAboveB,
                                             size_t& _breakCountB,
-                                            double _tol) -> bool
+                                            double _tol,
+                                            bool _earlyExit) -> bool
 {
   if (_maxDistAboveA * _maxDistAboveB > 0.0 || _a >= _b) {
     std::invalid_argument("Root not bracketed");
@@ -168,7 +169,7 @@ auto networkV4::quasiStaticStrain::converge(network& _baseNetwork,
       _maxDistAboveA = maxDistAboveITP;
     }
 
-    if (std::abs(_b - _a) < m_tol) {
+    if (std::abs(_b - _a) < 2 * _tol || (_earlyExit && _breakCountB == 1)) {
       return true;
     }
   }
@@ -224,10 +225,11 @@ auto networkV4::quasiStaticStrain::findSingleBreak(network& _network) -> size_t
                          maxDistAboveA,
                          maxDistAboveB,
                          breakCountB,
-                         config::rootMethods::minTol);
+                         config::rootMethods::minTol,
+                         true);
   }
   _network = networkB;
-  return converged ? breakCountB : 0;
+  return breakCountB;
 }
 
 auto networkV4::quasiStaticStrain::relaxBreak(network& _network) -> size_t
