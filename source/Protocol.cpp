@@ -260,7 +260,7 @@ auto networkV4::quasiStaticStrain::relaxBreak(network& _network) -> size_t
 
     double error = tools::maxAbsComponent(_network.getNodes().forces());
     if (error < m_tol && broken.size() == 0) {
-      break;
+      return breakCount;
     }
 
     m_t += integrator.getDt();
