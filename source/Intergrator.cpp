@@ -252,6 +252,7 @@ void networkV4::FireMinimizer::integrate(network& _network)
   double scale1, scale2, abc, vdotf, vdotv, fdotf;
 
   nodes& networkNodes = _network.getNodes();
+  _network.computeForces();
 
   double error = tools::maxAbsComponent(networkNodes.forces());
   if (error < m_tol) {
@@ -259,7 +260,6 @@ void networkV4::FireMinimizer::integrate(network& _network)
   }
 
   networkNodes.clearVelocities();
-  _network.computeForces();
   updateVelocities(_network, -0.5 * m_dt);
 
   for (size_t iter = 0; iter < maxIter; ++iter) {
