@@ -291,7 +291,7 @@ void networkV4::network::elongate(double _step)
 {
   m_elongationStrain += _step;
   const vec2d oldDomain = m_domain;
-  m_domain *= vec2d(1 / (1.0 + _step), 1.0 + _step);
+  m_domain = m_restSize * vec2d(1 / (1.0 + _step), 1.0 + _step);
 
   const vec2d scale = m_domain / oldDomain;
   std::transform(m_nodes.positions().begin(),
