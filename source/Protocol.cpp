@@ -98,6 +98,7 @@ networkV4::quasiStaticStrain::~quasiStaticStrain() {}
 
 void networkV4::quasiStaticStrain::run(network& _network)
 {
+  _network.computeForces();
   m_dataOut->writeTimeData(genTimeData(_network, "Initial", 0));
   while (true) {
     size_t aboveThreshold = findSingleBreak(_network);
@@ -194,8 +195,8 @@ auto networkV4::quasiStaticStrain::findSingleBreak(network& _network) -> size_t
     return 0;
   }
 
-  double guessStrain =
-      std::abs(maxDistAboveA) * config::protocols::quasiStaticStrain::strainGuessScale;
+  double guessStrain = std::abs(maxDistAboveA)
+      * config::protocols::quasiStaticStrain::strainGuessScale;
 
   network networkB = _network;
   evalStrain(networkB, guessStrain, maxDistAboveB, breakCountB);
@@ -210,13 +211,13 @@ auto networkV4::quasiStaticStrain::findSingleBreak(network& _network) -> size_t
   }
 
   bool converged = converge(_network,
-                       networkB,
-                       a,
-                       b,
-                       maxDistAboveA,
-                       maxDistAboveB,
-                       breakCountB,
-                       m_tol);
+                            networkB,
+                            a,
+                            b,
+                            maxDistAboveA,
+                            maxDistAboveB,
+                            breakCountB,
+                            m_tol);
   if (converged && breakCountB != 1) {
     converged = converge(_network,
                          networkB,
@@ -420,6 +421,7 @@ void networkV4::stepStrain::run(network& _network)
   OverdampedAdaptiveEulerHeun integrator(config::intergrators::default_dt,
                                          m_esp);
 
+  _network.computeForces();
   m_networkOut->save(_network, "Initial");
   m_dataOut->writeTimeData(genTimeData(_network, "Initial"));
 
@@ -531,9 +533,10 @@ auto networkV4::stepStrain::genTimeData(const network& _network,
   return data;
 }
 
-auto networkV4::stepStrain::genBondData(
-    const network& _network, size_t _bondIndex,
-                   BreakTypes* _breakProtocol) -> std::vector<writeableTypes>
+auto networkV4::stepStrain::genBondData(const network& _network,
+                                        size_t _bondIndex,
+                                        BreakTypes* _breakProtocol)
+    -> std::vector<writeableTypes>
 {
   auto types = tools::uniqueBondTypes(_network.getBonds());
   auto stresses = _network.getStresses();
