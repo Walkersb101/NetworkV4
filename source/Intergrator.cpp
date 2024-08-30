@@ -203,8 +203,9 @@ auto networkV4::OverdampedAdaptiveEulerHeun::forceErrorNorm(nodes& _nodes)
   double sum = 0.0;
 #pragma omp parallel for reduction(+ : sum)
   for (std::size_t i = 0; i < _nodes.size(); ++i) {
-    double force =
-        _nodes.fixed(i) ? 0.0 : (m_tempForces[i] - _nodes.force(i)).lengthSquared();
+    double force = _nodes.fixed(i)
+        ? 0.0
+        : (m_tempForces[i] - _nodes.force(i)).lengthSquared();
     sum += force;
   }
   return sqrt(sum);
@@ -251,6 +252,12 @@ void networkV4::FireMinimizer::integrate(network& _network)
   double scale1, scale2, abc, vdotf, vdotv, fdotf;
 
   nodes& networkNodes = _network.getNodes();
+
+  double error = tools::maxAbsComponent(networkNodes.forces());
+  if (error < m_tol) {
+    return;
+  }
+
   networkNodes.clearVelocities();
   _network.computeForces();
   updateVelocities(_network, -0.5 * m_dt);
