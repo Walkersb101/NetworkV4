@@ -98,8 +98,11 @@ networkV4::quasiStaticStrain::~quasiStaticStrain() {}
 
 void networkV4::quasiStaticStrain::run(network& _network)
 {
+  FireMinimizer minimizer(config::intergrators::miminizer::tol);
+  minimizer.integrate(_network);
   _network.computeForces();
   m_dataOut->writeTimeData(genTimeData(_network, "Initial", 0));
+  
   while (true) {
     size_t aboveThreshold = findSingleBreak(_network);
     if (aboveThreshold == 0) {
