@@ -143,10 +143,4 @@ inline void addStressByTypeHeader(
 }
 
 } // namespace tensorData
-
-#pragma omp declare reduction(vec_merge : std::vector<int> : omp_out.insert( \
-        omp_out.end(), omp_in.begin(), omp_in.end()))
-#pragma omp declare reduction( \
-        vec_merge : std::vector<std::size_t> : omp_out.insert( \
-                omp_out.end(), omp_in.begin(), omp_in.end()))
 }  // namespace networkV4

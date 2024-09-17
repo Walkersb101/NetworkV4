@@ -7,14 +7,6 @@
 #include "Config.hpp"
 #include "Vec2.hpp"
 
-#pragma omp declare reduction( \
-        vec_vec2d_plus : std::vector<vec2d> : std::transform(omp_out.begin(), \
-                    omp_out.end(), \
-                    omp_in.begin(), \
-                    omp_out.begin(),  \
-                    std::plus<vec2d>())) \
-    initializer(omp_priv = decltype(omp_orig)(omp_orig.size()))
-
 namespace networkV4
 {
 class nodes

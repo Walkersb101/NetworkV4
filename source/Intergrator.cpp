@@ -15,7 +15,6 @@
 void overdampedMove(networkV4::network& _network, double _dt)
 {
   networkV4::nodes& _nodes = _network.getNodes();
-#pragma omp parallel for
   for (std::size_t i = 0; i < _nodes.size(); ++i) {
     if (_nodes.fixed(i)) {
       continue;
@@ -28,7 +27,6 @@ void overdampedMove(networkV4::network& _network, double _dt)
 void move(networkV4::network& _network, double _dt)
 {
   networkV4::nodes& _nodes = _network.getNodes();
-#pragma omp parallel for
   for (std::size_t i = 0; i < _nodes.size(); ++i) {
     if (_nodes.fixed(i)) {
       continue;
@@ -41,7 +39,6 @@ void move(networkV4::network& _network, double _dt)
 void updateVelocities(networkV4::network& _network, double _alpha)
 {
   networkV4::nodes& _nodes = _network.getNodes();
-#pragma omp parallel for
   for (std::size_t i = 0; i < _nodes.size(); ++i) {
     if (_nodes.fixed(i)) {
       continue;
@@ -55,7 +52,6 @@ void heunAverage(networkV4::network& _network,
                  double _dt)
 {
   networkV4::nodes& networkNodes = _network.getNodes();
-#pragma omp parallel for
   for (std::size_t i = 0; i < networkNodes.size(); ++i) {
     if (networkNodes.fixed(i)) {
       continue;
@@ -201,7 +197,6 @@ auto networkV4::OverdampedAdaptiveEulerHeun::forceErrorNorm(nodes& _nodes)
     -> double
 {
   double sum = 0.0;
-#pragma omp parallel for reduction(+ : sum)
   for (std::size_t i = 0; i < _nodes.size(); ++i) {
     double force = _nodes.fixed(i)
         ? 0.0
@@ -319,7 +314,6 @@ auto networkV4::FireMinimizer::xdoty(const std::vector<vec2d>& _x,
 {
   size_t N = std::min(_x.size(), _y.size());
   double power = 0.0;
-#pragma omp parallel for reduction(+ : power)
   for (std::size_t i = 0; i < N; ++i) {
     power += _x[i].dot(_y[i]);
   }

@@ -1,5 +1,3 @@
-#pragma once
-
 #include "DataOut.hpp"
 
 #include <toml.hpp>

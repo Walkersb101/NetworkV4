@@ -47,7 +47,6 @@ void networkV4::StrainBreak::Data(const network& _network,
   const auto& bonds = _network.getBonds();
   _count = 0;
   _maxVal = -1e10;
-#pragma omp parallel for reduction(max : _maxStrain) reduction(+ : _count)
   for (size_t i = 0; i < bonds.size(); ++i) {
     const auto& b = bonds.get(i);
     if (!b.connected()) {
@@ -68,7 +67,6 @@ auto networkV4::StrainBreak::Break(network& _network,
 {
   auto& bonds = _network.getBonds();
   std::vector<std::size_t> broken;
-#pragma omp parallel for reduction(networkV4::merge : broken)
   for (std::size_t i = 0; i < bonds.size(); ++i) {
     auto& b = bonds.get(i);
     if (!b.connected() || _network.bondStrain(b) < m_lambda[i]) {
@@ -100,7 +98,6 @@ void networkV4::EnergyBreak::Data(const network& _network,
   const auto& bonds = _network.getBonds();
   _count = 0;
   _maxVal = -1e10;
-#pragma omp parallel for reduction(max : _maxVal) reduction(+ : _count)
   for (size_t i = 0; i < bonds.size(); ++i) {
     const auto& b = bonds.get(i);
     if (!b.connected()) {
@@ -121,7 +118,6 @@ auto networkV4::EnergyBreak::Break(network& _network,
 {
   auto& bonds = _network.getBonds();
   std::vector<std::size_t> broken;
-#pragma omp parallel for reduction(networkV4::merge : broken)
   for (std::size_t i = 0; i < bonds.size(); ++i) {
     auto& b = bonds.get(i);
     if (!b.connected() || _network.bondEnergy(b) < m_E[i]) {

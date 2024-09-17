@@ -2,8 +2,10 @@
 #include <cmath>
 #include <filesystem>
 #include <fstream>
+#include <ranges>
 #include <unordered_map>
 #include <vector>
+#include <numeric>
 
 #include "Network.hpp"
 
@@ -206,18 +208,13 @@ void networkV4::network::applyBond(
   _stresses[_bond.type()] += outer(force, dist);
 }
 
-void networkV4::network::applyBond(const bond& _bond)
-{
-  applyBond(_bond, m_nodes, m_nodes.forces(), m_stresses);
-}
-
 void networkV4::network::computeForces()
 {
   clearStresses();
   getNodes().clearForces();
-#pragma omp parallel for reduction(vec_vec2d_plus : m_nodes.forces()) \
-    reduction(stresses_plus : m_stresses)
-  for (const auto& _bond : m_bonds) {
+  auto connected = [](const auto& _b) { return _b.connected(); };
+  auto connectedList = m_bonds | std::views::filter(connected);
+  for (const auto& _bond : connectedList) {
     applyBond(_bond, m_nodes, m_nodes.forces(), m_stresses);
   }
   normalizeStresses();
@@ -229,18 +226,14 @@ auto networkV4::network::minDist(const vec2d& _pos1,
   const vec2d hDomain = m_domain * 0.5;
   const vec2d yShift = vec2d(m_domain.x * m_shearStrain, m_domain.y);
   vec2d dist = _pos2 - _pos1;
-  while (dist.y > hDomain.y) {
+  while (dist.y > hDomain.y)
     dist -= yShift;
-  }
-  while (dist.y <= -hDomain.y) {
+  while (dist.y <= -hDomain.y)
     dist += yShift;
-  }
-  while (dist.x > hDomain.x) {
+  while (dist.x > hDomain.x)
     dist.x -= m_domain.x;
-  }
-  while (dist.x < -hDomain.x) {
+  while (dist.x < -hDomain.x)
     dist.x += m_domain.x;
-  }
   // vec2d dist2 = _pos2 - _pos1;
   // dist2.x -= std::round(dist2.y / m_domain.y) * m_domain.x * m_shearStrain;
   // distBC(dist2.x, m_domain.x);
@@ -251,18 +244,15 @@ auto networkV4::network::minDist(const vec2d& _pos1,
 void networkV4::network::wrapPosition(vec2d& _pos) const
 {
   const vec2d yShift = vec2d(m_domain.x * m_shearStrain, m_domain.y);
-  while (_pos.y > m_domain.y) {
+  while (_pos.y > m_domain.y)
     _pos -= yShift;
-  }
-  while (_pos.y <= 0.0) {
+  while (_pos.y <= 0.0)
     _pos += yShift;
-  }
-  while (_pos.x > m_domain.x) {
+  while (_pos.x > m_domain.x)
     _pos.x -= m_domain.x;
-  }
-  while (_pos.x < 0.0) {
+  while (_pos.x < 0.0)
     _pos.x += m_domain.x;
-  }
+
   //_pos.x -= std::floor(_pos.y / m_domain.y) * m_domain.x * m_shearStrain;
   // BC(_pos.x, m_domain.x);
   // BC(_pos.y, m_domain.y);
@@ -305,7 +295,7 @@ void networkV4::network::initStresses()
 {
   m_stresses.clear();
   for (const auto& bond : m_bonds) {
-    if (m_stresses.find(bond.type()) == m_stresses.end()) {
+    if (m_stresses.contains(bond.type())) {
       m_stresses[bond.type()] = tensor2d();
     }
   }
@@ -327,19 +317,18 @@ void networkV4::network::normalizeStresses()
 
 auto networkV4::network::getGlobalStress() const -> tensor2d
 {
-  tensor2d stress;
-  for (const auto& s : m_stresses) {
-    stress += s.second;
-  }
-  return stress;
+    return std::accumulate(m_stresses.begin(),
+                           m_stresses.end(),
+                           tensor2d(),
+                           [](const tensor2d& _sum, const auto& _stress)
+                           { return _sum + _stress.second; });
 }
 
 auto networkV4::network::bondStrain(const bond& _bond) const -> double
 {
   const vec2d dist =
       minDist(m_nodes.position(_bond.src()), m_nodes.position(_bond.dst()));
-  const double r = dist.length();
-  return (r - _bond.naturalLength()) / _bond.naturalLength();
+  return (dist.length() - _bond.naturalLength()) / _bond.naturalLength();
 }
 
 auto networkV4::network::bondEnergy(const bond& _bond) const -> double

@@ -3,11 +3,6 @@
 #include <cmath>
 #include <algorithm>
 
-#pragma omp declare reduction(+ : vec2f : omp_out += omp_in) \
-    initializer(omp_priv = vec2f(0, 0))
-#pragma omp declare reduction(+ : vec2d : omp_out += omp_in) \
-    initializer(omp_priv = vec2d(0, 0))
-
 template<class T>
 struct vec2
 {
