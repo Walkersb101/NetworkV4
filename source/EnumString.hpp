@@ -2,56 +2,75 @@
 
 #include <string>
 #include <unordered_map>
+#include <bxzstr.hpp>      // For bxz::Compression
+#include "Enums.hpp"       // For external enum definitions like bondType, dataOutType, etc.
 
-#include <bxzstr.hpp>
+namespace networkV4 {
+namespace enumString {
 
-#include "Enums.hpp"
+// --- Type Aliases for Readability ---
+using Str2BondTypeMap = std::unordered_map<std::string, bondType>;
+using BondType2StrMap = std::unordered_map<bondType, std::string>;
+using Str2DataOutTypeMap = std::unordered_map<std::string, dataOutType>;
+using DataOutType2StrMap = std::unordered_map<dataOutType, std::string>;
+using Str2NetworkOutTypeMap = std::unordered_map<std::string, networkOutType>;
+using NetworkOutType2StrMap = std::unordered_map<networkOutType, std::string>;
+using Str2IntegratorTypeMap = std::unordered_map<std::string, intergratorType>;
+using IntegratorType2StrMap = std::unordered_map<intergratorType, std::string>;
+using Str2LoadVersionMap = std::unordered_map<std::string, loadVersion>;
+using LoadVersion2StrMap = std::unordered_map<loadVersion, std::string>;
+using Str2StrainTypeMap = std::unordered_map<std::string, StrainType>;
+using StrainType2StrMap = std::unordered_map<StrainType, std::string>;
+using Str2BreakTypeMap = std::unordered_map<std::string, BreakType>;
+using BreakType2StrMap = std::unordered_map<BreakType, std::string>;
+using Str2ProtocolTypeMap = std::unordered_map<std::string, protocolType>;
+using ProtocolType2StrMap = std::unordered_map<protocolType, std::string>;
+using Str2RootMethodMap = std::unordered_map<std::string, rootMethod>;
+using RootMethod2StrMap = std::unordered_map<rootMethod, std::string>;
+using Str2CompressionMap = std::unordered_map<std::string, bxz::Compression>;
+using Compression2StrMap = std::unordered_map<bxz::Compression, std::string>;
+using CompressionExtMap = std::unordered_map<bxz::Compression, std::string>;
 
-namespace networkV4
-{
-namespace enumString
-{
 // --- BondType ---
-extern const std::unordered_map<std::string, bondType> str2BondType;
-extern const std::unordered_map<bondType, std::string> bondType2Str;
+extern const Str2BondTypeMap str2BondType;
+extern const BondType2StrMap bondType2Str;
 
 // --- DataOutType ---
-extern const std::unordered_map<std::string, dataOutType> str2DataOutType;
-extern const std::unordered_map<dataOutType, std::string> dataOutType2Str;
+extern const Str2DataOutTypeMap str2DataOutType;
+extern const DataOutType2StrMap dataOutType2Str;
 
 // --- NetworkOutType ---
-extern const std::unordered_map<std::string, networkOutType> str2NetworkOutType;
-extern const std::unordered_map<networkOutType, std::string> networkOutType2Str;
+extern const Str2NetworkOutTypeMap str2NetworkOutType;
+extern const NetworkOutType2StrMap networkOutType2Str;
 
-// --- IntergratorType ---
-extern const std::unordered_map<std::string, intergratorType>
-    str2IntergratorType;
-extern const std::unordered_map<intergratorType, std::string>
-    intergratorType2Str;
+// --- IntegratorType ---
+extern const Str2IntegratorTypeMap str2IntergratorType;
+extern const IntegratorType2StrMap intergratorType2Str;
 
 // --- LoadVersion ---
-extern const std::unordered_map<std::string, loadVersion> str2LoadVersion;
-extern const std::unordered_map<loadVersion, std::string> loadVersion2Str;
+extern const Str2LoadVersionMap str2LoadVersion;
+extern const LoadVersion2StrMap loadVersion2Str;
 
 // --- StrainType ---
-extern const std::unordered_map<std::string, StrainType> str2StrainType;
-extern const std::unordered_map<StrainType, std::string> strainType2Str;
+extern const Str2StrainTypeMap str2StrainType;
+extern const StrainType2StrMap strainType2Str;
 
 // --- BreakType ---
-extern const std::unordered_map<std::string, BreakType> str2BreakType;
-extern const std::unordered_map<BreakType, std::string> breakType2Str;
+extern const Str2BreakTypeMap str2BreakType;
+extern const BreakType2StrMap breakType2Str;
 
 // --- ProtocolType ---
-extern const std::unordered_map<std::string, protocolType> str2ProtocolType;
-extern const std::unordered_map<protocolType, std::string> protocolType2Str;
+extern const Str2ProtocolTypeMap str2ProtocolType;
+extern const ProtocolType2StrMap protocolType2Str;
 
 // --- RootMethod ---
-extern const std::unordered_map<std::string, rootMethod> str2RootMethod;
-extern const std::unordered_map<rootMethod, std::string> rootMethod2Str;
+extern const Str2RootMethodMap str2RootMethod;
+extern const RootMethod2StrMap rootMethod2Str;
 
 // --- Compression ---
-extern const std::unordered_map<std::string, bxz::Compression> str2Compression;
-extern const std::unordered_map<bxz::Compression, std::string> compression2Str;
-extern const std::unordered_map<bxz::Compression, std::string> compressionExt;
+extern const Str2CompressionMap str2Compression;
+extern const Compression2StrMap compression2Str;
+extern const CompressionExtMap compressionExt;
+
 }  // namespace enumString
 }  // namespace networkV4

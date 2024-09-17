@@ -12,25 +12,23 @@
 #include "EnumString.hpp"
 #include "Enums.hpp"
 #include "Vec2.hpp"
+#include "EnumMap.hpp"
 
 namespace networkV4
 {
 namespace tools
 {
-template<typename T, typename U>
-inline auto averageMaps(const std::unordered_map<T, U>& _map1,
-                        const std::unordered_map<T, U>& _map2)
-    -> std::unordered_map<T, U>
+template<typename Enum, typename ValueType, Enum MinEnumValue, Enum MaxEnumValue>
+inline auto averageMaps(const EnumMap<Enum, ValueType, MinEnumValue, MaxEnumValue>& _map1,
+                        const EnumMap<Enum, ValueType, MinEnumValue, MaxEnumValue>& _map2)
+    -> EnumMap<Enum, ValueType, MinEnumValue, MaxEnumValue>
 {
-  std::unordered_map<T, U> averageMap;
-  for (const auto& [key, val] : _map1) {
-    if (_map2.find(key) == _map2.end()) {
-      throw std::runtime_error("Key not found in _stresses2");
-    } else {
-      averageMap[key] = (val + _map2.at(key)) * 0.5;
+    EnumMap<Enum, ValueType, MinEnumValue, MaxEnumValue> result;
+    for (size_t i = to_index(MinEnumValue); i <= to_index(MaxEnumValue); ++i) {
+        const Enum key = static_cast<Enum>(i);
+        result[key] = (_map1[key] + _map2[key]) / 2;
     }
-  }
-  return averageMap;
+    return result;
 }
 
 template<typename T>

@@ -3,7 +3,6 @@
 #include <filesystem>
 #include <fstream>
 #include <ranges>
-#include <unordered_map>
 #include <vector>
 #include <numeric>
 
@@ -13,6 +12,7 @@
 #include "Nodes.hpp"
 #include "Tensor2.hpp"
 #include "Vec2.hpp"
+#include "EnumMap.hpp"
 
 networkV4::network::network()
     : m_nodes()
@@ -140,13 +140,13 @@ auto networkV4::network::getBonds() const -> const bonds&
 }
 
 auto networkV4::network::getStresses()
-    -> std::unordered_map<bondType, tensor2d>&
+    -> stressMap&
 {
   return m_stresses;
 }
 
 auto networkV4::network::getStresses() const
-    -> const std::unordered_map<bondType, tensor2d>&
+    -> const stressMap&
 {
   return m_stresses;
 }
@@ -193,15 +193,15 @@ void networkV4::network::applyBond(
     const bond& _bond,
     const nodes& _nodes,
     std::vector<vec2d>& _forces,
-    std::unordered_map<bondType, tensor2d>& _stresses)
+    stressMap& _stresses)
 {
   if (!_bond.connected()) {
     return;
   }
   const vec2d dist =
       minDist(_nodes.position(_bond.src()), _nodes.position(_bond.dst()));
-  const double r = dist.length();
-  const vec2d force = dist * _bond.force(r) / r;
+  const double length = dist.length();
+  const vec2d force = dist * (_bond.force(length) / length);
   _forces[_bond.src()] += force;
   _forces[_bond.dst()] -= force;
 
@@ -293,25 +293,18 @@ void networkV4::network::elongate(double _step)
 
 void networkV4::network::initStresses()
 {
-  m_stresses.clear();
-  for (const auto& bond : m_bonds) {
-    if (m_stresses.contains(bond.type())) {
-      m_stresses[bond.type()] = tensor2d();
-    }
-  }
+  m_stresses = stressMap();
 }
 
 void networkV4::network::clearStresses()
 {
-  for (auto& stress : m_stresses) {
-    stress.second = tensor2d();
-  }
+  m_stresses = stressMap();
 }
 
 void networkV4::network::normalizeStresses()
 {
   for (auto& stress : m_stresses) {
-    stress.second /= m_domain.x * m_domain.y;
+    stress /= m_domain.x * m_domain.y;
   }
 }
 
@@ -321,7 +314,7 @@ auto networkV4::network::getGlobalStress() const -> tensor2d
                            m_stresses.end(),
                            tensor2d(),
                            [](const tensor2d& _sum, const auto& _stress)
-                           { return _sum + _stress.second; });
+                           { return _sum + _stress; });
 }
 
 auto networkV4::network::bondStrain(const bond& _bond) const -> double

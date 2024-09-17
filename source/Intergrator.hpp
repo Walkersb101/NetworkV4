@@ -2,16 +2,18 @@
 
 #include <cstddef>
 #include <cstdint>
-#include <unordered_map>
 #include <vector>
 
 #include "Network.hpp"
 #include "Nodes.hpp"
 #include "Tensor2.hpp"
 #include "Vec2.hpp"
+#include "EnumMap.hpp"
 
 namespace networkV4
 {
+
+using stressMap = EnumMap<bondType, tensor2d, bondType::single, bondType::matrix>;
 
 class intergrator
 {
@@ -55,7 +57,7 @@ private:
   double m_dt;
   std::vector<vec2d> m_tempPositions;
   std::vector<vec2d> m_tempForces;
-  std::unordered_map<bondType, tensor2d> m_tempStresses;
+  stressMap m_tempStresses;
 };
 
 class OverdampedAdaptiveEulerHeun : public intergrator
@@ -80,7 +82,7 @@ private:
 
   std::vector<vec2d> m_tempForces;
   std::vector<vec2d> m_tempPositions;
-  std::unordered_map<bondType, tensor2d> m_tempStresses;
+  stressMap m_tempStresses;
 };
 
 class FireMinimizer : public intergrator

@@ -348,7 +348,7 @@ auto networkV4::quasiStaticStrain::genTimeData(const network& _network,
       data.end(),
       {globalStress.xx, globalStress.xy, globalStress.yx, globalStress.yy});
   for (const auto& type : types) {
-    tensor2 stress = stresses.at(type);
+    tensor2 stress = stresses[type];
     data.insert(data.end(), {stress.xx, stress.xy, stress.yx, stress.yy});
   }
   return data;
@@ -391,7 +391,7 @@ auto networkV4::quasiStaticStrain::genBondData(
       data.end(),
       {globalStress.xx, globalStress.xy, globalStress.yx, globalStress.yy});
   for (const auto& type : types) {
-    tensor2 stress = stresses.at(type);
+    tensor2 stress = stresses[type];
     data.insert(data.end(), {stress.xx, stress.xy, stress.yx, stress.yy});
   }
   return data;
@@ -530,7 +530,7 @@ auto networkV4::stepStrain::genTimeData(const network& _network,
       data.end(),
       {globalStress.xx, globalStress.xy, globalStress.yx, globalStress.yy});
   for (const auto& type : types) {
-    tensor2 stress = stresses.at(type);
+    tensor2 stress = stresses[type];
     data.insert(data.end(), {stress.xx, stress.xy, stress.yx, stress.yy});
   }
   return data;
@@ -577,7 +577,7 @@ auto networkV4::stepStrain::genBondData(const network& _network,
       data.end(),
       {globalStress.xx, globalStress.xy, globalStress.yx, globalStress.yy});
   for (const auto& type : types) {
-    tensor2 stress = stresses.at(type);
+    tensor2 stress = stresses[type];
     data.insert(data.end(), {stress.xx, stress.xy, stress.yx, stress.yy});
   }
   return data;

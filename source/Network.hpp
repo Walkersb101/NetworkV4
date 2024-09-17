@@ -1,17 +1,20 @@
 #pragma once
 
 #include <filesystem>
-#include <unordered_map>
 #include <vector>
 
 #include "Bonds.hpp"
 #include "Enums.hpp"
+#include "EnumMap.hpp"
 #include "Nodes.hpp"
 #include "Tensor2.hpp"
 #include "Vec2.hpp"
 
 namespace networkV4
 {
+
+using stressMap = EnumMap<bondType, tensor2d, bondType::single, bondType::matrix>;
+
 class network
 {
 public:
@@ -29,8 +32,8 @@ public:
   auto getBonds() -> bonds&;
   auto getBonds() const -> const bonds&;
 
-  auto getStresses() -> std::unordered_map<bondType, tensor2d>&;
-  auto getStresses() const -> const std::unordered_map<bondType, tensor2d>&;
+  auto getStresses() -> stressMap&;
+  auto getStresses() const -> const stressMap&;
 
   auto getShearStrain() const -> double;
   auto getElongationStrain() const -> double;
@@ -59,7 +62,7 @@ private:
   void applyBond(const bond& _bond,
                  const nodes& _nodes,
                  std::vector<vec2d>& _forces,
-                 std::unordered_map<bondType, tensor2d>& _stresses);
+                 stressMap& _stresses);
   void applyBond(const bond& _bond);
 
 public:
@@ -79,7 +82,7 @@ private:
   nodes m_nodes;
   bonds m_bonds;
 
-  std::unordered_map<bondType, tensor2d> m_stresses;
+  stressMap m_stresses;
   tensor2d m_avgStress;
 
   double m_shearStrain;
