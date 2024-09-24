@@ -11,3 +11,4 @@ CMakeUserPresets.json
 compile_commands.json
 test/*
 NetworkV4
+perf.data

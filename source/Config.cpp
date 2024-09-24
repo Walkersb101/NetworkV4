@@ -13,7 +13,7 @@ double default_dt = 1e-3;
 
 namespace adaptiveIntergrator
 {
-double esp = 1e-4;
+double esp = 1e-2;
 std::size_t maxIter = 10;
 
 double dtMin = 1e-6;
@@ -29,7 +29,7 @@ double qMax = 1.2;
 namespace miminizer
 {
 std::size_t maxIter = 1e6;
-double tol = 1e-4;
+double tol = 1e-3;
 }  // namespace miminizer
 
 namespace fire2
