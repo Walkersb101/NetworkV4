@@ -177,7 +177,7 @@ auto networkV4::SGRBreak::Break(network& _network,
 {
   auto& bonds = _network.getBonds();
   std::vector<std::size_t> broken;
-  trng::yarn2 test;
+  std::uniform_real_distribution<double> dist(0.0, 1.0);
   for (size_t i = 0; i < bonds.size(); i++) {
     auto& b = bonds.get(i);
     if (!b.connected()) {
@@ -186,9 +186,9 @@ auto networkV4::SGRBreak::Break(network& _network,
     const double energy = _network.bondEnergy(b);
     const double distAbove = energy - m_E[i];
     const double rate = m_rtau0 * std::exp(-distAbove * m_rT);
-    std::exponential_distribution<double> dist(rate);
-    double rand = dist(m_rng);
-    if (rand < _intergrator.getDt()) {
+    const double probOfBreak = 1 - std::exp(-rate * _intergrator.getDt());
+    const double rand = dist(m_rng);
+    if (rand < probOfBreak) {
       b.connected() = false;
       broken.push_back(i);
     }
