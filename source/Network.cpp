@@ -195,9 +195,9 @@ void networkV4::network::applyBond(
     std::vector<vec2d>& _forces,
     stressMap& _stresses)
 {
-  if (!_bond.connected()) {
-    return;
-  }
+  //if (!_bond.connected()) {
+  //  return;
+  //}
   const vec2d dist =
       minDist(_nodes.position(_bond.src()), _nodes.position(_bond.dst()));
   const double length = dist.length();
@@ -214,8 +214,8 @@ void networkV4::network::computeForces()
   getNodes().clearForces();
   auto connected = [](const auto& _b) { return _b.connected(); };
   auto connectedList = m_bonds | std::views::filter(connected);
-  for (const auto& _bond : connectedList) {
-    applyBond(_bond, m_nodes, m_nodes.forces(), m_stresses);
+  for (const auto& bond : connectedList) {
+    applyBond(bond, m_nodes, m_nodes.forces(), m_stresses);
   }
   normalizeStresses();
 }

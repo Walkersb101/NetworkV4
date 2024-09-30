@@ -98,10 +98,11 @@ networkV4::quasiStaticStrain::~quasiStaticStrain() {}
 
 void networkV4::quasiStaticStrain::run(network& _network)
 {
-  FireMinimizer minimizer(config::intergrators::miminizer::tol);
+  FireMinimizer minimizer(m_tol);
   minimizer.integrate(_network);
   _network.computeForces();
   m_dataOut->writeTimeData(genTimeData(_network, "Initial", 0));
+  m_networkOut->save(_network, "Initial");
   
   while (true) {
     size_t aboveThreshold = findSingleBreak(_network);
@@ -262,7 +263,7 @@ auto networkV4::quasiStaticStrain::relaxBreak(network& _network) -> size_t
       m_dataOut->writeBondData(genBondData(_network, b));
     }
 
-    double error = tools::maxAbsComponent(_network.getNodes().forces());
+    double error = tools::norm(_network.getNodes().forces());
     if (error < m_tol && broken.size() == 0) {
       return breakCount;
     }

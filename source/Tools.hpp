@@ -56,11 +56,19 @@ inline auto norm(const std::vector<vec2<U>>& _vec) -> double
 template<typename T>
 inline auto maxLength(const std::vector<vec2<T>>& _vec) -> T
 {
-  return std::accumulate(_vec.begin(),
-                         _vec.end(),
-                         0.0,
-                         [](double _max, const vec2<T>& _v)
-                         { return std::max(_max, _v.length()); });
+    double max = 0.0;
+    for (size_t i = 0; i < _vec.size(); ++i) {
+        if (_vec[i].length() > max) {
+            max = _vec[i].length();
+        }
+    }
+    return max;
+
+  //return std::accumulate(_vec.begin(),
+  //                       _vec.end(),
+  //                       0.0,
+  //                       [](double _max, const vec2<T>& _v)
+  //                       { return std::max(_max, _v.length()); });
 }
 
 inline auto uniqueBondTypes(const networkV4::bonds& _bonds)

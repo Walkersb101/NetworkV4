@@ -17,7 +17,7 @@ double esp = 1e-2;
 std::size_t maxIter = 10;
 
 double dtMin = 1e-6;
-double dtMax = 5e-1;
+double dtMax = 1e-1;
 }  // namespace adaptiveIntergrator
 
 namespace adaptiveHeun
@@ -34,7 +34,7 @@ double tol = 1e-3;
 
 namespace fire2
 {
-double alpha0 = 0.1;
+double alpha0 = 0.25;
 std::size_t Ndelay = 5;
 double finc = 1.1;
 double fdec = 0.5;
@@ -62,7 +62,7 @@ namespace protocols
 namespace quasiStaticStrain
 {
 bool errorOnNotSingleBreak = false;
-double strainGuessScale = 2.0;
+double strainGuessScale = 1.2;
 }  // namespace quasiStaticStrain
 
 namespace stepStrain

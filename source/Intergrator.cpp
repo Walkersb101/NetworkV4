@@ -198,9 +198,10 @@ auto networkV4::OverdampedAdaptiveEulerHeun::forceErrorNorm(nodes& _nodes)
 {
   double sum = 0.0;
   for (std::size_t i = 0; i < _nodes.size(); ++i) {
-    double force = _nodes.fixed(i)
-        ? 0.0
-        : (m_tempForces[i] - _nodes.force(i)).lengthSquared();
+    if (_nodes.fixed(i)) {
+      continue;
+    }
+    const double force = (m_tempForces[i] - _nodes.force(i)).lengthSquared();
     sum += force;
   }
   return sqrt(sum);
@@ -249,13 +250,13 @@ void networkV4::FireMinimizer::integrate(network& _network)
   nodes& networkNodes = _network.getNodes();
   _network.computeForces();
 
-  double error = tools::maxAbsComponent(networkNodes.forces());
+  double error = tools::norm(networkNodes.forces());
   if (error < m_tol) {
     return;
   }
 
   networkNodes.clearVelocities();
-  updateVelocities(_network, -0.5 * m_dt);
+  updateVelocities(_network, m_dt);
 
   for (size_t iter = 0; iter < maxIter; ++iter) {
     vdotf = xdoty(networkNodes.velocities(), networkNodes.forces());
@@ -265,10 +266,8 @@ void networkV4::FireMinimizer::integrate(network& _network)
       vdotv = xdoty(networkNodes.velocities(), networkNodes.velocities());
       fdotf = xdoty(networkNodes.forces(), networkNodes.forces());
 
-      alpha = std::max(alpha, 1e-10);
-      abc = (1.0 - std::pow(1.0 - alpha, Npos));
-      scale1 = (1.0 - alpha) / abc;
-      scale2 = fdotf <= 1e-20 ? 0.0 : (alpha * std::sqrt(vdotv / fdotf)) / abc;
+      scale1 = 1.0 - alpha;
+      scale2 = fdotf <= 1e-20 ? 0.0 : (alpha * std::sqrt(vdotv / fdotf));
 
       if (Npos > Ndelay) {
         m_dt = std::min(m_dt * finc, dtMax);
@@ -287,22 +286,26 @@ void networkV4::FireMinimizer::integrate(network& _network)
       }
       move(_network, -0.5 * m_dt);
       networkNodes.clearVelocities();
+      _network.computeForces();
     }
-
     updateVelocities(_network, m_dt);
+    double maxAbsVel = tools::maxAbsComponent(networkNodes.velocities());
+    m_dt = std::min(m_dt, dmax / maxAbsVel);
+
     if (vdotf > 0.0) {
       auto& vels = networkNodes.velocities();
       auto& forces = networkNodes.forces();
-      double vmax = dmax / m_dt;
+      const double vmax = dmax / m_dt;
       for (size_t i = 0; i < vels.size(); ++i) {
         vels[i] = (vels[i] * scale1) + (forces[i] * scale2);
-        vels[i] = vels[i].clamp(vec2d(-vmax, -vmax), vec2d(vmax, vmax));
       }
     }
     move(_network, m_dt);
     _network.computeForces();
 
-    double error = tools::maxAbsComponent(networkNodes.forces());
+    double test = tools::maxLength(networkNodes.forces());
+    double test2 = tools::maxAbsComponent(networkNodes.forces());
+    error = tools::norm(networkNodes.forces());
     if (error < m_tol) {
       break;
     }
@@ -342,7 +345,7 @@ void networkV4::OverdampedAdaptiveMinimizer::integrate(network& _network)
   size_t iters = 0;
   while (iters < maxIter) {
     m_integrator.integrate(_network);
-    double error = tools::maxAbsComponent(_network.getNodes().forces());
+    double error = tools::norm(_network.getNodes().forces());
     if (error < m_tol) {
       break;
     }

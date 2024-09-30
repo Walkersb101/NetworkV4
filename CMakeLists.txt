@@ -66,7 +66,8 @@ target_link_libraries(NetworkV4_lib PUBLIC bxzstr)
 FetchContent_Declare(
   trng4
   GIT_REPOSITORY https://github.com/rabauke/trng4.git
-  GIT_TAG 1ef58a7)
+  GIT_TAG 1ef58a7
+  )
 FetchContent_MakeAvailable(trng4)
 
 target_link_libraries(NetworkV4_lib PUBLIC trng4)
