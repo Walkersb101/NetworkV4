@@ -103,7 +103,7 @@ void networkV4::quasiStaticStrain::run(network& _network)
   _network.computeForces();
   m_dataOut->writeTimeData(genTimeData(_network, "Initial", 0));
   m_networkOut->save(_network, "Initial");
-  
+
   while (true) {
     size_t aboveThreshold = findSingleBreak(_network);
     if (aboveThreshold == 0) {
@@ -199,8 +199,10 @@ auto networkV4::quasiStaticStrain::findSingleBreak(network& _network) -> size_t
     return 0;
   }
 
-  double guessStrain = std::abs(maxDistAboveA)
-      * config::protocols::quasiStaticStrain::strainGuessScale;
+  double guessStrain =
+      std::max(std::abs(maxDistAboveA)
+                   * config::protocols::quasiStaticStrain::strainGuessScale,
+               b);
 
   network networkB = _network;
   evalStrain(networkB, guessStrain, maxDistAboveB, breakCountB);
