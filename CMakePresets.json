@@ -133,6 +133,14 @@
             }
         },
         {
+            "name": "debug-flags",
+            "description": "These flags are supported by both GCC and Clang",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_CXX_FLAGS": "-Og -g -fkeep-inline-functions -fkeep-static-functions"
+            }
+        },
+        {
             "name": "release-flags",
             "description": "These flags are supported by both GCC and Clang",
             "hidden": true,

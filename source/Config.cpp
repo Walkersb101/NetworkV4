@@ -81,4 +81,9 @@ std::string outputType = "CSV";
 size_t precision = 16;
 }  // namespace IO
 
+namespace hdf5
+{
+    std::size_t maxChunk = 256;
+} // namespace hdf5
+
 }  // namespace config

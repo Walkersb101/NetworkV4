@@ -131,6 +131,10 @@ void networkV4::Simulation::readNetworkOut()
   }
 
   switch (m_networkOutType) {
+    case networkV4::networkOutType::HDF5: {
+      m_networkOut = std::make_unique<networkOutHDF5>(path);
+      break;
+    }
     case networkV4::networkOutType::BinV2: {
       m_networkOut = std::make_unique<networkOutBinV2>(path, compression);
       break;

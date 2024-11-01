@@ -28,16 +28,17 @@ class networkOut
 {
 public:
   networkOut();
-  networkOut(const std::filesystem::path& _path, bxz::Compression _compression);
+  networkOut(const std::filesystem::path& _path);
   virtual ~networkOut();
 
 public:
   virtual void save(const networkV4::network& _net,
-                    const std::string& _name) const;
+                    const std::size_t _step,
+                    const double _time,
+                    const std::string& _type) const;
 
 protected:
   std::filesystem::path m_path;
-  bxz::Compression m_compression;
 };
 
 class noNetworkOut : public networkOut
@@ -48,7 +49,9 @@ public:
 
 public:
   void save(const networkV4::network& _net,
-            const std::string& _name) const override;
+            const std::size_t _step,
+            const double _time,
+            const std::string& _type) const override;
 };
 
 class networkOutBinV2 : public networkOut
@@ -60,5 +63,26 @@ public:
 
 public:
   void save(const networkV4::network& _net,
-            const std::string& _name) const override;
+            const std::size_t _step,
+            const double _time,
+            const std::string& _type) const override;
+
+private:
+  bxz::Compression m_compression;
+};
+
+class networkOutHDF5 : public networkOut
+{
+public:
+  networkOutHDF5(const std::filesystem::path& _path);
+  ~networkOutHDF5();
+
+public:
+  void save(const networkV4::network& _net,
+            const std::size_t _step,
+            const double _time,
+            const std::string& _type) const override;
+
+private:
+    HighFive::File m_file;
 };

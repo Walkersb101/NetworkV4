@@ -90,4 +90,9 @@ extern std::string outputType;
 extern size_t precision;
 }  // namespace IO
 
+namespace hdf5
+{
+extern std::size_t maxChunk;
+} // namespace hdf5
+
 }  // namespace config

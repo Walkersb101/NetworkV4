@@ -22,6 +22,7 @@ enum class networkOutType : std::uint8_t
 {
   None,
   BinV2,
+  HDF5,
 };
 
 enum class intergratorType : std::uint8_t

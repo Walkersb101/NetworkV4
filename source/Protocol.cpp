@@ -102,7 +102,7 @@ void networkV4::quasiStaticStrain::run(network& _network)
   minimizer.integrate(_network);
   _network.computeForces();
   m_dataOut->writeTimeData(genTimeData(_network, "Initial", 0));
-  m_networkOut->save(_network, "Initial");
+  m_networkOut->save(_network, 0, 0.0, "Initial");
 
   while (true) {
     size_t aboveThreshold = findSingleBreak(_network);
@@ -115,12 +115,12 @@ void networkV4::quasiStaticStrain::run(network& _network)
     m_t = 0.0;
 
     m_dataOut->writeTimeData(genTimeData(_network, "Start", aboveThreshold));
-    m_networkOut->save(_network, "Start-" + std::to_string(m_strainCount));
+    m_networkOut->save(_network, m_strainCount, 0.0, "Start" + std::to_string(m_strainCount));
 
     size_t breakCount = relaxBreak(_network);
 
     m_dataOut->writeTimeData(genTimeData(_network, "End", breakCount));
-    m_networkOut->save(_network, "End-" + std::to_string(m_strainCount));
+    m_networkOut->save(_network, m_strainCount, m_t, "End" + std::to_string(m_strainCount));
   }
 }
 
@@ -200,7 +200,7 @@ auto networkV4::quasiStaticStrain::findSingleBreak(network& _network) -> size_t
   }
 
   double guessStrain =
-      std::max(std::abs(maxDistAboveA)
+      std::min(std::abs(maxDistAboveA)
                    * config::protocols::quasiStaticStrain::strainGuessScale,
                b);
 
@@ -263,6 +263,14 @@ auto networkV4::quasiStaticStrain::relaxBreak(network& _network) -> size_t
 
     for (const auto& b : broken) {
       m_dataOut->writeBondData(genBondData(_network, b));
+    }
+
+    if (broken.size() > 0) {
+      m_networkOut->save(_network,
+                         m_strainCount,
+                         m_t,
+                         "Broken-" + std::to_string(m_strainCount) + "-"
+                             + std::to_string(breakCount));
     }
 
     double error = tools::norm(_network.getNodes().forces());
@@ -428,12 +436,12 @@ void networkV4::stepStrain::run(network& _network)
                                          m_esp);
 
   _network.computeForces();
-  m_networkOut->save(_network, "Initial");
+  m_networkOut->save(_network, 0, 0.0, "Initial");
   m_dataOut->writeTimeData(genTimeData(_network, "Initial"));
 
   strain(_network, m_maxStrain);
   _network.computeForces();
-  m_networkOut->save(_network, "Affine.bin");
+  m_networkOut->save(_network, 1, 0.0, "Affine");
   m_dataOut->writeTimeData(genTimeData(_network, "Affine"));
 
   const double initialStress = globalStressAlongAxis(_network);
@@ -455,7 +463,7 @@ void networkV4::stepStrain::run(network& _network)
       break;
     }
   }
-  m_networkOut->save(_network, "Final");
+  m_networkOut->save(_network, m_logCount, m_t, "Final");
   m_dataOut->writeTimeData(genTimeData(_network, "Final"));
 }
 
@@ -613,8 +621,8 @@ void networkV4::stepStrain::checkLog(const network& _network)
   } else {
     return;
   }
-  m_networkOut->save(_network, reason + "-" + std::to_string(m_logCount++));
   m_dataOut->writeTimeData(genTimeData(_network, reason));
+  m_networkOut->save(_network, m_logCount++, m_t, reason + "-" + std::to_string(m_logCount));
 }
 
 auto networkV4::stepStrain::checkExit(const network& _network) -> bool

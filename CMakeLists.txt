@@ -72,6 +72,18 @@ FetchContent_MakeAvailable(trng4)
 
 target_link_libraries(NetworkV4_lib PUBLIC trng4)
 
+FetchContent_Declare(
+  HighFive
+  GIT_REPOSITORY https://github.com/BlueBrain/HighFive.git
+  GIT_SHALLOW ON
+  GIT_TAG v3.0.0-beta1
+  )
+FetchContent_GetProperties(highfive)
+FetchContent_MakeAvailable(highfive)
+
+include_directories(BEFORE SYSTEM ${highfive_SOURCE_DIR} ${highfive_BINARY_DIR}/include)
+target_link_libraries(NetworkV4_lib PUBLIC HighFive)
+
 # ---- Declare executable ----
 
 add_executable(NetworkV4_exe source/main.cpp)

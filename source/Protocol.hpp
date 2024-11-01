@@ -91,6 +91,8 @@ private:
   double m_t;
 
   std::size_t m_strainCount;
+
+  bool m_saveBreaks;
 };
 
 class stepStrain : public protocol

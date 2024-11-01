@@ -33,12 +33,14 @@ const DataOutType2StrMap dataOutType2Str = {
 // --- NetworkOutType ---
 const Str2NetworkOutTypeMap str2NetworkOutType = {
     {"None", networkOutType::None},
-    {"BinV2", networkOutType::BinV2}
+    {"BinV2", networkOutType::BinV2},
+    {"HDF5", networkOutType::HDF5}
 };
 
 const NetworkOutType2StrMap networkOutType2Str = {
     {networkOutType::None, "None"},
-    {networkOutType::BinV2, "BinV2"}
+    {networkOutType::BinV2, "BinV2"},
+    {networkOutType::HDF5, "HDF5"}
 };
 
 // --- IntegratorType ---
