@@ -243,8 +243,9 @@ auto networkV4::quasiStaticStrain::relaxBreak(network& _network) -> size_t
 {
   std::size_t maxIter = config::intergrators::miminizer::maxIter;
 
-  OverdampedAdaptiveEulerHeun integrator(config::intergrators::default_dt,
-                                         m_esp);
+  //OverdampedAdaptiveEulerHeun integrator(config::intergrators::default_dt,
+  //                                       m_esp);
+  SteepestDescent integrator(config::intergrators::default_dt);
 
   std::vector<size_t> broken = m_breakProtocol->Break(_network, integrator);
   size_t breakCount = broken.size();
@@ -279,6 +280,7 @@ auto networkV4::quasiStaticStrain::relaxBreak(network& _network) -> size_t
     }
 
     m_t += integrator.getDt();
+    std::cout << iter << " " << error << " " << breakCount << " " << integrator.getDt() << std::endl;
   }
   return breakCount;
 }

@@ -9,26 +9,30 @@
 #include <bxzstr.hpp>
 
 #include "Bonds.hpp"
+#include "EnumMap.hpp"
 #include "EnumString.hpp"
 #include "Enums.hpp"
 #include "Vec2.hpp"
-#include "EnumMap.hpp"
 
 namespace networkV4
 {
 namespace tools
 {
-template<typename Enum, typename ValueType, Enum MinEnumValue, Enum MaxEnumValue>
-inline auto averageMaps(const EnumMap<Enum, ValueType, MinEnumValue, MaxEnumValue>& _map1,
-                        const EnumMap<Enum, ValueType, MinEnumValue, MaxEnumValue>& _map2)
+template<typename Enum,
+         typename ValueType,
+         Enum MinEnumValue,
+         Enum MaxEnumValue>
+inline auto averageMaps(
+    const EnumMap<Enum, ValueType, MinEnumValue, MaxEnumValue>& _map1,
+    const EnumMap<Enum, ValueType, MinEnumValue, MaxEnumValue>& _map2)
     -> EnumMap<Enum, ValueType, MinEnumValue, MaxEnumValue>
 {
-    EnumMap<Enum, ValueType, MinEnumValue, MaxEnumValue> result;
-    for (size_t i = to_index(MinEnumValue); i <= to_index(MaxEnumValue); ++i) {
-        const Enum key = static_cast<Enum>(i);
-        result[key] = (_map1[key] + _map2[key]) / 2;
-    }
-    return result;
+  EnumMap<Enum, ValueType, MinEnumValue, MaxEnumValue> result;
+  for (size_t i = to_index(MinEnumValue); i <= to_index(MaxEnumValue); ++i) {
+    const Enum key = static_cast<Enum>(i);
+    result[key] = (_map1[key] + _map2[key]) / 2;
+  }
+  return result;
 }
 
 template<typename T>
@@ -45,7 +49,7 @@ inline auto norm(const std::vector<T>& _vec) -> double
 template<typename U>
 inline auto norm(const std::vector<vec2<U>>& _vec) -> double
 {
-  double sum = std::accumulate(_vec.begin(),
+  const double sum = std::accumulate(_vec.begin(),
                                _vec.end(),
                                0.0,
                                [](double _sum, const vec2<U>& _v)
@@ -56,19 +60,18 @@ inline auto norm(const std::vector<vec2<U>>& _vec) -> double
 template<typename T>
 inline auto maxLength(const std::vector<vec2<T>>& _vec) -> T
 {
-    double max = 0.0;
-    for (size_t i = 0; i < _vec.size(); ++i) {
-        if (_vec[i].length() > max) {
-            max = _vec[i].length();
-        }
-    }
-    return max;
+  // double max = 0.0;
+  // for (size_t i = 0; i < _vec.size(); ++i) {
+  //     if (_vec[i].length() > max)
+  //         max = _vec[i].length();
+  // }
+  // return max;
 
-  //return std::accumulate(_vec.begin(),
-  //                       _vec.end(),
-  //                       0.0,
-  //                       [](double _max, const vec2<T>& _v)
-  //                       { return std::max(_max, _v.length()); });
+  return std::accumulate(_vec.begin(),
+                         _vec.end(),
+                         0.0,
+                         [](double _max, const vec2<T>& _v)
+                         { return std::max(_max, _v.length()); });
 }
 
 inline auto uniqueBondTypes(const networkV4::bonds& _bonds)
@@ -148,5 +151,5 @@ inline void addStressByTypeHeader(
   }
 }
 
-} // namespace tensorData
+}  // namespace tensorData
 }  // namespace networkV4

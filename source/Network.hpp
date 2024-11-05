@@ -4,8 +4,8 @@
 #include <vector>
 
 #include "Bonds.hpp"
-#include "Enums.hpp"
 #include "EnumMap.hpp"
+#include "Enums.hpp"
 #include "Nodes.hpp"
 #include "Tensor2.hpp"
 #include "Vec2.hpp"
@@ -13,7 +13,8 @@
 namespace networkV4
 {
 
-using stressMap = EnumMap<bondType, tensor2d, bondType::single, bondType::matrix>;
+using stressMap =
+    EnumMap<bondType, tensor2d, bondType::single, bondType::matrix>;
 
 class network
 {
@@ -35,20 +36,20 @@ public:
   auto getStresses() -> stressMap&;
   auto getStresses() const -> const stressMap&;
 
+  auto getEnergy() const -> double;
+
   auto getShearStrain() const -> double;
   auto getElongationStrain() const -> double;
-
-  auto getShearStrain() -> double&;
-  auto getElongationStrain() -> double&;
 
   auto getRestSize() const -> vec2d;
   auto getDomain() const -> vec2d;
 
-  auto getRestSize() -> vec2d&;
-  auto getDomain() -> vec2d&;
+  void setDomain(const vec2d& _domain);
 
 public:
   void computeForces();
+
+  auto computeEnergy() -> double;
 
   auto minDist(const vec2d& _pos1, const vec2d& _pos2) const -> vec2d;
   void wrapPosition(vec2d& _pos) const;
@@ -62,7 +63,8 @@ private:
   void applyBond(const bond& _bond,
                  const nodes& _nodes,
                  std::vector<vec2d>& _forces,
-                 stressMap& _stresses);
+                 stressMap& _stresses,
+                 double& _energy);
   void applyBond(const bond& _bond);
 
 public:
@@ -79,11 +81,16 @@ private:
   vec2d m_domain;
   vec2d m_restSize;
 
+  vec2d m_halfDomain;
+  vec2d m_yshift;
+
   nodes m_nodes;
   bonds m_bonds;
 
   stressMap m_stresses;
   tensor2d m_avgStress;
+
+  double m_energy;
 
   double m_shearStrain;
   double m_elongationStrain;

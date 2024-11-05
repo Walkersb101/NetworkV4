@@ -83,7 +83,8 @@ size_t precision = 16;
 
 namespace hdf5
 {
-    std::size_t maxChunk = 256;
-} // namespace hdf5
+std::size_t maxChunk = 256;
+std::string fileName = "output.h5";
+}  // namespace hdf5
 
 }  // namespace config

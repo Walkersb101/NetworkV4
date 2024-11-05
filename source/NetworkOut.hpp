@@ -3,6 +3,7 @@
 #include <filesystem>
 
 #include <bxzstr.hpp>
+#include <highfive/highfive.hpp>
 
 #include "Network.hpp"
 
@@ -74,7 +75,7 @@ private:
 class networkOutHDF5 : public networkOut
 {
 public:
-  networkOutHDF5(const std::filesystem::path& _path);
+  networkOutHDF5(const std::filesystem::path& _path, const networkV4::network& _net); 
   ~networkOutHDF5();
 
 public:
@@ -82,7 +83,4 @@ public:
             const std::size_t _step,
             const double _time,
             const std::string& _type) const override;
-
-private:
-    HighFive::File m_file;
 };

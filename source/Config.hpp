@@ -93,6 +93,7 @@ extern size_t precision;
 namespace hdf5
 {
 extern std::size_t maxChunk;
+extern std::string fileName;
 } // namespace hdf5
 
 }  // namespace config

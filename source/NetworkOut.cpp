@@ -116,16 +116,16 @@ void networkOutBinV2::save(const networkV4::network& _net,
   ss.clear();
 }
 
-networkOutHDF5::networkOutHDF5(const std::filesystem::path& _path)
+networkOutHDF5::networkOutHDF5(const std::filesystem::path& _path, const networkV4::network& _net)
     : networkOut(_path)
 {
   HighFive::DataSetCreateProps props;
 
   // create or overwrite file
-  m_file = HighFive::File(m_path.string(), HighFive::File::Overwrite);
-
+  HighFive::File file(m_path.string() + config::hdf5::fileName,
+                      HighFive::File::Overwrite);  // create or overwrite file
   // create h5md group
-  auto h5md = m_file.createGroup("h5md");
+  auto h5md = file.createGroup("h5md");
 
   // create version attribute
   h5md.createAttribute("version", std::array<int, 2> {1, 1});
@@ -133,16 +133,16 @@ networkOutHDF5::networkOutHDF5(const std::filesystem::path& _path)
   // create author group
   // TODO: add author
   auto author = h5md.createGroup("author");
-  author.createAttribute("name", "Network V4");
+  author.createAttribute<std::string>("name", "Network V4");
 
   // create creator group
   auto creator = h5md.createGroup("creator");
-  creator.createAttribute("name", "HighFive");
-  creator.createAttribute("version", "v3.0.0-beta1");
+  creator.createAttribute<std::string>("name", "HighFive");
+  creator.createAttribute<std::string>("version", "v3.0.0-beta1");
 
   // create positions group
   auto particles = h5md.createGroup("particles");
-  auto allParticles = h5md.createGroup("all");
+  auto allParticles = particles.createGroup("all");
 
   // setup box
   auto box = allParticles.createGroup("box");
@@ -190,13 +190,39 @@ networkOutHDF5::networkOutHDF5(const std::filesystem::path& _path)
   props = HighFive::DataSetCreateProps();
   props.add(
       HighFive::Chunking(std::vector<hsize_t> {config::hdf5::maxChunk / 2, 2}));
+
+  // add Types
+  HighFive::CompoundType typeVec = {{"x", HighFive::create_datatype<double>()},
+                                    {"y", HighFive::create_datatype<double>()}};
+  typeVec.commit(file, "vec2d");
+
+  file.flush();
 }
 
 networkOutHDF5::~networkOutHDF5() {}
 
 void networkOutHDF5::save(const networkV4::network& _net,
-                           const std::size_t _step,
-                           const double _time,
-                           const std::string& _type) const
+                          const std::size_t _step,
+                          const double _time,
+                          const std::string& _type) const
 {
-}
+  HighFive::File file(m_path.string() + config::hdf5::fileName,
+                      HighFive::File::ReadWrite);
+
+  auto h5md = file.getGroup("h5md");
+  auto allParticles = h5md.getGroup("particles").getGroup("all");
+
+  auto edges = allParticles.getGroup("box").getGroup("edges");
+  auto positions = allParticles.getGroup("positions");
+
+  // write box
+  auto step = edges.getDataSet("step");
+  step.resize({step.getSpace().getDimensions()[0] + 1});
+  step.select({step.getSpace().getDimensions()[0] - 1}, {1}).write(_step);
+
+  auto time = edges.getDataSet("time");
+  time.resize({time.getSpace().getDimensions()[0] + 1});
+  time.select({time.getSpace().getDimensions()[0] - 1}, {1}).write(_time);
+
+  file.flush();
+}  // namespace networkOut

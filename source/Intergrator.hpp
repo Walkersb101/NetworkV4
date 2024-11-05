@@ -85,6 +85,28 @@ private:
   stressMap m_tempStresses;
 };
 
+class SteepestDescent : public intergrator
+{
+public:
+  SteepestDescent();
+  SteepestDescent(double _dt);
+  ~SteepestDescent();
+
+public:
+    void integrate(network& _network) override;
+    auto getDt() const -> double;
+
+private:
+    double m_dt;
+    double m_h;
+    double m_nexth;
+    double m_prevEnergy;
+
+    std::vector<vec2d> m_tempPositions;
+    std::vector<vec2d> m_tempForces;
+};
+
+
 class FireMinimizer : public intergrator
 {
 public:

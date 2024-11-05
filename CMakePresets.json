@@ -137,7 +137,7 @@
             "description": "These flags are supported by both GCC and Clang",
             "hidden": true,
             "cacheVariables": {
-                "CMAKE_CXX_FLAGS": "-Og -g -fkeep-inline-functions -fkeep-static-functions"
+                "CMAKE_CXX_FLAGS": "-g"
             }
         },
         {

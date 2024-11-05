@@ -2,22 +2,23 @@
 #include <cmath>
 #include <filesystem>
 #include <fstream>
+#include <numeric>
 #include <ranges>
 #include <vector>
-#include <numeric>
 
 #include "Network.hpp"
 
 #include "Bonds.hpp"
+#include "EnumMap.hpp"
 #include "Nodes.hpp"
 #include "Tensor2.hpp"
 #include "Vec2.hpp"
-#include "EnumMap.hpp"
 
 networkV4::network::network()
     : m_nodes()
     , m_bonds()
     , m_stresses()
+    , m_energy(0.0)
     , m_domain()
     , m_restSize()
     , m_shearStrain(0.0)
@@ -139,16 +140,19 @@ auto networkV4::network::getBonds() const -> const bonds&
   return m_bonds;
 }
 
-auto networkV4::network::getStresses()
-    -> stressMap&
+auto networkV4::network::getStresses() -> stressMap&
 {
   return m_stresses;
 }
 
-auto networkV4::network::getStresses() const
-    -> const stressMap&
+auto networkV4::network::getStresses() const -> const stressMap&
 {
   return m_stresses;
+}
+
+auto networkV4::network::getEnergy() const -> double
+{
+  return m_energy;
 }
 
 auto networkV4::network::getShearStrain() const -> double
@@ -157,16 +161,6 @@ auto networkV4::network::getShearStrain() const -> double
 }
 
 auto networkV4::network::getElongationStrain() const -> double
-{
-  return m_elongationStrain;
-}
-
-auto networkV4::network::getShearStrain() -> double&
-{
-  return m_shearStrain;
-}
-
-auto networkV4::network::getElongationStrain() -> double&
 {
   return m_elongationStrain;
 }
@@ -180,24 +174,22 @@ auto networkV4::network::getDomain() const -> vec2d
   return m_domain;
 }
 
-auto networkV4::network::getRestSize() -> vec2d&
+void networkV4::network::setDomain(const vec2d& _domain)
 {
-  return m_restSize;
-}
-auto networkV4::network::getDomain() -> vec2d&
-{
-  return m_domain;
+  m_domain = _domain;
+  m_halfDomain = m_domain * 0.5;
+  m_yshift = vec2d(m_domain.x * m_shearStrain, m_domain.y);
 }
 
-void networkV4::network::applyBond(
-    const bond& _bond,
-    const nodes& _nodes,
-    std::vector<vec2d>& _forces,
-    stressMap& _stresses)
+void networkV4::network::applyBond(const bond& _bond,
+                                   const nodes& _nodes,
+                                   std::vector<vec2d>& _forces,
+                                   stressMap& _stresses,
+                                   double& _energy)
 {
-  //if (!_bond.connected()) {
-  //  return;
-  //}
+  // if (!_bond.connected()) {
+  //   return;
+  // }
   const vec2d dist =
       minDist(_nodes.position(_bond.src()), _nodes.position(_bond.dst()));
   const double length = dist.length();
@@ -205,19 +197,35 @@ void networkV4::network::applyBond(
   _forces[_bond.src()] += force;
   _forces[_bond.dst()] -= force;
 
+  _energy += _bond.energy(length);
+
   _stresses[_bond.type()] += outer(force, dist);
 }
 
 void networkV4::network::computeForces()
 {
+  m_energy = 0.0;
   clearStresses();
   getNodes().clearForces();
   auto connected = [](const auto& _b) { return _b.connected(); };
   auto connectedList = m_bonds | std::views::filter(connected);
   for (const auto& bond : connectedList) {
-    applyBond(bond, m_nodes, m_nodes.forces(), m_stresses);
+    applyBond(bond, m_nodes, m_nodes.forces(), m_stresses, m_energy);
   }
   normalizeStresses();
+}
+
+auto networkV4::network::computeEnergy() -> double
+{
+  m_energy = 0.0;
+  auto connected = [](const auto& _b) { return _b.connected(); };
+  auto connectedList = m_bonds | std::views::filter(connected);
+  for (const auto& bond : connectedList) {
+    const vec2d dist =
+        minDist(m_nodes.position(bond.src()), m_nodes.position(bond.dst()));
+    m_energy += bond.energy(dist.length());
+  }
+  return m_energy;
 }
 
 auto networkV4::network::minDist(const vec2d& _pos1,
@@ -275,20 +283,21 @@ void networkV4::network::shear(double _step)
       m_nodes.positions().begin(),
       [&](const vec2d& _pos)
       { return wrapedPosition(_pos + vec2d((_step * _pos.y) - offset, 0.0)); });
+  m_yshift = vec2d(m_domain.x * m_shearStrain, m_domain.y);
 }
 
 void networkV4::network::elongate(double _step)
 {
   m_elongationStrain += _step;
   const vec2d oldDomain = m_domain;
-  m_domain = m_restSize
-      * vec2d(1 / (1.0 + m_elongationStrain), 1.0 + m_elongationStrain);
+  setDomain(m_restSize * vec2d(1 / (1.0 + m_elongationStrain), 1.0 + m_elongationStrain));
 
   const vec2d scale = m_domain / oldDomain;
   std::transform(m_nodes.positions().begin(),
                  m_nodes.positions().end(),
                  m_nodes.positions().begin(),
-                 [&](const vec2d& _pos) { return _pos * scale; });
+                 [&](const vec2d& _pos) {
+    return _pos * scale; });
 }
 
 void networkV4::network::initStresses()
@@ -310,11 +319,11 @@ void networkV4::network::normalizeStresses()
 
 auto networkV4::network::getGlobalStress() const -> tensor2d
 {
-    return std::accumulate(m_stresses.begin(),
-                           m_stresses.end(),
-                           tensor2d(),
-                           [](const tensor2d& _sum, const auto& _stress)
-                           { return _sum + _stress; });
+  return std::accumulate(m_stresses.begin(),
+                         m_stresses.end(),
+                         tensor2d(),
+                         [](const tensor2d& _sum, const auto& _stress)
+                         { return _sum + _stress; });
 }
 
 auto networkV4::network::bondStrain(const bond& _bond) const -> double

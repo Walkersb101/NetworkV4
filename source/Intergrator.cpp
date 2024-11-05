@@ -179,6 +179,9 @@ void networkV4::OverdampedAdaptiveEulerHeun::integrate(network& _network)
     m_dt *= q;
     ++iters;
   }
+  if (iters == maxIter) {
+    std::runtime_error("Max iterations reached");
+  }
 
   heunAverage(_network, m_tempForces, m_dt);
 
@@ -205,6 +208,70 @@ auto networkV4::OverdampedAdaptiveEulerHeun::forceErrorNorm(nodes& _nodes)
     sum += force;
   }
   return sqrt(sum);
+}
+
+networkV4::SteepestDescent::SteepestDescent()
+    : SteepestDescent(config::intergrators::default_dt)
+{
+}
+
+networkV4::SteepestDescent::SteepestDescent(double _dt)
+    : m_h(config::intergrators::default_dt)
+    , m_dt(_dt)
+    , m_nexth(config::intergrators::default_dt)
+    , m_prevEnergy(std::numeric_limits<double>::quiet_NaN())
+
+{
+}
+
+networkV4::SteepestDescent::~SteepestDescent() {}
+
+auto networkV4::SteepestDescent::integrate(network& _network) -> void
+{
+  m_h = m_nexth;
+  double energy;
+
+  std::size_t maxIter = config::intergrators::adaptiveIntergrator::maxIter;
+  double qMin = config::intergrators::adaptiveHeun::qMin;
+  double qMax = config::intergrators::adaptiveHeun::qMax;
+  double dtMin = config::intergrators::adaptiveIntergrator::dtMin;
+  double dtMax = config::intergrators::adaptiveIntergrator::dtMax;
+
+  std::size_t iters = 0;
+
+  nodes& networkNodes = _network.getNodes();
+  _network.computeForces();
+  if (std::isnan(m_prevEnergy)) {
+    m_prevEnergy = _network.getEnergy();
+  }
+  const double maxLen = tools::maxLength(networkNodes.forces());
+
+  m_tempPositions = networkNodes.positions();
+  m_tempForces = networkNodes.forces();
+
+  while (iters < maxIter) {
+    m_dt = std::clamp(m_h / maxLen, dtMin, dtMax);
+    overdampedMove(_network, m_dt);
+    energy = _network.computeEnergy();
+
+    if (energy < m_prevEnergy) {
+      m_prevEnergy = energy;
+      m_nexth = m_h * 1.2;
+      break;
+    }
+    networkNodes.positions() = m_tempPositions;
+    networkNodes.forces() = m_tempForces;
+    m_h *= 0.2;
+    ++iters;
+  }
+  if (iters == maxIter) {
+    std::runtime_error("Max iterations reached");
+  }
+}
+
+auto networkV4::SteepestDescent::getDt() const -> double
+{
+  return m_dt;
 }
 
 networkV4::FireMinimizer::FireMinimizer()
