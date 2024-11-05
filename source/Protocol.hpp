@@ -142,4 +142,6 @@ private:
   size_t m_logCount;
 };
 
+std::vector<double> forceMags(const network& _network);
+
 }  // namespace networkV4

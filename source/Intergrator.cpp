@@ -210,17 +210,15 @@ auto networkV4::OverdampedAdaptiveEulerHeun::forceErrorNorm(nodes& _nodes)
   return sqrt(sum);
 }
 
-networkV4::SteepestDescent::SteepestDescent()
-    : SteepestDescent(config::intergrators::default_dt)
+networkV4::SteepestDescent::SteepestDescent(double _dt)
+    : m_dt(_dt)
+    , m_nextdt(_dt)
+    , m_prevEnergy(std::numeric_limits<double>::quiet_NaN())
 {
 }
 
-networkV4::SteepestDescent::SteepestDescent(double _dt)
-    : m_h(config::intergrators::default_dt)
-    , m_dt(_dt)
-    , m_nexth(config::intergrators::default_dt)
-    , m_prevEnergy(std::numeric_limits<double>::quiet_NaN())
-
+networkV4::SteepestDescent::SteepestDescent()
+    : SteepestDescent(config::intergrators::default_dt)
 {
 }
 
@@ -228,7 +226,7 @@ networkV4::SteepestDescent::~SteepestDescent() {}
 
 auto networkV4::SteepestDescent::integrate(network& _network) -> void
 {
-  m_h = m_nexth;
+  m_dt = m_nextdt;
   double energy;
 
   std::size_t maxIter = config::intergrators::adaptiveIntergrator::maxIter;
@@ -236,6 +234,8 @@ auto networkV4::SteepestDescent::integrate(network& _network) -> void
   double qMax = config::intergrators::adaptiveHeun::qMax;
   double dtMin = config::intergrators::adaptiveIntergrator::dtMin;
   double dtMax = config::intergrators::adaptiveIntergrator::dtMax;
+
+  double gamma = 1e-4;
 
   std::size_t iters = 0;
 
@@ -245,34 +245,75 @@ auto networkV4::SteepestDescent::integrate(network& _network) -> void
     m_prevEnergy = _network.getEnergy();
   }
   const double maxLen = tools::maxLength(networkNodes.forces());
+  const double FdotF =
+      tools::xdoty(networkNodes.forces(), networkNodes.forces());
 
-  m_tempPositions = networkNodes.positions();
-  m_tempForces = networkNodes.forces();
+  m_dt = std::clamp(m_dt, dtMin, dtMax);
+  overdampedMove(_network, m_dt);
+  energy = _network.computeEnergy();
 
-  while (iters < maxIter) {
-    m_dt = std::clamp(m_h / maxLen, dtMin, dtMax);
+  while (energy > m_prevEnergy - gamma * m_dt * FdotF && iters < maxIter
+         && m_dt > dtMin)
+  {
+    overdampedMove(_network, -m_dt);
+    m_dt = ((m_dt * m_dt) * FdotF)
+        / (2.0 * (energy + m_dt * FdotF - m_prevEnergy));
+    m_dt = std::clamp(m_dt, dtMin, dtMax);
     overdampedMove(_network, m_dt);
     energy = _network.computeEnergy();
-
-    if (energy < m_prevEnergy) {
-      m_prevEnergy = energy;
-      m_nexth = m_h * 1.2;
-      break;
-    }
-    networkNodes.positions() = m_tempPositions;
-    networkNodes.forces() = m_tempForces;
-    m_h *= 0.2;
-    ++iters;
   }
-  if (iters == maxIter) {
-    std::runtime_error("Max iterations reached");
-  }
+  m_nextdt = std::clamp(2 * (m_prevEnergy - energy) / FdotF, dtMin, dtMax);
+  m_prevEnergy = energy;
 }
 
 auto networkV4::SteepestDescent::getDt() const -> double
 {
   return m_dt;
 }
+//
+//auto networkV4::SteepestDescent::eGradient(network& _network,
+//                                           const double _step) const -> double
+//{
+//  const double energy = _network.computeEnergy();
+//  overdampedMove(_network, _step);
+//  const double newEnergy = _network.computeEnergy();
+//  overdampedMove(_network, -_step);
+//  return (newEnergy - energy) / _step;
+//}
+//
+//auto networkV4::SteepestDescent::lineSearch(network& _network) const -> double
+//{
+//  double grad = eGradient(_network);
+//  double gradSign = tools::sign(grad);
+//  double bound = std::abs(grad);
+//  double initialEnergy = _network.getEnergy();
+//
+//  // Find Upper Bound
+//  for (std::size_t i = 0; i < 10; i++) {
+//    overdampedMove(_network, bound);
+//    double newGrad = eGradient(_network);
+//    double newEnergy = _network.computeEnergy();
+//    overdampedMove(_network, -bound);
+//    if (newEnergy > initialEnergy) {
+//      bound *= 0.5;
+//      break;
+//    }
+//    double oldSign = gradSign;
+//    gradSign = tools::sign(newGrad);
+//    bound *= 2.0;
+//    if (oldSign != gradSign) {
+//      break;
+//    }
+//  }
+//
+//  double numer = 1.0;
+//  double denom = 2.0;
+//  for (std::size_t i = 0; i < 10; i++) {
+//    double testStep = bound * numer / denom;
+//    overdampedMove(_network, testStep);
+//    double newGrad = eGradient(_network);
+//  }
+//}
 
 networkV4::FireMinimizer::FireMinimizer()
     : m_dt(config::intergrators::default_dt)
@@ -326,12 +367,13 @@ void networkV4::FireMinimizer::integrate(network& _network)
   updateVelocities(_network, m_dt);
 
   for (size_t iter = 0; iter < maxIter; ++iter) {
-    vdotf = xdoty(networkNodes.velocities(), networkNodes.forces());
+    vdotf = tools::xdoty(networkNodes.velocities(), networkNodes.forces());
     if (vdotf > 0.0) {
       Npos++;
       Nneg = 0;
-      vdotv = xdoty(networkNodes.velocities(), networkNodes.velocities());
-      fdotf = xdoty(networkNodes.forces(), networkNodes.forces());
+      vdotv =
+          tools::xdoty(networkNodes.velocities(), networkNodes.velocities());
+      fdotf = tools::xdoty(networkNodes.forces(), networkNodes.forces());
 
       scale1 = 1.0 - alpha;
       scale2 = fdotf <= 1e-20 ? 0.0 : (alpha * std::sqrt(vdotv / fdotf));
@@ -377,17 +419,6 @@ void networkV4::FireMinimizer::integrate(network& _network)
       break;
     }
   }
-}
-
-auto networkV4::FireMinimizer::xdoty(const std::vector<vec2d>& _x,
-                                     const std::vector<vec2d>& _y) -> double
-{
-  size_t N = std::min(_x.size(), _y.size());
-  double power = 0.0;
-  for (std::size_t i = 0; i < N; ++i) {
-    power += _x[i].dot(_y[i]);
-  }
-  return power;
 }
 
 networkV4::OverdampedAdaptiveMinimizer::OverdampedAdaptiveMinimizer()

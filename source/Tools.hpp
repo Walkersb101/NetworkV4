@@ -9,6 +9,7 @@
 #include <bxzstr.hpp>
 
 #include "Bonds.hpp"
+#include "Network.hpp"
 #include "EnumMap.hpp"
 #include "EnumString.hpp"
 #include "Enums.hpp"
@@ -96,6 +97,17 @@ inline auto maxAbsComponent(const std::vector<vec2<T>>& _vec) -> T
                          { return std::max(_max, _v.abs().max()); });
 }
 
+inline auto xdoty(const std::vector<vec2d>& _vec1, const std::vector<vec2d>& _vec2) -> double
+{
+  return std::inner_product(_vec1.begin(),
+                            _vec1.end(),
+                            _vec2.begin(),
+                            0.0,
+                            std::plus<double>(),
+                            [](const vec2d& _v1, const vec2d& _v2)
+                            { return _v1.dot(_v2); });
+}
+
 template<typename T>
 inline auto sign(const T& _val) -> T
 {
@@ -152,4 +164,5 @@ inline void addStressByTypeHeader(
 }
 
 }  // namespace tensorData
+
 }  // namespace networkV4

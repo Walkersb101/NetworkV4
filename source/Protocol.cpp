@@ -239,6 +239,20 @@ auto networkV4::quasiStaticStrain::findSingleBreak(network& _network) -> size_t
   return breakCountB;
 }
 
+std::vector<double> networkV4::forceMags(const network& _network) {
+    const auto& bonds = _network.getBonds();
+    const auto& position = _network.getNodes().positions();
+
+    std::vector<double> forces;
+    forces.reserve(bonds.size());
+    for (const auto& bond : bonds) {
+        const vec2d dist = _network.minDist(position[bond.src()], position[bond.dst()]);
+        const double force = bond.force(dist.length());
+        forces.push_back(force);
+    }
+    return forces;
+}
+
 auto networkV4::quasiStaticStrain::relaxBreak(network& _network) -> size_t
 {
   std::size_t maxIter = config::intergrators::miminizer::maxIter;
@@ -280,7 +294,7 @@ auto networkV4::quasiStaticStrain::relaxBreak(network& _network) -> size_t
     }
 
     m_t += integrator.getDt();
-    std::cout << iter << " " << error << " " << breakCount << " " << integrator.getDt() << std::endl;
+    std::cout << std::setprecision(10) << iter << " " << error << " " << _network.getEnergy() << " " << integrator.getDt() << std::endl;
   }
   return breakCount;
 }

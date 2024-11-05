@@ -35,8 +35,9 @@ void networkV4::network::loadFromBinV1(std::ifstream& _file, double _lambda)
   _file.read(reinterpret_cast<char*>(&N), sizeof(std::size_t));
   _file.read(reinterpret_cast<char*>(&B), sizeof(std::size_t));
 
-  _file.read(reinterpret_cast<char*>(&m_domain.x), sizeof(double));
-  m_domain.y = m_domain.x;
+  double domainX;
+  _file.read(reinterpret_cast<char*>(&domainX), sizeof(double));
+  setDomain(vec2d(domainX, domainX));
   _file.read(reinterpret_cast<char*>(&m_shearStrain), sizeof(double));
   m_restSize = m_domain;
 
@@ -79,8 +80,10 @@ void networkV4::network::loadFromBinV2(std::ifstream& _file)
   _file.read(reinterpret_cast<char*>(&N), sizeof(std::size_t));
   _file.read(reinterpret_cast<char*>(&B), sizeof(std::size_t));
 
-  _file.read(reinterpret_cast<char*>(&m_domain), sizeof(vec2d));
+  vec2d domain;  
+  _file.read(reinterpret_cast<char*>(&domain), sizeof(vec2d));
   _file.read(reinterpret_cast<char*>(&m_shearStrain), sizeof(double));
+  setDomain(domain);
   m_restSize = m_domain;
 
   m_nodes.reserve(N);
@@ -231,17 +234,28 @@ auto networkV4::network::computeEnergy() -> double
 auto networkV4::network::minDist(const vec2d& _pos1,
                                  const vec2d& _pos2) const -> vec2d
 {
-  const vec2d hDomain = m_domain * 0.5;
-  const vec2d yShift = vec2d(m_domain.x * m_shearStrain, m_domain.y);
   vec2d dist = _pos2 - _pos1;
-  while (dist.y > hDomain.y)
-    dist -= yShift;
-  while (dist.y <= -hDomain.y)
-    dist += yShift;
-  while (dist.x > hDomain.x)
-    dist.x -= m_domain.x;
-  while (dist.x < -hDomain.x)
-    dist.x += m_domain.x;
+  if (m_shearStrain != 0.0) {
+    while (std::abs(dist.y) > m_halfDomain.y) {
+      if (dist.y > 0.0)
+        dist -= m_yshift;
+      else
+        dist += m_yshift;
+    }
+  } else {
+    while (std::abs(dist.y) > m_halfDomain.y) {
+      if (dist.y > 0.0)
+        dist.y -= m_domain.y;
+      else
+        dist.y += m_domain.y;
+    }
+  }
+  while (std::abs(dist.x) > m_halfDomain.x) {
+    if (dist.x > 0.0)
+      dist.x -= m_domain.x;
+    else
+      dist.x += m_domain.x;
+  }
   // vec2d dist2 = _pos2 - _pos1;
   // dist2.x -= std::round(dist2.y / m_domain.y) * m_domain.x * m_shearStrain;
   // distBC(dist2.x, m_domain.x);
@@ -251,11 +265,32 @@ auto networkV4::network::minDist(const vec2d& _pos1,
 
 void networkV4::network::wrapPosition(vec2d& _pos) const
 {
-  const vec2d yShift = vec2d(m_domain.x * m_shearStrain, m_domain.y);
+  if (m_shearStrain != 0.0) {
+    while (std::abs(_pos.y) > m_domain.y) {
+      if (_pos.y > 0.0)
+        _pos -= m_yshift;
+      else
+        _pos += m_yshift;
+    }
+  } else {
+    while (std::abs(_pos.y) > m_domain.y) {
+      if (_pos.y > 0.0)
+        _pos.y -= m_domain.y;
+      else
+        _pos.y += m_domain.y;
+    }
+  }
+  while (std::abs(_pos.x) > m_domain.x) {
+    if (_pos.x > 0.0)
+      _pos.x -= m_domain.x;
+    else
+      _pos.x += m_domain.x;
+  }
+
   while (_pos.y > m_domain.y)
-    _pos -= yShift;
+    _pos -= m_yshift;
   while (_pos.y <= 0.0)
-    _pos += yShift;
+    _pos += m_yshift;
   while (_pos.x > m_domain.x)
     _pos.x -= m_domain.x;
   while (_pos.x < 0.0)
@@ -290,14 +325,14 @@ void networkV4::network::elongate(double _step)
 {
   m_elongationStrain += _step;
   const vec2d oldDomain = m_domain;
-  setDomain(m_restSize * vec2d(1 / (1.0 + m_elongationStrain), 1.0 + m_elongationStrain));
+  setDomain(m_restSize
+            * vec2d(1 / (1.0 + m_elongationStrain), 1.0 + m_elongationStrain));
 
   const vec2d scale = m_domain / oldDomain;
   std::transform(m_nodes.positions().begin(),
                  m_nodes.positions().end(),
                  m_nodes.positions().begin(),
-                 [&](const vec2d& _pos) {
-    return _pos * scale; });
+                 [&](const vec2d& _pos) { return _pos * scale; });
 }
 
 void networkV4::network::initStresses()

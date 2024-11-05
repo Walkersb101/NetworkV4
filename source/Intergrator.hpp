@@ -97,15 +97,14 @@ public:
     auto getDt() const -> double;
 
 private:
+    //auto eGradient(network& _network, const double _step = 0.01) const -> double;
+    //auto lineSearch(network& _network) const -> double;
+
+private:
     double m_dt;
-    double m_h;
-    double m_nexth;
+    double m_nextdt;
     double m_prevEnergy;
-
-    std::vector<vec2d> m_tempPositions;
-    std::vector<vec2d> m_tempForces;
 };
-
 
 class FireMinimizer : public intergrator
 {
