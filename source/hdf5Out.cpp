@@ -53,11 +53,11 @@ void networkOutHDF5::save(const networkV4::network& _net,
   savePositions(positions, _net, _step, _time);
 
   // write observations
-  auto sacrificialObs = file.getGroup("observables/sacrificialConnections");
+  auto sacrificialObs = file.getGroup("observables/sacrificialConnected");
   saveConnected(
       sacrificialObs, _net, _step, _time, networkV4::bondType::sacrificial);
 
-  auto matrixObs = file.getGroup("observables/matrixConnections");
+  auto matrixObs = file.getGroup("observables/matrixConnected");
   saveConnected(matrixObs, _net, _step, _time, networkV4::bondType::matrix);
 
   auto typeObs = file.getGroup("observables/logType");
@@ -267,7 +267,7 @@ void networkOutHDF5::initObservations(HighFive::File& _file,
 
   // Connected Observables
   auto sacrificialConnectedObs =
-      createOrGetGroup(_file, "observables/sacrificialConnections");
+      createOrGetGroup(_file, "observables/sacrificialConnected");
   createDataSet<int>(sacrificialConnectedObs,
                      "step",
                      std::vector<std::size_t> {0},
@@ -290,7 +290,7 @@ void networkOutHDF5::initObservations(HighFive::File& _file,
                       true);
 
   auto matrixConnectedObs =
-      createOrGetGroup(_file, "observables/matrixConnections");
+      createOrGetGroup(_file, "observables/matrixConnected");
   createDataSet<int>(matrixConnectedObs,
                      "step",
                      std::vector<std::size_t> {0},
