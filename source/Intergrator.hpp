@@ -97,8 +97,8 @@ public:
     auto getDt() const -> double;
 
 private:
-    //auto eGradient(network& _network, const double _step = 0.01) const -> double;
-    //auto lineSearch(network& _network) const -> double;
+    auto eGradient(network& _network, const double _step = 1e-6) const -> double;
+    auto lineSearch(network& _network) const -> double;
 
 private:
     double m_dt;

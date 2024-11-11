@@ -115,12 +115,14 @@ void networkV4::quasiStaticStrain::run(network& _network)
     m_t = 0.0;
 
     m_dataOut->writeTimeData(genTimeData(_network, "Start", aboveThreshold));
-    m_networkOut->save(_network, m_strainCount, 0.0, "Start" + std::to_string(m_strainCount));
+    m_networkOut->save(
+        _network, m_strainCount, 0.0, "Start-" + std::to_string(m_strainCount));
 
     size_t breakCount = relaxBreak(_network);
 
-    m_dataOut->writeTimeData(genTimeData(_network, "End", breakCount));
-    m_networkOut->save(_network, m_strainCount, m_t, "End" + std::to_string(m_strainCount));
+   m_dataOut->writeTimeData(genTimeData(_network, "End", breakCount));
+    m_networkOut->save(
+        _network, m_strainCount, m_t, "End-" + std::to_string(m_strainCount));
   }
 }
 
@@ -239,27 +241,29 @@ auto networkV4::quasiStaticStrain::findSingleBreak(network& _network) -> size_t
   return breakCountB;
 }
 
-std::vector<double> networkV4::forceMags(const network& _network) {
-    const auto& bonds = _network.getBonds();
-    const auto& position = _network.getNodes().positions();
+std::vector<double> networkV4::forceMags(const network& _network)
+{
+  const auto& bonds = _network.getBonds();
+  const auto& position = _network.getNodes().positions();
 
-    std::vector<double> forces;
-    forces.reserve(bonds.size());
-    for (const auto& bond : bonds) {
-        const vec2d dist = _network.minDist(position[bond.src()], position[bond.dst()]);
-        const double force = bond.force(dist.length());
-        forces.push_back(force);
-    }
-    return forces;
+  std::vector<double> forces;
+  forces.reserve(bonds.size());
+  for (const auto& bond : bonds) {
+    const vec2d dist =
+        _network.minDist(position[bond.src()], position[bond.dst()]);
+    const double force = bond.force(dist.length());
+    forces.push_back(force);
+  }
+  return forces;
 }
 
 auto networkV4::quasiStaticStrain::relaxBreak(network& _network) -> size_t
 {
   std::size_t maxIter = config::intergrators::miminizer::maxIter;
 
-  //OverdampedAdaptiveEulerHeun integrator(config::intergrators::default_dt,
-  //                                       m_esp);
-  SteepestDescent integrator(config::intergrators::default_dt);
+  OverdampedAdaptiveEulerHeun integrator(config::intergrators::default_dt,
+                                         m_esp);
+  //SteepestDescent integrator(config::intergrators::default_dt);
 
   std::vector<size_t> broken = m_breakProtocol->Break(_network, integrator);
   size_t breakCount = broken.size();
@@ -294,7 +298,11 @@ auto networkV4::quasiStaticStrain::relaxBreak(network& _network) -> size_t
     }
 
     m_t += integrator.getDt();
-    std::cout << std::setprecision(10) << iter << " " << error << " " << _network.getEnergy() << " " << integrator.getDt() << std::endl;
+    //std::cout << std::setprecision(10) << iter << " " << error << " "
+    //          << _network.getEnergy() << " " << integrator.getDt() << " "
+    //          << tools::maxLength(_network.getNodes().forces()) << " "
+    //          << tools::maxAbsComponent(_network.getNodes().forces())
+    //          << std::endl;
   }
   return breakCount;
 }
@@ -638,7 +646,8 @@ void networkV4::stepStrain::checkLog(const network& _network)
     return;
   }
   m_dataOut->writeTimeData(genTimeData(_network, reason));
-  m_networkOut->save(_network, m_logCount++, m_t, reason + "-" + std::to_string(m_logCount));
+  m_networkOut->save(
+      _network, m_logCount++, m_t, reason + "-" + std::to_string(m_logCount));
 }
 
 auto networkV4::stepStrain::checkExit(const network& _network) -> bool

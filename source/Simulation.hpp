@@ -10,6 +10,7 @@
 #include "Enums.hpp"
 #include "Network.hpp"
 #include "NetworkOut.hpp"
+#include "hdf5Out.hpp"
 #include "Protocol.hpp"
 
 namespace networkV4

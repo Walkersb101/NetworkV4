@@ -3,7 +3,6 @@
 #include <filesystem>
 
 #include <bxzstr.hpp>
-#include <highfive/highfive.hpp>
 
 #include "Network.hpp"
 
@@ -70,17 +69,4 @@ public:
 
 private:
   bxz::Compression m_compression;
-};
-
-class networkOutHDF5 : public networkOut
-{
-public:
-  networkOutHDF5(const std::filesystem::path& _path, const networkV4::network& _net); 
-  ~networkOutHDF5();
-
-public:
-  void save(const networkV4::network& _net,
-            const std::size_t _step,
-            const double _time,
-            const std::string& _type) const override;
 };

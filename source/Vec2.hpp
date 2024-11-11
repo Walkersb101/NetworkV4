@@ -17,11 +17,6 @@ struct vec2
       , y(_y)
   {
   }
-  vec2(const vec2& _v)
-      : x(_v.x)
-      , y(_v.y)
-  {
-  }
 
 public:
   auto operator=(const vec2& _v) -> vec2&

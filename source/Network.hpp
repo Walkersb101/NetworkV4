@@ -36,13 +36,13 @@ public:
   auto getStresses() -> stressMap&;
   auto getStresses() const -> const stressMap&;
 
-  auto getEnergy() const -> double;
+  auto getEnergy() const -> const double;
 
-  auto getShearStrain() const -> double;
-  auto getElongationStrain() const -> double;
+  auto getShearStrain() const -> const double;
+  auto getElongationStrain() const -> const double;
 
-  auto getRestSize() const -> vec2d;
-  auto getDomain() const -> vec2d;
+  auto getRestSize() const -> const vec2d;
+  auto getDomain() const -> const vec2d;
 
   void setDomain(const vec2d& _domain);
 

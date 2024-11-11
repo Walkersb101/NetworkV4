@@ -153,26 +153,26 @@ auto networkV4::network::getStresses() const -> const stressMap&
   return m_stresses;
 }
 
-auto networkV4::network::getEnergy() const -> double
+auto networkV4::network::getEnergy() const -> const double
 {
   return m_energy;
 }
 
-auto networkV4::network::getShearStrain() const -> double
+auto networkV4::network::getShearStrain() const -> const double
 {
   return m_shearStrain;
 }
 
-auto networkV4::network::getElongationStrain() const -> double
+auto networkV4::network::getElongationStrain() const -> const double
 {
   return m_elongationStrain;
 }
 
-auto networkV4::network::getRestSize() const -> vec2d
+auto networkV4::network::getRestSize() const -> const vec2d
 {
   return m_restSize;
 }
-auto networkV4::network::getDomain() const -> vec2d
+auto networkV4::network::getDomain() const -> const vec2d
 {
   return m_domain;
 }
@@ -287,14 +287,14 @@ void networkV4::network::wrapPosition(vec2d& _pos) const
       _pos.x += m_domain.x;
   }
 
-  while (_pos.y > m_domain.y)
-    _pos -= m_yshift;
-  while (_pos.y <= 0.0)
-    _pos += m_yshift;
-  while (_pos.x > m_domain.x)
-    _pos.x -= m_domain.x;
-  while (_pos.x < 0.0)
-    _pos.x += m_domain.x;
+  //while (_pos.y > m_domain.y)
+  //  _pos -= m_yshift;
+  //while (_pos.y <= 0.0)
+  //  _pos += m_yshift;
+  //while (_pos.x > m_domain.x)
+  //  _pos.x -= m_domain.x;
+  //while (_pos.x < 0.0)
+  //  _pos.x += m_domain.x;
 
   //_pos.x -= std::floor(_pos.y / m_domain.y) * m_domain.x * m_shearStrain;
   // BC(_pos.x, m_domain.x);

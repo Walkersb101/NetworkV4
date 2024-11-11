@@ -13,7 +13,7 @@ double default_dt = 1e-3;
 
 namespace adaptiveIntergrator
 {
-double esp = 1e-2;
+double esp = 1e-3;
 std::size_t maxIter = 10;
 
 double dtMin = 1e-6;
@@ -83,7 +83,7 @@ size_t precision = 16;
 
 namespace hdf5
 {
-std::size_t maxChunk = 256;
+std::size_t maxChunk = 65536;
 std::string fileName = "output.h5";
 }  // namespace hdf5
 

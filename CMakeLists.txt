@@ -23,6 +23,7 @@ add_library(
     source/Intergrator.cpp
     source/DataOut.cpp
     source/EnumString.cpp
+    source/hdf5Out.cpp
     source/Network.cpp
     source/NetworkOut.cpp
     source/Nodes.cpp

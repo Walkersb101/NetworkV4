@@ -8,6 +8,7 @@
 #include "Config.hpp"
 #include "Network.hpp"
 #include "Nodes.hpp"
+#include "Roots.hpp"
 #include "Tensor2.hpp"
 #include "Tools.hpp"
 #include "Vec2.hpp"
@@ -244,76 +245,155 @@ auto networkV4::SteepestDescent::integrate(network& _network) -> void
   if (std::isnan(m_prevEnergy)) {
     m_prevEnergy = _network.getEnergy();
   }
-  const double maxLen = tools::maxLength(networkNodes.forces());
-  const double FdotF =
-      tools::xdoty(networkNodes.forces(), networkNodes.forces());
+  // const double maxLen = tools::maxLength(networkNodes.forces());
+  // const double FdotF =
+  //     tools::xdoty(networkNodes.forces(), networkNodes.forces());
 
-  m_dt = std::clamp(m_dt, dtMin, dtMax);
+  m_dt = lineSearch(_network);
+  // m_dt = std::clamp(m_dt, dtMin, dtMax);
   overdampedMove(_network, m_dt);
   energy = _network.computeEnergy();
 
-  while (energy > m_prevEnergy - gamma * m_dt * FdotF && iters < maxIter
-         && m_dt > dtMin)
-  {
-    overdampedMove(_network, -m_dt);
-    m_dt = ((m_dt * m_dt) * FdotF)
-        / (2.0 * (energy + m_dt * FdotF - m_prevEnergy));
-    m_dt = std::clamp(m_dt, dtMin, dtMax);
-    overdampedMove(_network, m_dt);
-    energy = _network.computeEnergy();
-  }
-  m_nextdt = std::clamp(2 * (m_prevEnergy - energy) / FdotF, dtMin, dtMax);
-  m_prevEnergy = energy;
+  // while (energy > m_prevEnergy - gamma * m_dt * FdotF && iters < maxIter
+  //        && m_dt > dtMin)
+  //{
+  //   overdampedMove(_network, -m_dt);
+  //   m_dt = ((m_dt * m_dt) * FdotF)
+  //       / (2.0 * (energy + m_dt * FdotF - m_prevEnergy));
+  //   m_dt = std::clamp(m_dt, dtMin, dtMax);
+  //   overdampedMove(_network, m_dt);
+  //   energy = _network.computeEnergy();
+  // }
+  // m_nextdt = std::clamp(2 * (m_prevEnergy - energy) / FdotF, dtMin, dtMax);
+  // m_prevEnergy = energy;
 }
 
 auto networkV4::SteepestDescent::getDt() const -> double
 {
   return m_dt;
 }
+
+auto networkV4::SteepestDescent::eGradient(network& _network,
+                                           const double _step) const -> double
+{
+  ///const double norm = tools::norm(_network.getNodes().forces());
+  overdampedMove(_network, - _step);
+  const double energy = _network.computeEnergy();
+  overdampedMove(_network, 2.0 * _step);
+  const double newEnergy = _network.computeEnergy();
+  overdampedMove(_network, -_step);
+  return (newEnergy - energy) / ( 2.0 * _step);
+}
+
+auto networkV4::SteepestDescent::lineSearch(network& _network) const -> double
+{
+    //double a = config::intergrators::adaptiveIntergrator::dtMax;
+    //double tau = 0.5;
+    //double c = 1e-2;
 //
-//auto networkV4::SteepestDescent::eGradient(network& _network,
-//                                           const double _step) const -> double
-//{
-//  const double energy = _network.computeEnergy();
-//  overdampedMove(_network, _step);
-//  const double newEnergy = _network.computeEnergy();
-//  overdampedMove(_network, -_step);
-//  return (newEnergy - energy) / _step;
-//}
+    //double initialEnergy = _network.computeEnergy();
+    //double fdotf = tools::xdoty(_network.getNodes().forces(), _network.getNodes().forces());
+    //double Ea;
 //
-//auto networkV4::SteepestDescent::lineSearch(network& _network) const -> double
-//{
-//  double grad = eGradient(_network);
-//  double gradSign = tools::sign(grad);
-//  double bound = std::abs(grad);
-//  double initialEnergy = _network.getEnergy();
+    //overdampedMove(_network, a);
+    //Ea = _network.computeEnergy();
+    //overdampedMove(_network, -a);
+    //while (Ea > initialEnergy - a * c * fdotf) {
+    //    a *= tau;
+    //    overdampedMove(_network, a);
+    //    Ea = _network.computeEnergy();
+    //    overdampedMove(_network, -a);
+    //    if (a < config::intergrators::adaptiveIntergrator::dtMin) {
+    //        a = config::intergrators::adaptiveIntergrator::dtMin;
+    //        break;
+    //    }
+    //}
+    //return a;
+
+
+  //m_h = m_nexth;
+  //double energy;
 //
-//  // Find Upper Bound
-//  for (std::size_t i = 0; i < 10; i++) {
-//    overdampedMove(_network, bound);
-//    double newGrad = eGradient(_network);
-//    double newEnergy = _network.computeEnergy();
-//    overdampedMove(_network, -bound);
-//    if (newEnergy > initialEnergy) {
-//      bound *= 0.5;
-//      break;
-//    }
-//    double oldSign = gradSign;
-//    gradSign = tools::sign(newGrad);
-//    bound *= 2.0;
-//    if (oldSign != gradSign) {
-//      break;
-//    }
-//  }
+  //std::size_t maxIter = config::intergrators::adaptiveIntergrator::maxIter;
+  //double qMin = config::intergrators::adaptiveHeun::qMin;
+  //double qMax = config::intergrators::adaptiveHeun::qMax;
+  //double dtMin = config::intergrators::adaptiveIntergrator::dtMin;
+  //double dtMax = config::intergrators::adaptiveIntergrator::dtMax;
 //
-//  double numer = 1.0;
-//  double denom = 2.0;
-//  for (std::size_t i = 0; i < 10; i++) {
-//    double testStep = bound * numer / denom;
-//    overdampedMove(_network, testStep);
-//    double newGrad = eGradient(_network);
-//  }
-//}
+  //std::size_t iters = 0;
+//
+  //nodes& networkNodes = _network.getNodes();
+  //_network.computeForces();
+  //if (std::isnan(m_prevEnergy)) {
+  //  m_prevEnergy = _network.getEnergy();
+  //}
+  //const double maxLen = tools::maxLength(networkNodes.forces());
+//
+  //m_tempPositions = networkNodes.positions();
+  //m_tempForces = networkNodes.forces();
+//
+  //while (iters < maxIter) {
+  //  m_dt = std::clamp(m_h / maxLen, dtMin, dtMax);
+  //  overdampedMove(_network, m_dt);
+  //  energy = _network.computeEnergy();
+//
+  //  if (energy < m_prevEnergy) {
+  //    m_prevEnergy = energy;
+  //    m_nexth = m_h * 1.2;
+  //    break;
+  //  }
+  //  networkNodes.positions() = m_tempPositions;
+  //  networkNodes.forces() = m_tempForces;
+  //  m_h *= 0.2;
+  //  ++iters;
+  //}
+  //if (iters == maxIter) {
+  //  std::runtime_error("Max iterations reached");
+  //}
+
+  double a = config::intergrators::adaptiveIntergrator::dtMin;
+  double b = config::intergrators::adaptiveIntergrator::dtMax;
+  double tol = 1e-8;
+
+  double initialEnergy = _network.computeEnergy();
+  // overdampedMove(_network, a);
+  double fa = eGradient(_network);
+  // double Ea = _network.computeEnergy();
+  // overdampedMove(_network, -a);
+  overdampedMove(_network, b);
+  double fb = eGradient(_network);
+  double Eb = _network.computeEnergy();
+  overdampedMove(_network, -b);
+
+  roots::ITP solver(a, b, tol);
+  if (fa * fb > 0.0) {
+    if (Eb < initialEnergy) {
+      return b;
+    } else {
+      return a;
+    }
+  }
+
+  for (std::size_t iters = 0; iters < solver.nMax(); ++iters) {
+    double xITP = solver.guessRoot(a, b, fa, fb);
+
+    overdampedMove(_network, xITP);
+    double fITP = eGradient(_network);
+    overdampedMove(_network, -xITP);
+    if (fITP >= 0.) {
+      b = xITP;
+      fb = fITP;
+    } else {
+      a = xITP;
+      fa = fITP;
+    }
+
+    if (std::abs(b - a) < 2 * tol) {
+      break;
+    }
+  }
+  return (a + b) * 0.5;
+}
 
 networkV4::FireMinimizer::FireMinimizer()
     : m_dt(config::intergrators::default_dt)

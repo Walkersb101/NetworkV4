@@ -90,11 +90,25 @@ inline auto uniqueBondTypes(const networkV4::bonds& _bonds)
 template<typename T>
 inline auto maxAbsComponent(const std::vector<vec2<T>>& _vec) -> T
 {
-  return std::accumulate(_vec.begin(),
-                         _vec.end(),
-                         0.0,
-                         [](double _max, const vec2<T>& _v)
-                         { return std::max(_max, _v.abs().max()); });
+    double max = 0.0;
+    size_t maxIndex = 0;
+    for (size_t i = 0; i < _vec.size(); ++i) {
+        if (std::abs(_vec[i].x) > max){
+            max = std::abs(_vec[i].x);
+            maxIndex = i;
+        }
+        if (std::abs(_vec[i].y) > max){
+            max = std::abs(_vec[i].y);
+            maxIndex = i;
+        }
+    }
+    return max;
+
+  //return std::accumulate(_vec.begin(),
+  //                       _vec.end(),
+  //                       0.0,
+  //                       [](double _max, const vec2<T>& _v)
+  //                       { return std::max(_max, _v.abs().max()); });
 }
 
 inline auto xdoty(const std::vector<vec2d>& _vec1, const std::vector<vec2d>& _vec2) -> double
