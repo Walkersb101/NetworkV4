@@ -22,8 +22,9 @@ networkOutHDF5::networkOutHDF5(const std::filesystem::path& _path,
 {
   HighFive::DataSetCreateProps props;
 
+  const auto filePath = _path / config::hdf5::fileName;
   // create or overwrite file
-  HighFive::File file(m_path.string() + config::hdf5::fileName,
+  HighFive::File file(filePath,
                       HighFive::File::Overwrite);  // create or overwrite file
 
   writeHeader(file);
@@ -39,8 +40,8 @@ void networkOutHDF5::save(const networkV4::network& _net,
                           const double _time,
                           const std::string& _type) const
 {
-  HighFive::File file(m_path.string() + config::hdf5::fileName,
-                      HighFive::File::ReadWrite);
+  const auto filePath = m_path / config::hdf5::fileName;
+  HighFive::File file(filePath, HighFive::File::ReadWrite);
 
   auto allParticles = file.getGroup("particles").getGroup("all");
 
@@ -284,8 +285,8 @@ void networkOutHDF5::initObservations(HighFive::File& _file,
   createDataSet<bool>(sacrificialConnectedObs,
                       "value",
                       std::vector<std::size_t> {0, sacrificialCount},
-                      std::vector<std::size_t> {
-                          HighFive::DataSpace::UNLIMITED, sacrificialCount},
+                      std::vector<std::size_t> {HighFive::DataSpace::UNLIMITED,
+                                                sacrificialCount},
                       std::vector<hsize_t> {1, sacrificialChunkSize},
                       true);
 
