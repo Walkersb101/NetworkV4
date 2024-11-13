@@ -22,8 +22,9 @@ networkOutHDF5::networkOutHDF5(const std::filesystem::path& _path,
 {
   HighFive::DataSetCreateProps props;
 
+  const auto filePath = _path / config::hdf5::fileName;
   // create or overwrite file
-  HighFive::File file(m_path.string() + config::hdf5::fileName,
+  HighFive::File file(filePath,
                       HighFive::File::Overwrite);  // create or overwrite file
 
   writeHeader(file);
