@@ -9,12 +9,12 @@
 #include <bxzstr.hpp>
 #include <highfive/highfive.hpp>
 
-#include "Bonds.hpp"
-#include "Config.hpp"
-#include "Network.hpp"
-#include "NetworkOut.hpp"
-#include "Nodes.hpp"
-#include "Tools.hpp"
+#include "Core/Bonds.hpp"
+#include "Core/Nodes.hpp"
+#include "Core/Network.hpp"
+#include "IO/NetworkOut.hpp"
+#include "Misc/Tools.hpp"
+#include "Misc/Config.hpp"
 
 networkOutHDF5::networkOutHDF5(const std::filesystem::path& _path,
                                const networkV4::network& _net)

@@ -5,13 +5,14 @@
 
 #include <toml.hpp>
 
-#include "BreakTypes.hpp"
-#include "DataOut.hpp"
-#include "Enums.hpp"
-#include "Network.hpp"
-#include "NetworkOut.hpp"
-#include "hdf5Out.hpp"
-#include "Protocol.hpp"
+#include "Core/BreakTypes.hpp"
+#include "Core/Network.hpp"
+#include "Misc/Enums.hpp"
+#include "IO/NetworkOut.hpp"
+#include "IO/DataOut.hpp"
+#include "IO/hdf5Out.hpp"
+#include "Protocols/Protocol.hpp"
+#include "Protocols/StepStrain.hpp"
 
 namespace networkV4
 {

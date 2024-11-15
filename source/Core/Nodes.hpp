@@ -4,8 +4,8 @@
 #include <ranges>
 #include <vector>
 
-#include "Config.hpp"
-#include "Vec2.hpp"
+#include "Misc/Config.hpp"
+#include "Core/Vec2.hpp"
 
 namespace networkV4
 {

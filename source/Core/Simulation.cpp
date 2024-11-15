@@ -1,7 +1,7 @@
 #include "Simulation.hpp"
 
-#include "EnumString.hpp"
-#include "Tools.hpp"
+#include "Misc/EnumString.hpp"
+#include "Misc/Tools.hpp"
 
 networkV4::Simulation::Simulation(const std::filesystem::path& _path)
 {

@@ -4,11 +4,11 @@
 #include <cstdint>
 #include <vector>
 
-#include "Network.hpp"
-#include "Nodes.hpp"
-#include "Tensor2.hpp"
-#include "Vec2.hpp"
-#include "EnumMap.hpp"
+#include "Core/Network.hpp"
+#include "Core/Nodes.hpp"
+#include "Core/Tensor2.hpp"
+#include "Core/Vec2.hpp"
+#include "Misc/EnumMap.hpp"
 
 namespace networkV4
 {

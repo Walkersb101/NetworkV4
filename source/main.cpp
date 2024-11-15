@@ -1,10 +1,6 @@
 #include <fstream>
 
-#include "DataOut.hpp"
-#include "Intergrator.hpp"
-#include "Network.hpp"
-#include "Protocol.hpp"
-#include "Simulation.hpp"
+#include "Core/Simulation.hpp"
 
 auto main(int argc, char* argv[]) -> int
 {

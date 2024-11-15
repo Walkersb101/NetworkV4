@@ -7,11 +7,11 @@
 #include <bxzstr.hpp>
 #include <highfive/highfive.hpp>
 
-#include "Bonds.hpp"
-#include "Config.hpp"
-#include "Network.hpp"
-#include "Nodes.hpp"
-#include "Tools.hpp"
+#include "Core/Bonds.hpp"
+#include "Core/Network.hpp"
+#include "Core/Nodes.hpp"
+#include "Misc/Tools.hpp"
+#include "Misc/Config.hpp"
 
 template<>
 bool write<bxz::Compression>(const std::stringstream& _ss,

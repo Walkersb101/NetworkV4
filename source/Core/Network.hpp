@@ -3,12 +3,12 @@
 #include <filesystem>
 #include <vector>
 
-#include "Bonds.hpp"
-#include "EnumMap.hpp"
-#include "Enums.hpp"
-#include "Nodes.hpp"
-#include "Tensor2.hpp"
-#include "Vec2.hpp"
+#include "Misc/EnumMap.hpp"
+#include "Misc/Enums.hpp"
+#include "Core/Nodes.hpp"
+#include "Core/Bonds.hpp"
+#include "Core/Tensor2.hpp"
+#include "Core/Vec2.hpp"
 
 namespace networkV4
 {

@@ -8,12 +8,12 @@
 
 #include <bxzstr.hpp>
 
-#include "Bonds.hpp"
-#include "Network.hpp"
+#include "Core/Bonds.hpp"
+#include "Core/Network.hpp"
 #include "EnumMap.hpp"
 #include "EnumString.hpp"
 #include "Enums.hpp"
-#include "Vec2.hpp"
+#include "Core/Vec2.hpp"
 
 namespace networkV4
 {

@@ -3,7 +3,7 @@
 
 #include "EnumString.hpp"
 #include <bxzstr.hpp>
-#include "Enums.hpp"
+#include "Misc/Enums.hpp"
 
 namespace networkV4 {
 namespace enumString {

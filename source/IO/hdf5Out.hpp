@@ -4,7 +4,7 @@
 
 #include <highfive/highfive.hpp>
 
-#include "Network.hpp"
+#include "Core/Network.hpp"
 #include "NetworkOut.hpp"
 
 class networkOutHDF5 : public networkOut

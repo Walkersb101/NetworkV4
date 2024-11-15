@@ -6,8 +6,8 @@
 
 #include <toml.hpp>
 
-#include "Network.hpp"
-#include "Enums.hpp"
+#include "Core/Network.hpp"
+#include "Misc/Enums.hpp"
 
 using writeableTypes = std::variant<std::string, double, std::size_t>;
 

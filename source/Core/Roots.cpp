@@ -3,8 +3,8 @@
 
 #include "Roots.hpp"
 
-#include "Config.hpp"
-#include "Tools.hpp"
+#include "Misc/Config.hpp"
+#include "Misc/Tools.hpp"
 
 networkV4::roots::ITP::ITP()
     : m_n0(config::rootMethods::ITPMethod::n0)

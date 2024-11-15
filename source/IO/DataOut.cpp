@@ -2,9 +2,9 @@
 
 #include <toml.hpp>
 
-#include "Config.hpp"
-#include "Network.hpp"
-#include "Protocol.hpp"
+#include "Misc/Config.hpp"
+#include "Core/Network.hpp"
+#include "Protocols/Protocol.hpp"
 
 dataOut::dataOut(const std::filesystem::path& _timeDataPath,
                  const std::filesystem::path& _bondDataPath,

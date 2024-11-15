@@ -4,7 +4,7 @@
 #include <memory>
 #include <vector>
 
-#include "Enums.hpp"
+#include "Misc/Enums.hpp"
 
 namespace networkV4
 {

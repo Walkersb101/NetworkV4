@@ -4,7 +4,7 @@
 
 #include <bxzstr.hpp>
 
-#include "Network.hpp"
+#include "Core/Network.hpp"
 
 template<typename T>
 bool write(const std::stringstream& _ss,

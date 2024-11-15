@@ -17,19 +17,23 @@ include(cmake/variables.cmake)
 
 add_library(
     NetworkV4_lib OBJECT
-    source/Bonds.cpp
-    source/BreakTypes.cpp
-    source/Config.cpp
-    source/Intergrator.cpp
-    source/DataOut.cpp
-    source/EnumString.cpp
-    source/hdf5Out.cpp
-    source/Network.cpp
-    source/NetworkOut.cpp
-    source/Nodes.cpp
-    source/Protocol.cpp
-    source/Roots.cpp
-    source/Simulation.cpp
+    source/Core/Bonds.cpp
+    source/Core/BreakTypes.cpp
+    source/Core/Intergrator.cpp
+    source/Core/Network.cpp
+    source/Core/Simulation.cpp
+    source/Core/Nodes.cpp
+    source/Core/Roots.cpp
+
+    source/IO/DataOut.cpp
+    source/IO/hdf5Out.cpp
+    source/IO/NetworkOut.cpp
+    
+    source/Protocols/Protocol.cpp
+    source/Protocols/StepStrain.cpp
+    
+    source/Misc/Config.cpp
+    source/Misc/EnumString.cpp
 )
 
 target_include_directories(

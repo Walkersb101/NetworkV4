@@ -1,10 +1,10 @@
 #pragma once
 
-#include <Enums.hpp>
 #include <trng/yarn2.hpp>
 
-#include "Intergrator.hpp"
-#include "Network.hpp"
+#include "Misc/Enums.hpp"
+#include "Core/Intergrator.hpp"
+#include "Core/Network.hpp"
 
 namespace networkV4
 {

@@ -8,11 +8,11 @@
 
 #include "Network.hpp"
 
-#include "Bonds.hpp"
-#include "EnumMap.hpp"
-#include "Nodes.hpp"
-#include "Tensor2.hpp"
-#include "Vec2.hpp"
+#include "Core/Bonds.hpp"
+#include "Core/Nodes.hpp"
+#include "Core/Tensor2.hpp"
+#include "Core/Vec2.hpp"
+#include "Misc/EnumMap.hpp"
 
 networkV4::network::network()
     : m_nodes()
