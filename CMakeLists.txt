@@ -31,6 +31,7 @@ add_library(
     
     source/Protocols/Protocol.cpp
     source/Protocols/StepStrain.cpp
+    source/Protocols/Quasistatic.cpp
     
     source/Misc/Config.cpp
     source/Misc/EnumString.cpp

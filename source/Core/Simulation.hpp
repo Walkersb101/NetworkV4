@@ -13,6 +13,7 @@
 #include "IO/hdf5Out.hpp"
 #include "Protocols/Protocol.hpp"
 #include "Protocols/StepStrain.hpp"
+#include "Protocols/Quasistatic.hpp"
 
 namespace networkV4
 {
