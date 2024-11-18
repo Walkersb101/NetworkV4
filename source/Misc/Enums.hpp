@@ -11,6 +11,7 @@ enum class bondType : std::uint8_t
   single,
   sacrificial,
   matrix,
+  any,
 };
 
 enum class dataOutType : std::uint8_t
@@ -40,7 +41,6 @@ enum loadVersion : std::uint8_t
   BinV2,
 };
 
-
 enum class StrainType : std::uint8_t
 {
   Shear,
@@ -58,7 +58,8 @@ enum class BreakType : std::uint8_t
 enum class protocolType : std::uint8_t
 {
   QuasisaticStrain,
-  StepStrain
+  StepStrain,
+  Propogator,
 };
 
 enum class rootMethod : std::uint8_t

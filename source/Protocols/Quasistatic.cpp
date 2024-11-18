@@ -16,7 +16,8 @@ networkV4::quasiStaticStrain::quasiStaticStrain(
           config::intergrators::adaptiveIntergrator::esp,
           config::rootMethods::targetTol,
           config::protocols::quasiStaticStrain::errorOnNotSingleBreak,
-          _maxStrain)
+          _maxStrain,
+          false)
 {
 }
 
@@ -27,7 +28,8 @@ networkV4::quasiStaticStrain::quasiStaticStrain(
     double _esp,
     double _tol,
     bool _errorOnNotSingleBreak,
-    double _maxStep)
+    double _maxStep,
+    bool _single)
     : m_maxStrain(_maxStrain)
     , m_esp(_esp)
     , m_tol(_tol)
@@ -36,6 +38,7 @@ networkV4::quasiStaticStrain::quasiStaticStrain(
     , m_t(0.0)
     , m_errorOnNotSingleBreak(_errorOnNotSingleBreak)
     , m_maxStep(_maxStep)
+    , m_single(_single)
 {
 }
 
@@ -68,6 +71,10 @@ void networkV4::quasiStaticStrain::run(network& _network)
     m_dataOut->writeTimeData(genTimeData(_network, "End", breakCount));
     m_networkOut->save(
         _network, m_strainCount, m_t, "End-" + std::to_string(m_strainCount));
+
+    if (m_single || getStrain(_network) >= m_maxStrain) {
+        break;
+    }
   }
 }
 

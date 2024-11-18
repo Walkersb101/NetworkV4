@@ -25,7 +25,8 @@ public:
                     double _esp,
                     double _tol,
                     bool _errorOnNotSingleBreak,
-                    double _maxStep);
+                    double _maxStep,
+                    bool _single = false);
   ~quasiStaticStrain();
 
 public:
@@ -61,6 +62,7 @@ private:
 
 private:
   double m_maxStrain;
+  bool m_single;
 
   double m_esp;
   double m_tol;

@@ -12,13 +12,15 @@ namespace enumString {
 const Str2BondTypeMap str2BondType = {
     {"Single", bondType::single},
     {"Sacrificial", bondType::sacrificial},
-    {"Matrix", bondType::matrix}
+    {"Matrix", bondType::matrix},
+    {"Any", bondType::any}
 };
 
 const BondType2StrMap bondType2Str = {
     {bondType::single, "Single"},
     {bondType::sacrificial, "Sacrificial"},
-    {bondType::matrix, "Matrix"}
+    {bondType::matrix, "Matrix"},
+    {bondType::any, "Any"}
 };
 
 // --- DataOutType ---
@@ -100,12 +102,14 @@ const BreakType2StrMap breakType2Str = {
 // --- ProtocolType ---
 const Str2ProtocolTypeMap str2ProtocolType = {
     {"QuasiStaticStrain", protocolType::QuasisaticStrain},
-    {"StepStrain", protocolType::StepStrain}
+    {"StepStrain", protocolType::StepStrain},
+    {"Propogator", protocolType::Propogator}
 };
 
 const ProtocolType2StrMap protocolType2Str = {
     {protocolType::QuasisaticStrain, "QuasiStaticStrain"},
-    {protocolType::StepStrain, "StepStrain"}
+    {protocolType::StepStrain, "StepStrain"},
+    {protocolType::Propogator, "Propogator"}
 };
 
 // --- RootMethod ---

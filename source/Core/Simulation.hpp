@@ -14,6 +14,7 @@
 #include "Protocols/Protocol.hpp"
 #include "Protocols/StepStrain.hpp"
 #include "Protocols/Quasistatic.hpp"
+#include "Protocols/Propogator.hpp"
 
 namespace networkV4
 {
@@ -42,6 +43,7 @@ private:
   void readProtocol();
   void readQuasistatic();
   void readStepStrain();
+  void readPropogator();
 
 private:
   toml::value m_config;

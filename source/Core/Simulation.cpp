@@ -49,7 +49,7 @@ void networkV4::Simulation::loadTypes()
   m_networkOutType = enumString::str2NetworkOutType.at(typeStr);
 
   m_protocolType = getProtocol();
-  m_breakType = loadBreakType();
+  m_breakType = networkV4::BreakType::None;
 }
 
 void networkV4::Simulation::loadNetwork()
@@ -260,6 +260,10 @@ void networkV4::Simulation::readProtocol()
       readStepStrain();
       break;
     }
+    case networkV4::protocolType::Propogator: {
+      readPropogator();
+      break;
+    }
     default:
       throw std::runtime_error("Protocol not implemented");
   }
@@ -292,11 +296,19 @@ void networkV4::Simulation::readQuasistatic()
       quasiConfig,
       "ErrorOnNotSingleBreak",
       config::protocols::quasiStaticStrain::errorOnNotSingleBreak);
- const double maxStep = toml::find_or<double>(
-      quasiConfig, "MaxStep", maxStrain);
+  const double maxStep =
+      toml::find_or<double>(quasiConfig, "MaxStep", maxStrain);
+  const bool single = toml::find_or<bool>(quasiConfig, "Single", false);
 
-  m_protocol = std::make_unique<networkV4::quasiStaticStrain>(
-      maxStrain, strainType, m_breakProtocol, ESP, tol, errorOnNotSingleBreak, maxStep);
+  m_protocol =
+      std::make_unique<networkV4::quasiStaticStrain>(maxStrain,
+                                                     strainType,
+                                                     m_breakProtocol,
+                                                     ESP,
+                                                     tol,
+                                                     errorOnNotSingleBreak,
+                                                     maxStep,
+                                                     single);
 }
 
 void networkV4::Simulation::readStepStrain()
@@ -333,4 +345,36 @@ void networkV4::Simulation::readStepStrain()
                                                        ESP,
                                                        timeScale,
                                                        stressScale);
+}
+
+void networkV4::Simulation::readPropogator()
+{
+  auto propConfig = toml::find(m_config, "Propogator");
+
+  if (!propConfig.contains("Strains")) {
+    throw std::runtime_error("Strains not specified");
+  }
+  std::vector<double> strains =
+      toml::find<std::vector<double>>(propConfig, "Strains");
+
+  if (!propConfig.contains("StrainType")) {
+    throw std::runtime_error("StrainType not specified");
+  }
+  const std::string strainTypeStr =
+      toml::find<std::string>(propConfig, "StrainType");
+  const networkV4::StrainType strainType =
+      enumString::str2StrainType.at(strainTypeStr);
+
+  const std::string breakTypeStr =
+      toml::find_or<std::string>(propConfig, "BreakType", "Any");
+  bondType bType = enumString::str2BondType.at(breakTypeStr);
+
+  const double ESP = toml::find_or<double>(
+      propConfig, "ESP", config::intergrators::adaptiveIntergrator::esp);
+  const double tol = toml::find_or<double>(
+      propConfig, "Tol", config::intergrators::miminizer::tol);
+  const double maxStep = toml::find_or<double>(propConfig, "MaxStep", 0.0);
+
+  m_protocol = std::make_unique<networkV4::propogator>(
+      strains, strainType, bType, ESP, tol, maxStep);
 }
