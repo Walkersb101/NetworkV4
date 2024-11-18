@@ -16,7 +16,7 @@
 networkV4::protocol::protocol() {}
 
 networkV4::protocol::protocol(StrainType _strainType,
-                              std::unique_ptr<BreakTypes>& _breakType)
+                              std::unique_ptr<BreakTypes> _breakType)
     : m_strainType(_strainType)
     , m_breakProtocol(_breakType.get())
     , m_dataOut(nullptr)

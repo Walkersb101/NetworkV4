@@ -18,10 +18,10 @@ public:
   quasiStaticStrain();
   quasiStaticStrain(double _maxStrain,
                     StrainType _strainType,
-                    std::unique_ptr<BreakTypes>& _breakType);
+                    std::unique_ptr<BreakTypes> _breakType);
   quasiStaticStrain(double _maxStrain,
                     StrainType _strainType,
-                    std::unique_ptr<BreakTypes>& _breakType,
+                    std::unique_ptr<BreakTypes> _breakType,
                     double _esp,
                     double _tol,
                     bool _errorOnNotSingleBreak);

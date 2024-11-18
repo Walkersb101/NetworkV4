@@ -6,7 +6,7 @@ networkV4::stepStrain::stepStrain() {}
 
 networkV4::stepStrain::stepStrain(double _maxStrain,
                                   StrainType _strainType,
-                                  std::unique_ptr<BreakTypes>& _breakType,
+                                  std::unique_ptr<BreakTypes> _breakType,
                                   double _maxTime,
                                   double _esp,
                                   double _timeScale,

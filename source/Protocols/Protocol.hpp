@@ -14,7 +14,7 @@ class protocol
 {
 public:
   protocol();
-  protocol(StrainType _strainType, std::unique_ptr<BreakTypes>& _breakType);
+  protocol(StrainType _strainType, std::unique_ptr<BreakTypes> _breakType);
   virtual ~protocol();
 
 public:
