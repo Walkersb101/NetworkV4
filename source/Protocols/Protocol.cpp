@@ -6,20 +6,29 @@
 
 #include "Protocol.hpp"
 
-#include "IO/DataOut.hpp"
 #include "Core/Intergrator.hpp"
 #include "Core/Network.hpp"
 #include "Core/Roots.hpp"
-#include "Misc/Tools.hpp"
+#include "IO/DataOut.hpp"
 #include "Misc/Config.hpp"
+#include "Misc/Tools.hpp"
 
 networkV4::protocol::protocol() {}
 
 networkV4::protocol::protocol(StrainType _strainType,
-                              std::unique_ptr<BreakTypes> _breakType)
+                              std::unique_ptr<BreakTypes>& _breakType)
     : m_strainType(_strainType)
     , m_breakProtocol(_breakType.get())
     , m_dataOut(nullptr)
+    , m_networkOut(nullptr)
+{
+}
+
+networkV4::protocol::protocol(StrainType _strainType)
+    : m_strainType(_strainType)
+    , m_breakProtocol(nullptr)
+    , m_dataOut(nullptr)
+    , m_networkOut(nullptr)
 {
 }
 

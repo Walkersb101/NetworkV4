@@ -272,7 +272,7 @@ void networkV4::Simulation::readQuasistatic()
   if (!quasiConfig.contains("MaxStrain")) {
     throw std::runtime_error("MaxStrain not specified");
   }
-  double maxStrain = toml::find<double>(quasiConfig, "MaxStrain");
+  const double maxStrain = toml::find<double>(quasiConfig, "MaxStrain");
 
   if (!quasiConfig.contains("StrainType")) {
     throw std::runtime_error("StrainType not specified");
@@ -292,9 +292,11 @@ void networkV4::Simulation::readQuasistatic()
       quasiConfig,
       "ErrorOnNotSingleBreak",
       config::protocols::quasiStaticStrain::errorOnNotSingleBreak);
+ const double maxStep = toml::find_or<double>(
+      quasiConfig, "MaxStep", maxStrain);
 
   m_protocol = std::make_unique<networkV4::quasiStaticStrain>(
-      maxStrain, strainType, m_breakProtocol, ESP, tol, errorOnNotSingleBreak);
+      maxStrain, strainType, m_breakProtocol, ESP, tol, errorOnNotSingleBreak, maxStep);
 }
 
 void networkV4::Simulation::readStepStrain()

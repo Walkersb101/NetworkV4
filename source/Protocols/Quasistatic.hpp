@@ -18,13 +18,14 @@ public:
   quasiStaticStrain();
   quasiStaticStrain(double _maxStrain,
                     StrainType _strainType,
-                    std::unique_ptr<BreakTypes> _breakType);
+                    std::unique_ptr<BreakTypes>& _breakType);
   quasiStaticStrain(double _maxStrain,
                     StrainType _strainType,
-                    std::unique_ptr<BreakTypes> _breakType,
+                    std::unique_ptr<BreakTypes>& _breakType,
                     double _esp,
                     double _tol,
-                    bool _errorOnNotSingleBreak);
+                    bool _errorOnNotSingleBreak,
+                    double _maxStep);
   ~quasiStaticStrain();
 
 public:
@@ -37,9 +38,9 @@ private:
   void evalStrain(network& _network,
                   double _step,
                   double& _maxVal,
-                  std::size_t& _count);
+                  std::size_t& _count,
+                  bool _save = false);
   auto converge(network& _baseNetwork,
-                network& _networkB,
                 double& _a,
                 double& _b,
                 double& _fa,
@@ -64,6 +65,7 @@ private:
   double m_esp;
   double m_tol;
   bool m_errorOnNotSingleBreak;
+  double m_maxStep;
 
   double m_t;
 

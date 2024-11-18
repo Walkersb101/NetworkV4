@@ -4,8 +4,8 @@
 
 #include "Core/BreakTypes.hpp"
 #include "Core/Network.hpp"
-#include "IO/NetworkOut.hpp"
 #include "IO/DataOut.hpp"
+#include "IO/NetworkOut.hpp"
 #include "Misc/Enums.hpp"
 
 namespace networkV4
@@ -14,7 +14,8 @@ class protocol
 {
 public:
   protocol();
-  protocol(StrainType _strainType, std::unique_ptr<BreakTypes> _breakType);
+  protocol(StrainType _strainType, std::unique_ptr<BreakTypes>& _breakType);
+  protocol(StrainType _strainType);
   virtual ~protocol();
 
 public:
