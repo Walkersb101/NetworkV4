@@ -12,7 +12,7 @@ networkV4::NoBreaks::NoBreaks() {}
 networkV4::NoBreaks::~NoBreaks() {}
 
 void networkV4::NoBreaks::Data(const network& _network,
-                               const intergrator& _intergrator,
+                               const integrator& _integrator,
                                double& _maxVal,
                                std::size_t& _count)
 {
@@ -21,7 +21,7 @@ void networkV4::NoBreaks::Data(const network& _network,
 }
 
 auto networkV4::NoBreaks::Break(network& _network,
-                                const intergrator& _intergrator)
+                                const integrator& _integrator)
     -> std::vector<std::size_t>
 {
   return std::vector<std::size_t>();
@@ -40,7 +40,7 @@ networkV4::StrainBreak::StrainBreak(const std::vector<double>& _lambda)
 networkV4::StrainBreak::~StrainBreak() {}
 
 void networkV4::StrainBreak::Data(const network& _network,
-                                  const intergrator& _intergrator,
+                                  const integrator& _integrator,
                                   double& _maxVal,
                                   std::size_t& _count)
 {
@@ -62,7 +62,7 @@ void networkV4::StrainBreak::Data(const network& _network,
 }
 
 auto networkV4::StrainBreak::Break(network& _network,
-                                   const intergrator& _intergrator)
+                                   const integrator& _integrator)
     -> std::vector<std::size_t>
 {
   auto& bonds = _network.getBonds();
@@ -91,7 +91,7 @@ networkV4::EnergyBreak::EnergyBreak(const std::vector<double>& _E)
 networkV4::EnergyBreak::~EnergyBreak() {}
 
 void networkV4::EnergyBreak::Data(const network& _network,
-                                  const intergrator& _intergrator,
+                                  const integrator& _integrator,
                                   double& _maxVal,
                                   std::size_t& _count)
 {
@@ -113,7 +113,7 @@ void networkV4::EnergyBreak::Data(const network& _network,
 }
 
 auto networkV4::EnergyBreak::Break(network& _network,
-                                   const intergrator& _intergrator)
+                                   const integrator& _integrator)
     -> std::vector<std::size_t>
 {
   auto& bonds = _network.getBonds();
@@ -147,7 +147,7 @@ networkV4::SGRBreak::SGRBreak(const std::vector<double>& _E,
 networkV4::SGRBreak::~SGRBreak() {}
 
 void networkV4::SGRBreak::Data(const network& _network,
-                               const intergrator& _intergrator,
+                               const integrator& _integrator,
                                double& _maxVal,
                                std::size_t& _count)
 {
@@ -164,7 +164,7 @@ void networkV4::SGRBreak::Data(const network& _network,
     const double distAbove = energy - m_E[i];
     const double rate = m_rtau0 * std::exp(-distAbove * m_rT);
     std::exponential_distribution<double> dist(rate);
-    if (dist(rng) >= _intergrator.getDt()) {
+    if (dist(rng) >= _integrator.getDt()) {
       ++_count;
     }
     _maxVal = std::max(_maxVal, distAbove);
@@ -172,7 +172,7 @@ void networkV4::SGRBreak::Data(const network& _network,
 }
 
 auto networkV4::SGRBreak::Break(network& _network,
-                                const intergrator& _intergrator)
+                                const integrator& _integrator)
     -> std::vector<std::size_t>
 {
   auto& bonds = _network.getBonds();
@@ -186,7 +186,7 @@ auto networkV4::SGRBreak::Break(network& _network,
     const double energy = _network.bondEnergy(b);
     const double distAbove = energy - m_E[i];
     const double rate = m_rtau0 * std::exp(-distAbove * m_rT);
-    const double probOfBreak = 1 - std::exp(-rate * _intergrator.getDt());
+    const double probOfBreak = 1 - std::exp(-rate * _integrator.getDt());
     const double rand = dist(m_rng);
     if (rand < probOfBreak) {
       b.connected() = false;

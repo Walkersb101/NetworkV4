@@ -3,7 +3,7 @@
 #include <trng/yarn2.hpp>
 
 #include "Misc/Enums.hpp"
-#include "Intergration/Intergrator.hpp"
+#include "Integration/Integrator.hpp"
 #include "Core/Network.hpp"
 
 namespace networkV4
@@ -16,10 +16,10 @@ public:
 
 public:
   virtual void Data(const network& _network,
-                    const intergrator& _intergrator,
+                    const integrator& _integrator,
                     double& _maxVal,
                     std::size_t& _count) = 0;
-  virtual auto Break(network& _network, const intergrator& _intergrator)
+  virtual auto Break(network& _network, const integrator& _integrator)
       -> std::vector<std::size_t> = 0;
 };
 
@@ -31,10 +31,10 @@ public:
 
 public:
   void Data(const network& _network,
-            const intergrator& _intergrator,
+            const integrator& _integrator,
             double& _maxVal,
             std::size_t& _count) override;
-  auto Break(network& _network, const intergrator& _intergrator)
+  auto Break(network& _network, const integrator& _integrator)
       -> std::vector<std::size_t> override;
 };
 
@@ -47,10 +47,10 @@ public:
 
 public:
   void Data(const network& _network,
-            const intergrator& _intergrator,
+            const integrator& _integrator,
             double& _maxVal,
             std::size_t& _count) override;
-  auto Break(network& _network, const intergrator& _intergrator)
+  auto Break(network& _network, const integrator& _integrator)
       -> std::vector<std::size_t> override;
 
 private:
@@ -66,10 +66,10 @@ public:
 
 public:
   void Data(const network& _network,
-            const intergrator& _intergrator,
+            const integrator& _integrator,
             double& _maxVal,
             std::size_t& _count) override;
-  auto Break(network& _network, const intergrator& _intergrator)
+  auto Break(network& _network, const integrator& _integrator)
       -> std::vector<std::size_t> override;
 
 private:
@@ -85,10 +85,10 @@ public:
 
 public:
   void Data(const network& _network,
-            const intergrator& _intergrator,
+            const integrator& _integrator,
             double& _maxVal,
             std::size_t& _count) override;
-  auto Break(network& _network, const intergrator& _intergrator)
+  auto Break(network& _network, const integrator& _integrator)
       -> std::vector<std::size_t> override;
 
 private:

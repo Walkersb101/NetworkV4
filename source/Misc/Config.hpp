@@ -16,18 +16,18 @@
 namespace config
 {
 
-namespace intergrators
+namespace integrators
 {
 extern double default_dt;
 
-namespace adaptiveIntergrator
+namespace adaptiveIntegrator
 {
 extern double esp;
 extern std::size_t maxIter;
 
 extern double dtMin;
 extern double dtMax;
-}  // namespace adaptiveIntergrator
+}  // namespace adaptiveIntegrator
 
 namespace adaptiveHeun
 {
@@ -51,7 +51,7 @@ extern double falpha;
 extern std::size_t Nnegmax;
 extern double dmax;
 }  // namespace fire2
-}  // namespace intergrators
+}  // namespace integrators
 
 namespace rootMethods
 {

@@ -1,6 +1,7 @@
 #include "StepStrain.hpp"
 
 #include "Misc/Tools.hpp"
+#include "Integration/OverDamped.hpp"
 
 networkV4::stepStrain::stepStrain() {}
 
@@ -26,7 +27,7 @@ networkV4::stepStrain::~stepStrain() {}
 
 void networkV4::stepStrain::run(network& _network)
 {
-  OverdampedAdaptiveEulerHeun integrator(config::intergrators::default_dt,
+  OverdampedAdaptiveEulerHeun integrator(config::integrators::default_dt,
                                          m_esp);
 
   _network.computeForces();

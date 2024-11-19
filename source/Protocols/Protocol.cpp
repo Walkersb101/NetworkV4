@@ -7,7 +7,7 @@
 #include "Protocol.hpp"
 
 #include "Core/Network.hpp"
-#include "Intergration/Intergrator.hpp"
+#include "Integration/Integrator.hpp"
 #include "IO/DataOut.hpp"
 #include "Misc/Config.hpp"
 #include "Misc/Tools.hpp"

@@ -47,19 +47,19 @@ const NetworkOutType2StrMap networkOutType2Str = {
 
 // --- IntegratorType ---
 const Str2IntegratorTypeMap str2IntegratorType = {
-    {"OverdampedEuler", intergratorType::overdampedEuler},
-    {"OverdampedEulerHeun", intergratorType::overdampedEulerHeun},
-    {"OverdampedAdaptiveEulerHeun", intergratorType::overdampedAdaptiveEulerHeun},
-    {"FireMinimizer", intergratorType::FireMinimizer},
-    {"OverdampedAdaptiveMinimizer", intergratorType::OverdampedAdaptiveMinimizer}
+    {"OverdampedEuler", integratorType::overdampedEuler},
+    {"OverdampedEulerHeun", integratorType::overdampedEulerHeun},
+    {"OverdampedAdaptiveEulerHeun", integratorType::overdampedAdaptiveEulerHeun},
+    {"FireMinimizer", integratorType::FireMinimizer},
+    {"OverdampedAdaptiveMinimizer", integratorType::OverdampedAdaptiveMinimizer}
 };
 
 const IntegratorType2StrMap integratorType2Str = {
-    {intergratorType::overdampedEuler, "OverdampedEuler"},
-    {intergratorType::overdampedEulerHeun, "OverdampedEulerHeun"},
-    {intergratorType::overdampedAdaptiveEulerHeun, "OverdampedAdaptiveEulerHeun"},
-    {intergratorType::FireMinimizer, "FireMinimizer"},
-    {intergratorType::OverdampedAdaptiveMinimizer, "OverdampedAdaptiveMinimizer"}
+    {integratorType::overdampedEuler, "OverdampedEuler"},
+    {integratorType::overdampedEulerHeun, "OverdampedEulerHeun"},
+    {integratorType::overdampedAdaptiveEulerHeun, "OverdampedAdaptiveEulerHeun"},
+    {integratorType::FireMinimizer, "FireMinimizer"},
+    {integratorType::OverdampedAdaptiveMinimizer, "OverdampedAdaptiveMinimizer"}
 };
 
 // --- LoadVersion ---

@@ -9,6 +9,10 @@
 #include "Misc/Enums.hpp"
 #include "Protocols/Protocol.hpp"
 
+#include "Misc/Roots.hpp"
+#include "Misc/Tools.hpp"
+#include "Integration/Minimization.hpp"
+
 namespace networkV4
 {
 

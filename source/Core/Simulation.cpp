@@ -289,7 +289,7 @@ void networkV4::Simulation::readQuasistatic()
   m_breakProtocol = readBreakProtocol();
 
   const double ESP = toml::find_or<double>(
-      quasiConfig, "ESP", config::intergrators::adaptiveIntergrator::esp);
+      quasiConfig, "ESP", config::integrators::adaptiveIntegrator::esp);
   const double tol =
       toml::find_or<double>(quasiConfig, "Tol", config::rootMethods::targetTol);
   const bool errorOnNotSingleBreak = toml::find_or<bool>(
@@ -331,7 +331,7 @@ void networkV4::Simulation::readStepStrain()
   const double maxStrain = toml::find<double>(stepConfig, "MaxStrain");
 
   const double ESP = toml::find_or<double>(
-      stepConfig, "ESP", config::intergrators::adaptiveIntergrator::esp);
+      stepConfig, "ESP", config::integrators::adaptiveIntegrator::esp);
   const double timeScale = toml::find_or<double>(
       stepConfig, "TimeScale", config::protocols::stepStrain::timeScale);
   const double stressScale = toml::find_or<double>(
@@ -370,9 +370,9 @@ void networkV4::Simulation::readPropogator()
   bondType bType = enumString::str2BondType.at(breakTypeStr);
 
   const double ESP = toml::find_or<double>(
-      propConfig, "ESP", config::intergrators::adaptiveIntergrator::esp);
+      propConfig, "ESP", config::integrators::adaptiveIntegrator::esp);
   const double tol = toml::find_or<double>(
-      propConfig, "Tol", config::intergrators::miminizer::tol);
+      propConfig, "Tol", config::integrators::miminizer::tol);
   const double maxStep = toml::find_or<double>(propConfig, "MaxStep", 0.0);
 
   m_protocol = std::make_unique<networkV4::propogator>(

@@ -23,7 +23,9 @@ add_library(
     source/Core/Simulation.cpp
     source/Core/Nodes.cpp
 
-    source/Intergration/Intergrator.cpp
+    source/Integration/Integrator.cpp
+    source/Integration/Minimization.cpp
+    source/Integration/OverDamped.cpp
 
     source/IO/DataOut.cpp
     source/IO/hdf5Out.cpp

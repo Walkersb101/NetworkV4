@@ -1,8 +1,5 @@
 #include "Quasistatic.hpp"
 
-#include "Misc/Roots.hpp"
-#include "Misc/Tools.hpp"
-
 networkV4::quasiStaticStrain::quasiStaticStrain() {}
 
 networkV4::quasiStaticStrain::quasiStaticStrain(
@@ -13,7 +10,7 @@ networkV4::quasiStaticStrain::quasiStaticStrain(
           _maxStrain,
           _strainType,
           _breakType,
-          config::intergrators::adaptiveIntergrator::esp,
+          config::integrators::adaptiveIntegrator::esp,
           config::rootMethods::targetTol,
           config::protocols::quasiStaticStrain::errorOnNotSingleBreak,
           _maxStrain,
@@ -84,11 +81,11 @@ void networkV4::quasiStaticStrain::evalStrain(network& _network,
                                               std::size_t& _count,
                                               bool _save)
 {
-  FireMinimizer minimizer(config::intergrators::miminizer::tol);
+  FireMinimizer minimizer(config::integrators::miminizer::tol);
   // OverdampedAdaptiveMinimizer minimizer(
-  //     config::intergrators::default_dt,
-  //     config::intergrators::adaptiveIntergrator::esp,
-  //     config::intergrators::miminizer::tol);
+  //     config::integrators::default_dt,
+  //     config::integrators::adaptiveIntegrator::esp,
+  //     config::integrators::miminizer::tol);
 
   double targetStrain = getStrain(_network) + _step;
   while (getStrain(_network) < targetStrain - 1e-15) {
@@ -213,11 +210,11 @@ std::vector<double> networkV4::forceMags(const network& _network)
 
 auto networkV4::quasiStaticStrain::relaxBreak(network& _network) -> size_t
 {
-  std::size_t maxIter = config::intergrators::miminizer::maxIter;
+  std::size_t maxIter = config::integrators::miminizer::maxIter;
 
-  OverdampedAdaptiveEulerHeun integrator(config::intergrators::default_dt,
+  OverdampedAdaptiveEulerHeun integrator(config::integrators::default_dt,
                                          m_esp);
-  // SteepestDescent integrator(config::intergrators::default_dt);
+  // SteepestDescent integrator(config::integrators::default_dt);
 
   std::vector<size_t> broken = m_breakProtocol->Break(_network, integrator);
   size_t breakCount = broken.size();

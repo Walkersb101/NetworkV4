@@ -7,18 +7,18 @@
 namespace config
 {
 
-namespace intergrators
+namespace integrators
 {
 double default_dt = 1e-3;
 
-namespace adaptiveIntergrator
+namespace adaptiveIntegrator
 {
 double esp = 1e-3;
 std::size_t maxIter = 10;
 
 double dtMin = 1e-6;
 double dtMax = 1e-1;
-}  // namespace adaptiveIntergrator
+}  // namespace adaptiveIntegrator
 
 namespace adaptiveHeun
 {
@@ -42,7 +42,7 @@ double falpha = 0.99;
 std::size_t Nnegmax = 2000;
 double dmax = 0.1;
 }  // namespace fire2
-}  // namespace intergrators
+}  // namespace integrators
 
 namespace rootMethods
 {

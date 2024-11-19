@@ -15,8 +15,8 @@ using Str2DataOutTypeMap = std::unordered_map<std::string, dataOutType>;
 using DataOutType2StrMap = std::unordered_map<dataOutType, std::string>;
 using Str2NetworkOutTypeMap = std::unordered_map<std::string, networkOutType>;
 using NetworkOutType2StrMap = std::unordered_map<networkOutType, std::string>;
-using Str2IntegratorTypeMap = std::unordered_map<std::string, intergratorType>;
-using IntegratorType2StrMap = std::unordered_map<intergratorType, std::string>;
+using Str2IntegratorTypeMap = std::unordered_map<std::string, integratorType>;
+using IntegratorType2StrMap = std::unordered_map<integratorType, std::string>;
 using Str2LoadVersionMap = std::unordered_map<std::string, loadVersion>;
 using LoadVersion2StrMap = std::unordered_map<loadVersion, std::string>;
 using Str2StrainTypeMap = std::unordered_map<std::string, StrainType>;
@@ -44,8 +44,8 @@ extern const Str2NetworkOutTypeMap str2NetworkOutType;
 extern const NetworkOutType2StrMap networkOutType2Str;
 
 // --- IntegratorType ---
-extern const Str2IntegratorTypeMap str2IntergratorType;
-extern const IntegratorType2StrMap intergratorType2Str;
+extern const Str2IntegratorTypeMap str2IntegratorType;
+extern const IntegratorType2StrMap integratorType2Str;
 
 // --- LoadVersion ---
 extern const Str2LoadVersionMap str2LoadVersion;

@@ -2,6 +2,7 @@
 
 #include "Misc/Roots.hpp"
 #include "Misc/Tools.hpp"
+#include "Integration/Minimization.hpp"
 
 networkV4::propogator::propogator() {}
 
@@ -10,8 +11,8 @@ networkV4::propogator::propogator(std::vector<double> _strains,
     : propogator(_strains,
                  _strainType,
                  bondType::any,
-                 config::intergrators::adaptiveIntergrator::esp,
-                 config::intergrators::miminizer::tol,
+                 config::integrators::adaptiveIntegrator::esp,
+                 config::integrators::miminizer::tol,
                  0.0)
 {
 }

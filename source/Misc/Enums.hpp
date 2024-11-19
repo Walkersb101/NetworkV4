@@ -26,7 +26,7 @@ enum class networkOutType : std::uint8_t
   HDF5,
 };
 
-enum class intergratorType : std::uint8_t
+enum class integratorType : std::uint8_t
 {
   overdampedEuler,
   overdampedEulerHeun,
