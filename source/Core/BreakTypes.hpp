@@ -3,7 +3,7 @@
 #include <trng/yarn2.hpp>
 
 #include "Misc/Enums.hpp"
-#include "Core/Intergrator.hpp"
+#include "Intergration/Intergrator.hpp"
 #include "Core/Network.hpp"
 
 namespace networkV4

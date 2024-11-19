@@ -6,12 +6,12 @@
 
 #include "Protocol.hpp"
 
-#include "Core/Intergrator.hpp"
 #include "Core/Network.hpp"
-#include "Core/Roots.hpp"
+#include "Intergration/Intergrator.hpp"
 #include "IO/DataOut.hpp"
 #include "Misc/Config.hpp"
 #include "Misc/Tools.hpp"
+#include "Misc/Roots.hpp"
 
 networkV4::protocol::protocol() {}
 

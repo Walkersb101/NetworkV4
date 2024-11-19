@@ -5,13 +5,13 @@
 
 #include "Intergrator.hpp"
 
-#include "Misc/Config.hpp"
-#include "Misc/Tools.hpp"
 #include "Core/Network.hpp"
 #include "Core/Nodes.hpp"
-#include "Core/Roots.hpp"
 #include "Core/Tensor2.hpp"
 #include "Core/Vec2.hpp"
+#include "Misc/Config.hpp"
+#include "Misc/Tools.hpp"
+#include "Misc/Roots.hpp"
 
 void overdampedMove(networkV4::network& _network, double _dt)
 {

@@ -19,11 +19,11 @@ add_library(
     NetworkV4_lib OBJECT
     source/Core/Bonds.cpp
     source/Core/BreakTypes.cpp
-    source/Core/Intergrator.cpp
     source/Core/Network.cpp
     source/Core/Simulation.cpp
     source/Core/Nodes.cpp
-    source/Core/Roots.cpp
+
+    source/Intergration/Intergrator.cpp
 
     source/IO/DataOut.cpp
     source/IO/hdf5Out.cpp
@@ -36,6 +36,7 @@ add_library(
     
     source/Misc/Config.cpp
     source/Misc/EnumString.cpp
+    source/Misc/Roots.cpp
 )
 
 target_include_directories(
