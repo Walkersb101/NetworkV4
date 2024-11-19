@@ -10,11 +10,11 @@
 #include <highfive/highfive.hpp>
 
 #include "Core/Bonds.hpp"
-#include "Core/Nodes.hpp"
 #include "Core/Network.hpp"
+#include "Core/Nodes.hpp"
 #include "IO/NetworkOut.hpp"
-#include "Misc/Tools.hpp"
 #include "Misc/Config.hpp"
+#include "Misc/Tools.hpp"
 
 networkOutHDF5::networkOutHDF5(const std::filesystem::path& _path,
                                const networkV4::network& _net)
@@ -369,16 +369,32 @@ void networkOutHDF5::savePositions(HighFive::Group& _group,
   auto time = _group.getDataSet("time");
   saveScalar(time, _time);
 
+  const double offset = _net.getShearStrain() * _net.getDomain().y * 0.5;
+  std::vector<std::vector<double>> data;
+  data.reserve(_net.getNodes().size());
+  for (const auto& pos : _net.getNodes().positions()) {
+    const vec2d TriPos =
+        _net.wrapedPosition(
+            pos - vec2d((_net.getShearStrain() * pos.y) - offset, 0.0))
+        / _net.getDomain();
+    data.push_back({TriPos.x, TriPos.y});
+  }
+
   auto value = _group.getDataSet("value");
-  const double* data =
-      reinterpret_cast<const double*>(_net.getNodes().positions().data());
+  // const double* data =
+  //     reinterpret_cast<const double*>(_net.getNodes().positions().data());
 
   value.resize({time.getSpace().getDimensions()[0], _net.getNodes().size(), 2});
+  // value
+  //     .select({time.getSpace().getDimensions()[0] - 1, 0, 0},
+  //             {1, _net.getNodes().size(), 2})
+  //     .squeezeMemSpace({0})
+  //     .write_raw(data);
   value
       .select({time.getSpace().getDimensions()[0] - 1, 0, 0},
               {1, _net.getNodes().size(), 2})
       .squeezeMemSpace({0})
-      .write_raw(data);
+      .write(data);
 }
 
 void networkOutHDF5::saveConnected(HighFive::Group& _group,
