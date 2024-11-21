@@ -6,15 +6,8 @@ networkV4::quasiStaticStrain::quasiStaticStrain(
     double _maxStrain,
     StrainType _strainType,
     std::unique_ptr<BreakTypes>& _breakType)
-    : quasiStaticStrain(
-          _maxStrain,
-          _strainType,
-          _breakType,
-          config::integrators::adaptiveIntegrator::esp,
-          config::rootMethods::targetTol,
-          config::protocols::quasiStaticStrain::errorOnNotSingleBreak,
-          _maxStrain,
-          false)
+    : m_maxStrain(_maxStrain)
+    , protocol(_strainType, _breakType)
 {
 }
 
@@ -29,10 +22,9 @@ networkV4::quasiStaticStrain::quasiStaticStrain(
     bool _single)
     : m_maxStrain(_maxStrain)
     , m_esp(_esp)
-    , m_tol(_tol)
+    , m_rootTol(_tol)
+    , m_forceTol(_tol)
     , protocol(_strainType, _breakType)
-    , m_strainCount(0)
-    , m_t(0.0)
     , m_errorOnNotSingleBreak(_errorOnNotSingleBreak)
     , m_maxStep(_maxStep)
     , m_single(_single)
@@ -43,7 +35,7 @@ networkV4::quasiStaticStrain::~quasiStaticStrain() {}
 
 void networkV4::quasiStaticStrain::run(network& _network)
 {
-  FireMinimizer minimizer(m_tol);
+  FireMinimizer minimizer(m_forceTol);
   minimizer.integrate(_network);
   m_dataOut->writeTimeData(genTimeData(_network, "Initial", 0));
   m_networkOut->save(_network, 0, 0.0, "Initial");
@@ -51,6 +43,7 @@ void networkV4::quasiStaticStrain::run(network& _network)
   while (true) {
     m_strainCount++;
     size_t aboveThreshold = findSingleBreak(_network);
+
     if (aboveThreshold == 0) {
       throw std::runtime_error("No bonds above threshold");
     } else if (aboveThreshold > 1 && m_errorOnNotSingleBreak) {
@@ -69,31 +62,21 @@ void networkV4::quasiStaticStrain::run(network& _network)
         _network, m_strainCount, m_t, "End-" + std::to_string(m_strainCount));
 
     if (m_single || getStrain(_network) >= m_maxStrain) {
-        break;
+      break;
     }
   }
 }
 
 void networkV4::quasiStaticStrain::evalStrain(network& _network,
-                                              double _step,
+                                              double _targetStrain,
                                               double& _maxVal,
-                                              std::size_t& _count,
-                                              bool _save)
+                                              std::size_t& _count)
 {
-  FireMinimizer minimizer(config::integrators::miminizer::tol);
-
-  double targetStrain = getStrain(_network) + _step;
-  while (getStrain(_network) < targetStrain - 1e-15) {
-    const double strainStep =
-        std::min(targetStrain - getStrain(_network), m_maxStep);
-    strain(_network, strainStep);
-    _network.computeForces();
-    minimizer.integrate(_network);
-    if (_save) {
-      m_dataOut->writeTimeData(genTimeData(_network, "Strain", 0));
-    }
-  }
-  m_breakProtocol->Data(_network, minimizer, _maxVal, _count);
+  FireMinimizer minimizer(m_forceTol);
+  const double step = _targetStrain - getStrain(_network);
+  strain(_network, step);
+  _network.computeForces();
+  minimizer.integrate(_network);
 }
 
 auto networkV4::quasiStaticStrain::converge(network& _baseNetwork,
@@ -111,7 +94,7 @@ auto networkV4::quasiStaticStrain::converge(network& _baseNetwork,
   }
   roots::ITP solver(_a, _b, _tol);
 
-  network testNetwork = _baseNetwork;
+  network testNetwork;
 
   for (std::size_t iters = 0; iters < solver.nMax(); ++iters) {
     double xITP = solver.guessRoot(_a, _b, _maxDistAboveA, _maxDistAboveB);
@@ -136,56 +119,51 @@ auto networkV4::quasiStaticStrain::converge(network& _baseNetwork,
   return false;
 }
 
-auto networkV4::quasiStaticStrain::findSingleBreak(network& _network) -> size_t
+auto networkV4::quasiStaticStrain::findSingleBreak(network& _network)
+    -> std::tuple<SingleBreakReason, size_t>
 {
-  double a = 0.0;
-  double b = m_maxStrain - getStrain(_network);
-  if (b < 0.0) {
-    return 0;
-  }
-
-  double maxDistAboveA, maxDistAboveB;
-  std::size_t breakCountA, breakCountB;
   network testNetwork;
+  double maxDistAboveA, maxDistAboveB;
+  size_t breakCountA, breakCountB;
+
+  double a = getStrain(_network);
+  double b = std::min(a + m_maxStep, m_maxStrain);
 
   testNetwork = _network;
   evalStrain(testNetwork, a, maxDistAboveA, breakCountA);
 
   if (maxDistAboveA >= 0.0) {
-    return 0;
+    return {SingleBreakReason::BreakAtLowerBound, 0};
+  }
+
+  testNetwork = _network;
+  evalStrain(testNetwork, b, maxDistAboveB, breakCountB);
+
+  if (maxDistAboveB < 0.0) {
+    return {SingleBreakReason::NoBreaksInStep, 0};
   }
 
   double guessStrain =
-      std::min(std::abs(maxDistAboveA)
-                   * config::protocols::quasiStaticStrain::strainGuessScale,
-               b);
+      std::min(std::abs(maxDistAboveA) * m_strainGuessScale, b);
 
   testNetwork = _network;
   evalStrain(testNetwork, guessStrain, maxDistAboveB, breakCountB);
 
-  if (maxDistAboveA * maxDistAboveB > 0.0) {  // guess was not big enough
+  if (maxDistAboveB <= 0.0) {  // guess was not big enough
     a = guessStrain;
     maxDistAboveA = maxDistAboveB;
-    testNetwork = _network;
-    evalStrain(testNetwork, b, maxDistAboveB, breakCountB);
+    breakCountA = breakCountB;
   } else {
     b = guessStrain;
   }
 
   bool converged = converge(
-      _network, a, b, maxDistAboveA, maxDistAboveB, breakCountB, m_tol);
-  if (converged && breakCountB != 1) {
-    converged = converge(_network,
-                         a,
-                         b,
-                         maxDistAboveA,
-                         maxDistAboveB,
-                         breakCountB,
-                         config::rootMethods::minTol,
-                         true);
+      _network, a, b, maxDistAboveA, maxDistAboveB, breakCountB, m_rootTol);
+  if (!converged) {
+    return {SingleBreakReason::DidNotConverge, 0};
   }
-  evalStrain(_network, b, maxDistAboveB, breakCountB, true);
-  return breakCountB;
+  evalStrain(_network, b, maxDistAboveB, breakCountB);
+  return {SingleBreakReason::Complete, breakCountB};
 }
 
 std::vector<double> networkV4::forceMags(const network& _network)
@@ -241,7 +219,7 @@ auto networkV4::quasiStaticStrain::relaxBreak(network& _network) -> size_t
     }
 
     double error = tools::norm(_network.getNodes().forces());
-    if (error < m_tol && broken.size() == 0) {
+    if (error < m_forceTol && broken.size() == 0) {
       return breakCount;
     }
     // std::cout << std::setprecision(10) << iter << " " << error << " "

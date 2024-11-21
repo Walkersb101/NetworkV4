@@ -4,14 +4,13 @@
 
 #include "Core/BreakTypes.hpp"
 #include "Core/Network.hpp"
-#include "IO/NetworkOut.hpp"
 #include "IO/DataOut.hpp"
+#include "IO/NetworkOut.hpp"
+#include "Integration/Minimization.hpp"
 #include "Misc/Enums.hpp"
-#include "Protocols/Protocol.hpp"
-
 #include "Misc/Roots.hpp"
 #include "Misc/Tools.hpp"
-#include "Integration/Minimization.hpp"
+#include "Protocols/Protocol.hpp"
 
 namespace networkV4
 {
@@ -40,11 +39,19 @@ public:
               std::unique_ptr<networkOut>& _networkOut);
 
 private:
+  enum class SingleBreakReason : std::uint8_t
+  {
+    NoBreaksInStep,
+    BreakAtLowerBound,
+    DidNotConverge,
+    Complete
+  };
+
+private:
   void evalStrain(network& _network,
                   double _step,
-                  double& _maxVal,
-                  std::size_t& _count,
-                  bool _save = false);
+                  double& _targetStrain,
+                  std::size_t& _count);
   auto converge(network& _baseNetwork,
                 double& _a,
                 double& _b,
@@ -53,10 +60,10 @@ private:
                 size_t& _breakCountB,
                 double _tol,
                 bool _earlyExit = false) -> bool;
-  auto findSingleBreak(network& _network) -> size_t;
+  auto findSingleBreak(network& _network) -> std::tuple<SingleBreakReason, size_t>;
 
   auto relaxBreak(network& _network) -> std::size_t;
-
+  
 private:
   auto genTimeData(const network& _network,
                    const std::string& _reason,
@@ -64,20 +71,26 @@ private:
   auto genBondData(const network& _network,
                    size_t _bondIndex) -> std::vector<writeableTypes>;
 
+
 private:
   double m_maxStrain;
   bool m_single;
 
-  double m_esp;
-  double m_tol;
-  bool m_errorOnNotSingleBreak;
+  double m_esp = config::integrators::adaptiveIntegrator::esp;
+  double m_rootTol = config::rootMethods::targetTol;
+  double m_forceTol = config::integrators::miminizer::tol;
+  bool m_errorOnNotSingleBreak =
+      config::protocols::quasiStaticStrain::errorOnNotSingleBreak;
+
   double m_maxStep;
+  double m_strainGuessScale =
+      config::protocols::quasiStaticStrain::strainGuessScale;
 
-  double m_t;
+  double m_t = 0.0;
 
-  std::size_t m_strainCount;
+  std::size_t m_strainCount = 0;
 
-  bool m_saveBreaks;
+  bool m_saveBreaks = false;
 };
 
 }  // namespace networkV4
