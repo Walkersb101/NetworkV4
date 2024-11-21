@@ -45,7 +45,6 @@ void networkV4::quasiStaticStrain::run(network& _network)
 {
   FireMinimizer minimizer(m_tol);
   minimizer.integrate(_network);
-  _network.computeForces();
   m_dataOut->writeTimeData(genTimeData(_network, "Initial", 0));
   m_networkOut->save(_network, 0, 0.0, "Initial");
 
@@ -82,16 +81,13 @@ void networkV4::quasiStaticStrain::evalStrain(network& _network,
                                               bool _save)
 {
   FireMinimizer minimizer(config::integrators::miminizer::tol);
-  // OverdampedAdaptiveMinimizer minimizer(
-  //     config::integrators::default_dt,
-  //     config::integrators::adaptiveIntegrator::esp,
-  //     config::integrators::miminizer::tol);
 
   double targetStrain = getStrain(_network) + _step;
   while (getStrain(_network) < targetStrain - 1e-15) {
     const double strainStep =
         std::min(targetStrain - getStrain(_network), m_maxStep);
     strain(_network, strainStep);
+    _network.computeForces();
     minimizer.integrate(_network);
     if (_save) {
       m_dataOut->writeTimeData(genTimeData(_network, "Strain", 0));
@@ -212,9 +208,9 @@ auto networkV4::quasiStaticStrain::relaxBreak(network& _network) -> size_t
 {
   std::size_t maxIter = config::integrators::miminizer::maxIter;
 
-  OverdampedAdaptiveEulerHeun integrator(config::integrators::default_dt,
+  OverdampedAdaptiveMinimizer integrator(config::integrators::default_dt,
                                          m_esp);
-  // SteepestDescent integrator(config::integrators::default_dt);
+  double nextDt = integrator.getDt();
 
   std::vector<size_t> broken = m_breakProtocol->Break(_network, integrator);
   size_t breakCount = broken.size();
@@ -226,7 +222,8 @@ auto networkV4::quasiStaticStrain::relaxBreak(network& _network) -> size_t
   }
 
   for (size_t iter = 0; iter < maxIter; ++iter) {
-    integrator.integrate(_network);
+    nextDt = integrator.innerIteration(_network, nextDt);
+    m_t += integrator.getDt();
 
     broken = m_breakProtocol->Break(_network, integrator);
     breakCount += broken.size();
@@ -247,8 +244,6 @@ auto networkV4::quasiStaticStrain::relaxBreak(network& _network) -> size_t
     if (error < m_tol && broken.size() == 0) {
       return breakCount;
     }
-
-    m_t += integrator.getDt();
     // std::cout << std::setprecision(10) << iter << " " << error << " "
     //           << _network.getEnergy() << " " << integrator.getDt() << " "
     //           << tools::maxLength(_network.getNodes().forces()) << " "

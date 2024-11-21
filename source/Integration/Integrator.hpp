@@ -13,7 +13,8 @@
 namespace networkV4
 {
 
-using stressMap = EnumMap<bondType, tensor2d, bondType::single, bondType::matrix>;
+using stressMap =
+    EnumMap<bondType, tensor2d, bondType::single, bondType::matrix>;
 
 class integrator
 {
@@ -29,10 +30,17 @@ public:
 
 namespace Integrationtools
 {
-    void overdampedMove(network& _network, double _dt);
-    void move(network& _network, double _dt);
-    void updateVelocities(network& _network, double _alpha);
-    void heunAverage(network& _network, const std::vector<vec2d>& _tempForces, double _dt);
-}  // namespace itergrationTools
+void overdampedMove(network& _network, double _dt);
+void move(network& _network, double _dt);
+void updateVelocities(network& _network, double _alpha);
+void heunAverage(network& _network,
+                 const std::vector<vec2d>& _tempForces,
+                 double _dt);
+void copyVector(const std::vector<vec2d>& _src, std::vector<vec2d>& _dst);
+auto vectorDiffNorm(const std::vector<vec2d>& _src,
+                    const std::vector<vec2d>& _dst,
+                    const std::vector<bool>& _mask,
+                    bool _invertmask = false) -> double;
+}  // namespace Integrationtools
 
 }  // namespace networkV4

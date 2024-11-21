@@ -51,6 +51,13 @@ extern double falpha;
 extern std::size_t Nnegmax;
 extern double dmax;
 }  // namespace fire2
+
+namespace OverdampedAdaptiveMinimizer
+{
+extern double energyStepScale;
+extern double dmax;
+extern double fdec;
+}
 }  // namespace integrators
 
 namespace rootMethods

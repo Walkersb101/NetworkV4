@@ -17,7 +17,7 @@ public:
   auto getDt() const -> double;
 
 private:
-  double m_dt;
+  double m_dt = config::integrators::default_dt;
 };
 
 class OverdampedEulerHeun : public integrator
@@ -32,10 +32,8 @@ public:
   auto getDt() const -> double;
 
 private:
-  double m_dt;
-  std::vector<vec2d> m_tempPositions;
-  std::vector<vec2d> m_tempForces;
-  stressMap m_tempStresses;
+  double m_dt = config::integrators::default_dt;
+  std::vector<vec2d> m_frn;
 };
 
 class OverdampedAdaptiveEulerHeun : public integrator
@@ -50,17 +48,21 @@ public:
   auto getDt() const -> double;
 
 private:
-  auto forceErrorNorm(nodes& _network) -> double;
 
 private:
-  double m_dt;
-  double m_nextdt;
+  double m_dt = config::integrators::default_dt;
+  double m_nextdt = config::integrators::default_dt;
 
-  double m_esp;
+  double m_esp = config::integrators::adaptiveIntegrator::esp;
 
-  std::vector<vec2d> m_tempForces;
-  std::vector<vec2d> m_tempPositions;
-  stressMap m_tempStresses;
+  std::vector<vec2d> m_frn;
+  std::vector<vec2d> m_frnbar;
+
+  double m_qMin = config::integrators::adaptiveHeun::qMin;
+  double m_qMax = config::integrators::adaptiveHeun::qMax;
+  double m_dtMin = config::integrators::adaptiveIntegrator::dtMin;
+  double m_dtMax = config::integrators::adaptiveIntegrator::dtMax;
+  size_t m_maxInnerIter = config::integrators::adaptiveIntegrator::maxIter;
 };
 
 }  // namespace networkV4

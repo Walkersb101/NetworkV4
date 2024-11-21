@@ -42,11 +42,18 @@ double falpha = 0.99;
 std::size_t Nnegmax = 2000;
 double dmax = 0.1;
 }  // namespace fire2
+
+namespace OverdampedAdaptiveMinimizer
+{
+double energyStepScale = 0.5;
+double dmax = 0.1;
+double fdec = 0.5;
+}
 }  // namespace integrators
 
 namespace rootMethods
 {
-double targetTol = 1e-4;
+double targetTol = 1e-5;
 double minTol = 1e-10;
 namespace ITPMethod
 {

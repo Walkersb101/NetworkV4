@@ -38,7 +38,6 @@ networkV4::propogator::~propogator() {}
 void networkV4::propogator::run(network& _network)
 {
   relax(_network);
-  _network.computeForces();
   m_dataOut->writeTimeData(genTimeData(_network, "Initial", 0));
   m_networkOut->save(_network, 0, 0.0, "Initial");
 
@@ -105,6 +104,7 @@ void networkV4::propogator::evalStrain(network& _network, double _strain)
 {
   if (m_maxStep == 0.0) {
     strain(_network, _strain - getStrain(_network));
+    _network.computeForces();
     relax(_network);
     return;
   }
@@ -112,6 +112,7 @@ void networkV4::propogator::evalStrain(network& _network, double _strain)
     const double strainStep =
         std::min(_strain - getStrain(_network), m_maxStep);
     strain(_network, strainStep);
+    _network.computeForces();
     relax(_network);
   }
 }

@@ -30,7 +30,6 @@ void networkV4::stepStrain::run(network& _network)
   OverdampedAdaptiveEulerHeun integrator(config::integrators::default_dt,
                                          m_esp);
 
-  _network.computeForces();
   m_networkOut->save(_network, 0, 0.0, "Initial");
   m_dataOut->writeTimeData(genTimeData(_network, "Initial"));
 
@@ -45,6 +44,7 @@ void networkV4::stepStrain::run(network& _network)
 
   while (m_t < m_maxTime) {
     integrator.integrate(_network);
+    m_t += integrator.getDt();
     const auto broken = m_breakProtocol->Break(_network, integrator);
 
     for (const auto& b : broken) {
@@ -52,7 +52,6 @@ void networkV4::stepStrain::run(network& _network)
     }
     checkLog(_network);
 
-    m_t += integrator.getDt();
 
     if (checkExit(_network)) {
       break;

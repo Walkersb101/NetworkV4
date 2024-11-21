@@ -74,6 +74,7 @@ void networkV4::Simulation::loadNetwork()
     default:
       throw std::runtime_error("load version not implemented");
   }
+  m_network.computeForces();
 }
 
 void networkV4::Simulation::readDataOut()
@@ -188,13 +189,11 @@ auto networkV4::Simulation::loadBreakType() -> networkV4::BreakType
 auto networkV4::Simulation::readBreakProtocol()
     -> std::unique_ptr<networkV4::BreakTypes>
 {
-  toml::value config;
-  if (m_config.contains("BreakType")) {
-    config = toml::find(m_config, "BreakType");
-  } else {
-    config =
-        toml::find(m_config, enumString::protocolType2Str.at(m_protocolType));
-  }
+  toml::value config =
+      toml::find(m_config, enumString::protocolType2Str.at(m_protocolType));
+  std::string breakTypeStr =
+      toml::find_or<std::string>(config, "BreakType", "None");
+  m_breakType = enumString::str2BreakType.at(breakTypeStr);
   switch (m_breakType) {
     case networkV4::BreakType::None: {
       return std::make_unique<networkV4::NoBreaks>();
