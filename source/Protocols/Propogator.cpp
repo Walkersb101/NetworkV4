@@ -54,7 +54,7 @@ void networkV4::propogator::run(network& _network)
     relax(_network);
     m_dataOut->writeTimeData(genTimeData(_network, "End", 1));
     m_networkOut->save(_network, m_strainCount, 1.0, "End");
-    _network = _network;
+    _network = InitalNetwork;
   }
 }
 
