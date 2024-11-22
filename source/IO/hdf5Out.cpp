@@ -373,9 +373,8 @@ void networkOutHDF5::savePositions(HighFive::Group& _group,
   std::vector<std::vector<double>> data;
   data.reserve(_net.getNodes().size());
   for (const auto& pos : _net.getNodes().positions()) {
-    const vec2d TriPos =
-        _net.wrapedPosition(
-            pos - vec2d((_net.getShearStrain() * pos.y) - offset, 0.0));
+    const vec2d shearOffset = vec2d((_net.getShearStrain() * pos.y) - offset, 0.0);
+    const vec2d TriPos = _net.wrapedPosition(pos - shearOffset) + shearOffset;
     data.push_back({TriPos.x, TriPos.y});
   }
 
