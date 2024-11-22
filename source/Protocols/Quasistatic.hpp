@@ -44,6 +44,7 @@ private:
     NoBreaksInStep,
     BreakAtLowerBound,
     DidNotConverge,
+    MaxStrainReached,
     Complete
   };
 
@@ -82,7 +83,7 @@ private:
   bool m_errorOnNotSingleBreak =
       config::protocols::quasiStaticStrain::errorOnNotSingleBreak;
 
-  double m_maxStep;
+  double m_maxStep = 0.0;
   double m_strainGuessScale =
       config::protocols::quasiStaticStrain::strainGuessScale;
 

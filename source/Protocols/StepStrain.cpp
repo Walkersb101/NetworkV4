@@ -46,6 +46,9 @@ void networkV4::stepStrain::run(network& _network)
     integrator.integrate(_network);
     m_t += integrator.getDt();
     const auto broken = m_breakProtocol->Break(_network, integrator);
+    if (broken.size() > 0) {
+        _network.computeForces();
+    }
 
     for (const auto& b : broken) {
       m_dataOut->writeBondData(genBondData(_network, b, m_breakProtocol));

@@ -1,10 +1,10 @@
 #pragma once
 
+#include "Core/BreakTypes.hpp"
 #include "Integration/Integrator.hpp"
 #include "Integration/OverDamped.hpp"
 #include "Misc/Roots.hpp"
 #include "Misc/Tools.hpp"
-#include "Core/BreakTypes.hpp"
 
 namespace networkV4
 {
@@ -90,6 +90,7 @@ private:
   size_t m_maxInnerIter = config::integrators::adaptiveIntegrator::maxIter;
   size_t m_maxOuterIter = config::integrators::miminizer::maxIter;
 
+  std::vector<vec2d> m_rn;
   std::vector<vec2d> m_frn;
   std::vector<vec2d> m_frnbar;
 

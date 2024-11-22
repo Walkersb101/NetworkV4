@@ -209,11 +209,14 @@ auto networkV4::OverdampedAdaptiveMinimizer::innerIteration(
   size_t iter = 0;
   nodes& networkNodes = _network.getNodes();
   double startEnergy = _network.getEnergy();
+  //double ComputedEnergy = _network.computeEnergy();
+  double energy, forceError;
 
-  const double maxAbsVel = tools::maxAbsComponent(networkNodes.forces());
+  double maxAbsVel = tools::maxAbsComponent(networkNodes.forces());
   m_dt = std::max(std::min(m_dt, m_dmax / maxAbsVel), m_dtMin);
 
   Integrationtools::copyVector(networkNodes.forces(), m_frn);
+  Integrationtools::copyVector(networkNodes.positions(), m_rn);
   while (iter++ < m_maxInnerIter) {
     Integrationtools::overdampedMove(_network,
                                      m_dt);  // rbar_{n+1} = r_n + f(r_n) * dt
@@ -226,27 +229,29 @@ auto networkV4::OverdampedAdaptiveMinimizer::innerIteration(
         m_dt);  // = rbar_{n+1} + 0.5 * (f(rbar_{n+1}) - f(r_n)) * dt
     _network.computeForces();
 
-    const double forceError =
+    forceError =
         Integrationtools::vectorDiffNorm(networkNodes.forces(),
                                          m_frnbar,
                                          networkNodes.fixed(),
                                          true);  // |f(rbar_{n+1}) - f(r_n)|
     q = std::clamp(std::pow(m_esp / forceError, 2), m_qMin, m_qMax);
-    const double energy = _network.getEnergy();
+    energy = _network.getEnergy();
 
     if (q > 1.0 && energy < startEnergy)
       break;
 
+    maxAbsVel = tools::maxAbsComponent(networkNodes.forces());
     error = (m_dt == m_dtMin || std::isnan(q));
     if (error)
       break;
 
     if (energy > startEnergy)
-        q = std::min(q, m_fdec);
+      q = std::min(q, m_fdec);
     q = std::clamp(q, m_qMin, m_qMax);
-    
-    Integrationtools::overdampedMove(_network, -m_dt);  // r_{n+1} = r_n
+
+    Integrationtools::copyVector(m_rn, networkNodes.positions());  // r_{n+1} = r_n
     Integrationtools::copyVector(m_frn, networkNodes.forces());
+    //double testEnergy = _network.computeEnergy();
     m_dt = std::clamp(m_dt * q, m_dtMin, m_dtMax);
   }
   if (error) {
