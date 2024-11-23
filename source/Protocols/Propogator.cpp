@@ -1,8 +1,8 @@
 #include "Propogator.hpp"
 
+#include "Integration/Minimization.hpp"
 #include "Misc/Roots.hpp"
 #include "Misc/Tools.hpp"
-#include "Integration/Minimization.hpp"
 
 networkV4::propogator::propogator() {}
 
@@ -41,10 +41,12 @@ void networkV4::propogator::run(network& _network)
   m_dataOut->writeTimeData(genTimeData(_network, "Initial", 0));
   m_networkOut->save(_network, 0, 0.0, "Initial");
 
-  network InitalNetwork = _network;
+  std::sort(m_strains.begin(), m_strains.end());
+  network SavedNetwork;
   for (const auto& strain : m_strains) {
     m_strainCount++;
     evalStrain(_network, strain);
+    SavedNetwork = _network;
     if (m_breakType == bondType::any)
       breakMostStrained(_network);
     else
@@ -54,7 +56,7 @@ void networkV4::propogator::run(network& _network)
     relax(_network);
     m_dataOut->writeTimeData(genTimeData(_network, "End", 1));
     m_networkOut->save(_network, m_strainCount, 1.0, "End");
-    _network = InitalNetwork;
+    _network = SavedNetwork;
   }
 }
 
