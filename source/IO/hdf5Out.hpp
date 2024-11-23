@@ -85,6 +85,7 @@ private:
     props.add(HighFive::Chunking(_chunkSize));
     if (_deflate)
       props.add(HighFive::Deflate(9));
+      props.add(HighFive::Shuffle());
     return _group.createDataSet<T>(
         _name, HighFive::DataSpace(_dims, _maxDims), props);
   }
