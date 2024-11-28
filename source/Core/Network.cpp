@@ -370,6 +370,7 @@ auto networkV4::network::bondStrain(const bond& _bond) const -> double
 
 auto networkV4::network::bondEnergy(const bond& _bond) const -> double
 {
-  const double strain = bondStrain(_bond);
-  return 0.5 * _bond.mu() * strain * strain;
+  const vec2d dist =
+      minDist(m_nodes.position(_bond.src()), m_nodes.position(_bond.dst()));
+  return 0.5 * _bond.mu() * std::pow(dist.length() - _bond.naturalLength(), 2) / _bond.naturalLength();
 }
