@@ -29,7 +29,7 @@ public:
                     double _tol,
                     bool _errorOnNotSingleBreak,
                     double _maxStep,
-                    bool _single = false);
+                    bool _saveBreaks = false);
   ~quasiStaticStrain();
 
 public:
@@ -61,10 +61,11 @@ private:
                 size_t& _breakCountB,
                 double _tol,
                 bool _earlyExit = false) -> bool;
-  auto findSingleBreak(network& _network) -> std::tuple<SingleBreakReason, size_t>;
+  auto findSingleBreak(network& _network)
+      -> std::tuple<SingleBreakReason, size_t>;
 
   auto relaxBreak(network& _network) -> std::size_t;
-  
+
 private:
   auto genTimeData(const network& _network,
                    const std::string& _reason,
@@ -72,10 +73,9 @@ private:
   auto genBondData(const network& _network,
                    size_t _bondIndex) -> std::vector<writeableTypes>;
 
-
 private:
   double m_maxStrain;
-  bool m_single;
+  bool m_oneBreak = false;
 
   double m_esp = config::integrators::adaptiveIntegrator::esp;
   double m_rootTol = config::rootMethods::targetTol;

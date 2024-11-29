@@ -19,7 +19,7 @@ networkV4::quasiStaticStrain::quasiStaticStrain(
     double _tol,
     bool _errorOnNotSingleBreak,
     double _maxStep,
-    bool _single)
+    bool _saveBreaks)
     : m_maxStrain(_maxStrain)
     , m_esp(_esp)
     , m_rootTol(_tol)
@@ -27,7 +27,7 @@ networkV4::quasiStaticStrain::quasiStaticStrain(
     , protocol(_strainType, _breakType)
     , m_errorOnNotSingleBreak(_errorOnNotSingleBreak)
     , m_maxStep(_maxStep)
-    , m_single(_single)
+    , m_saveBreaks(_saveBreaks)
 {
 }
 
@@ -72,6 +72,9 @@ void networkV4::quasiStaticStrain::run(network& _network)
         _network, m_strainCount, m_t, "End-" + std::to_string(m_strainCount));
 
     if (getStrain(_network) >= m_maxStrain) {
+      break;
+    }
+    if (m_oneBreak && breakCount > 0) {
       break;
     }
   }
@@ -230,7 +233,7 @@ auto networkV4::quasiStaticStrain::relaxBreak(network& _network) -> size_t
       m_dataOut->writeBondData(genBondData(_network, b));
     }
 
-    if (broken.size() > 0) {
+    if (m_saveBreaks && broken.size() > 0) {
       m_networkOut->save(_network,
                          m_strainCount,
                          m_t,
@@ -239,7 +242,9 @@ auto networkV4::quasiStaticStrain::relaxBreak(network& _network) -> size_t
     }
 
     double error = tools::norm(_network.getNodes().forces());
-    if (((error < m_forceTol) || (startEnergy - endEnergy < 1e-10)) && broken.size() == 0) {
+    if (((error < m_forceTol) || (startEnergy - endEnergy < 1e-10))
+        && broken.size() == 0)
+    {
       return breakCount;
     }
     // std::cout << std::setprecision(10) << iter << " " << error << " "

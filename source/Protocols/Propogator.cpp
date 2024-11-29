@@ -8,12 +8,8 @@ networkV4::propogator::propogator() {}
 
 networkV4::propogator::propogator(std::vector<double> _strains,
                                   StrainType _strainType)
-    : propogator(_strains,
-                 _strainType,
-                 bondType::any,
-                 config::integrators::adaptiveIntegrator::esp,
-                 config::integrators::miminizer::tol,
-                 0.0)
+    : m_strains(_strains)
+    , protocol(_strainType)
 {
 }
 
@@ -22,14 +18,15 @@ networkV4::propogator::propogator(const std::vector<double>& _strains,
                                   bondType _breakType,
                                   double _esp,
                                   double _tol,
-                                  double _maxStep)
+                                  double _maxStep,
+                                  bool _respectLambda)
     : m_strains(_strains)
     , m_breakType(_breakType)
     , m_esp(_esp)
     , m_tol(_tol)
     , m_maxStep(_maxStep)
     , protocol(_strainType)
-    , m_strainCount(0)
+    , m_respectLambda(_respectLambda)
 {
 }
 
@@ -41,22 +38,10 @@ void networkV4::propogator::run(network& _network)
   m_dataOut->writeTimeData(genTimeData(_network, "Initial", 0));
   m_networkOut->save(_network, 0, 0.0, "Initial");
 
-  std::sort(m_strains.begin(), m_strains.end());
-  network SavedNetwork;
-  for (const auto& strain : m_strains) {
-    m_strainCount++;
-    evalStrain(_network, strain);
-    SavedNetwork = _network;
-    if (m_breakType == bondType::any)
-      breakMostStrained(_network);
-    else
-      breakMostStrained(_network, m_breakType);
-    m_dataOut->writeTimeData(genTimeData(_network, "Start", 1));
-    m_networkOut->save(_network, m_strainCount, 0.0, "Start");
-    relax(_network);
-    m_dataOut->writeTimeData(genTimeData(_network, "End", 1));
-    m_networkOut->save(_network, m_strainCount, 1.0, "End");
-    _network = SavedNetwork;
+  if (m_respectLambda) {
+    runLambda(_network);
+  } else {
+    runStrain(_network);
   }
 }
 
@@ -102,14 +87,42 @@ void networkV4::propogator::initIO(const network& _network,
   m_networkOut = _networkOut.get();
 }
 
+void networkV4::propogator::runLambda(network& _network)
+{
+  bool foundBreak = false;
+  network savedNetwork = _network;
+  bonds& bonds = _network.getBonds();
+  while (!foundBreak) {
+    foundBreak = findSingleBreak(_network);
+  }
+  breakMostStrained(_network, m_breakType);
+  m_dataOut->writeTimeData(genTimeData(_network, "Start", 1));
+  m_networkOut->save(_network, m_strainCount, 0.0, "Start");
+  relax(_network);
+  m_dataOut->writeTimeData(genTimeData(_network, "End", 1));
+  m_networkOut->save(_network, m_strainCount, 1.0, "End");
+}
+
+void networkV4::propogator::runStrain(network& _network)
+{
+  std::sort(m_strains.begin(), m_strains.end());
+  network SavedNetwork;
+  for (const auto& strain : m_strains) {
+    m_strainCount++;
+    evalStrain(_network, strain);
+    SavedNetwork = _network;
+    breakMostStrained(_network, m_breakType);
+    m_dataOut->writeTimeData(genTimeData(_network, "Start", 1));
+    m_networkOut->save(_network, m_strainCount, 0.0, "Start");
+    relax(_network);
+    m_dataOut->writeTimeData(genTimeData(_network, "End", 1));
+    m_networkOut->save(_network, m_strainCount, 1.0, "End");
+    _network = SavedNetwork;
+  }
+}
+
 void networkV4::propogator::evalStrain(network& _network, double _strain)
 {
-  if (m_maxStep == 0.0) {
-    strain(_network, _strain - getStrain(_network));
-    _network.computeForces();
-    relax(_network);
-    return;
-  }
   while (getStrain(_network) < _strain - 1e-15) {
     const double strainStep =
         std::min(_strain - getStrain(_network), m_maxStep);
@@ -119,56 +132,98 @@ void networkV4::propogator::evalStrain(network& _network, double _strain)
   }
 }
 
-void networkV4::propogator::breakMostStrained(network& _network)
+void networkV4::propogator::relax(network& _network)
 {
-  bonds& bonds = _network.getBonds();
-  std::vector<double> strains;
-  strains.reserve(bonds.size());
-  for (const auto& b : bonds) {
-    if (!b.connected()) {
-      strains.push_back(0.0);
+  FireMinimizer minimizer(m_tol);
+  minimizer.integrate(_network);
+}
+
+auto networkV4::propogator::getMostStrained(network& _network,
+                                            bondType _type) -> size_t
+{
+  auto isType = [&_type](const bond& b)
+  { return (_type == bondType::any) || (b.type() == _type); };
+  auto isConnected = [](const bond& b) { return b.connected(); };
+
+  size_t maxIndex = 0;
+  double maxStrain = 0.0;
+  for (size_t i = 0; i < _network.getBonds().size(); ++i) {
+    const auto& b = _network.getBonds().get(i);
+    if (!isType(b) || !isConnected(b)) {
       continue;
     }
-    const vec2d bDist = _network.minDist(_network.getNodes().position(b.src()),
-                                         _network.getNodes().position(b.dst()));
-    const double strain =
-        (bDist.length() - b.naturalLength()) / b.naturalLength();
-    strains.push_back(strain);
+    const double strain = _network.bondStrain(b);
+    if (strain > maxStrain) {
+      maxStrain = strain;
+      maxIndex = i;
+    }
   }
-  auto maxElementIt = std::max_element(strains.begin(), strains.end());
-  size_t maxIndex = std::distance(strains.begin(), maxElementIt);
-  bond& b = bonds.get(maxIndex);
-  b.connected() = false;
-  m_dataOut->writeBondData(genBondData(_network, maxIndex));
+  return maxIndex;
 }
 
 void networkV4::propogator::breakMostStrained(network& _network, bondType _type)
 {
   bonds& bonds = _network.getBonds();
-  std::vector<double> strains;
-  strains.reserve(bonds.size());
-  for (const auto& b : bonds) {
-    if (!b.connected() || b.type() != _type) {
-      strains.push_back(0.0);
-      continue;
-    }
-    const vec2d bDist = _network.minDist(_network.getNodes().position(b.src()),
-                                         _network.getNodes().position(b.dst()));
-    const double strain =
-        (bDist.length() - b.naturalLength()) / b.naturalLength();
-    strains.push_back(strain);
-  }
-  auto maxElementIt = std::max_element(strains.begin(), strains.end());
-  size_t maxIndex = std::distance(strains.begin(), maxElementIt);
+  size_t maxIndex = getMostStrained(_network, m_breakType);
   bond& b = bonds.get(maxIndex);
   b.connected() = false;
   m_dataOut->writeBondData(genBondData(_network, maxIndex));
 }
 
-void networkV4::propogator::relax(network& _network)
+auto networkV4::propogator::findSingleBreak(network& _network) -> bool
 {
-  FireMinimizer minimizer(m_tol);
-  minimizer.integrate(_network);
+  network testNetwork;
+  bool converged = false;
+  double distToBreakA, distToBreakB;
+  size_t mostStrainedIndex;
+  bond mostStrainedBond;
+
+  double a = getStrain(_network);
+  double b = getStrain(_network) + m_maxStep;
+
+  testNetwork = _network;
+  evalStrain(testNetwork, a);
+  mostStrainedIndex = getMostStrained(testNetwork, m_breakType);
+  mostStrainedBond = testNetwork.getBonds().get(mostStrainedIndex);
+  distToBreakA =
+      mostStrainedBond.lambda() - testNetwork.bondStrain(mostStrainedBond);
+
+  testNetwork = _network;
+  evalStrain(testNetwork, b);
+  mostStrainedIndex = getMostStrained(testNetwork, m_breakType);
+  mostStrainedBond = testNetwork.getBonds().get(mostStrainedIndex);
+  distToBreakB =
+      mostStrainedBond.lambda() - testNetwork.bondStrain(mostStrainedBond);
+
+  if (distToBreakB > 0.0) {
+    _network = testNetwork;
+    return false;
+  }
+
+  roots::ITP solver(a, b, m_tol);
+  for (size_t iters = 0; iters < solver.nMax(); ++iters) {
+    double xITP = solver.guessRoot(a, b, distToBreakA, distToBreakB);
+
+    double distToBreakITP;
+    testNetwork = _network;
+    evalStrain(testNetwork, xITP);
+    mostStrainedIndex = getMostStrained(testNetwork, m_breakType);
+    mostStrainedBond = testNetwork.getBonds().get(mostStrainedIndex);
+    distToBreakITP =
+        mostStrainedBond.lambda() - testNetwork.bondStrain(mostStrainedBond);
+    if (distToBreakITP >= 0.) {
+      b = xITP;
+      distToBreakB = distToBreakITP;
+    } else {
+      a = xITP;
+      distToBreakB = distToBreakITP;
+    }
+    if (std::abs(b - a) < 2 * m_tol) {
+      break;
+    }
+  }
+  _network = testNetwork;
+  return true;
 }
 
 auto networkV4::propogator::genTimeData(const network& _network,

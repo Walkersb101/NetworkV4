@@ -297,7 +297,7 @@ void networkV4::Simulation::readQuasistatic()
       config::protocols::quasiStaticStrain::errorOnNotSingleBreak);
   const double maxStep =
       toml::find_or<double>(quasiConfig, "MaxStep", maxStrain);
-  const bool single = toml::find_or<bool>(quasiConfig, "Single", false);
+  const bool saveBreaks = toml::find_or<bool>(quasiConfig, "SaveBreaks", false);
 
   m_protocol =
       std::make_unique<networkV4::quasiStaticStrain>(maxStrain,
@@ -307,7 +307,7 @@ void networkV4::Simulation::readQuasistatic()
                                                      tol,
                                                      errorOnNotSingleBreak,
                                                      maxStep,
-                                                     single);
+                                                     saveBreaks);
 }
 
 void networkV4::Simulation::readStepStrain()
@@ -374,6 +374,9 @@ void networkV4::Simulation::readPropogator()
       propConfig, "Tol", config::integrators::miminizer::tol);
   const double maxStep = toml::find_or<double>(propConfig, "MaxStep", 0.0);
 
+  const bool respectLambda = toml::find_or<bool>(
+      propConfig, "RespectLambda", false);
+
   m_protocol = std::make_unique<networkV4::propogator>(
-      strains, strainType, bType, ESP, tol, maxStep);
+      strains, strainType, bType, ESP, tol, maxStep, respectLambda);
 }

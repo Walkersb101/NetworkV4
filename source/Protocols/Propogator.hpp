@@ -21,7 +21,8 @@ public:
              bondType _breakType,
              double _esp,
              double _tol,
-             double _maxStep);
+             double _maxStep,
+             bool _respectLambda);
   ~propogator();
 
 public:
@@ -31,10 +32,17 @@ public:
               std::unique_ptr<networkOut>& _networkOut);
 
 private:
+  void runLambda(network& _network);
+  void runStrain(network& _network);
+
+private:
   void evalStrain(network& _network, double _strain);
-  void breakMostStrained(network& _network);
-  void breakMostStrained(network& _network, bondType _type);
   void relax(network& _network);
+
+  auto getMostStrained(network& _network, bondType _type) -> size_t;
+  void breakMostStrained(network& _network, bondType _type);
+
+  auto findSingleBreak(network& _network) -> bool;
 
 private:
   auto genTimeData(const network& _network,
@@ -44,14 +52,15 @@ private:
                    size_t _bondIndex) -> std::vector<writeableTypes>;
 
 private:
-  std::vector<double> m_strains;
-  bondType m_breakType;
+  std::vector<double> m_strains = {};
+  bondType m_breakType = bondType::any;
+  bool m_respectLambda = false;
 
-  double m_esp;
-  double m_tol;
-  double m_maxStep;
+  double m_esp = config::integrators::adaptiveIntegrator::esp;
+  double m_tol = config::integrators::miminizer::tol;
+  double m_maxStep = 0.1;
 
-  size_t m_strainCount;
+  size_t m_strainCount = 0;
 };
 
 }  // namespace networkV4
