@@ -97,10 +97,10 @@ void networkV4::propogator::runLambda(network& _network)
   }
   breakMostStrained(_network, m_breakType);
   m_dataOut->writeTimeData(genTimeData(_network, "Start", 1));
-  m_networkOut->save(_network, m_strainCount, 0.0, "Start");
+  m_networkOut->save(_network, 1, 0.0, "Start");
   relax(_network);
   m_dataOut->writeTimeData(genTimeData(_network, "End", 1));
-  m_networkOut->save(_network, m_strainCount, 1.0, "End");
+  m_networkOut->save(_network, 1, 1.0, "End");
 }
 
 void networkV4::propogator::runStrain(network& _network)
