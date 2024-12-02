@@ -95,6 +95,7 @@ void networkV4::propogator::runLambda(network& _network)
   while (!foundBreak) {
     foundBreak = findSingleBreak(_network);
   }
+  m_strainCount = 1;
   breakMostStrained(_network, m_breakType);
   m_dataOut->writeTimeData(genTimeData(_network, "Start", 1));
   m_networkOut->save(_network, 1, 0.0, "Start");
