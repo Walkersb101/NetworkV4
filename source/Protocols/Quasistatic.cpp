@@ -148,7 +148,10 @@ auto networkV4::quasiStaticStrain::findSingleBreak(network& _network)
   testNetwork = _network;
   evalStrain(testNetwork, a, maxDistAboveA, breakCountA);
 
-  if (maxDistAboveA >= 0.0) {
+  if (maxDistAboveA > 0.0) {
+    std::cout << "Break at lower bound with strain \n";
+    std::cout << "Strain: " << a << "\n";
+    std::cout << "MaxDistAboveA: " << maxDistAboveA << "\n";
     return {SingleBreakReason::BreakAtLowerBound, 0};
   }
 
@@ -201,50 +204,45 @@ std::vector<double> networkV4::forceMags(const network& _network)
 
 auto networkV4::quasiStaticStrain::relaxBreak(network& _network) -> size_t
 {
-  std::size_t maxIter = config::integrators::miminizer::maxIter;
+  double startEnergy, endEnergy;
+  std::vector<bond*> broken;
+  size_t breakCount = 0;
 
-  OverdampedAdaptiveMinimizer integrator(config::integrators::default_dt,
-                                         m_esp);
+  OverdampedAdaptiveMinimizer integrator(m_defaultDt, m_esp);
   double nextDt = integrator.getDt();
 
-  std::vector<size_t> broken = m_breakProtocol->Break(_network, integrator);
+  broken = m_breakProtocol->Break(_network, integrator);
   _network.computeForces();
-  size_t breakCount = broken.size();
-  if (breakCount == 0) {
-    return 0;
-  }
-  for (const auto& b : broken) {
-    m_dataOut->writeBondData(genBondData(_network, b));
+
+  breakCount += broken.size();
+  for (const auto b : broken){
+    m_dataOut->writeBondData(genBondData(_network, *b));
   }
 
-  for (size_t iter = 0; iter < maxIter; ++iter) {
-    double startEnergy = _network.getEnergy();
+  for (size_t iter = 0; iter < m_maxMinimizerIter; ++iter) {
+    startEnergy = _network.getEnergy();
     nextDt = integrator.innerIteration(_network, nextDt);
     m_t += integrator.getDt();
-    double endEnergy = _network.getEnergy();
+    endEnergy = _network.getEnergy();
 
     broken = m_breakProtocol->Break(_network, integrator);
     if (broken.size() > 0) {
       _network.computeForces();
-    }
-    breakCount += broken.size();
-
-    for (const auto& b : broken) {
-      m_dataOut->writeBondData(genBondData(_network, b));
-    }
-
-    if (m_saveBreaks && broken.size() > 0) {
-      m_networkOut->save(_network,
-                         m_strainCount,
-                         m_t,
-                         "Broken-" + std::to_string(m_strainCount) + "-"
-                             + std::to_string(breakCount));
+      breakCount += broken.size();
+      for (const auto b : broken) {
+        m_dataOut->writeBondData(genBondData(_network, *b));
+      }
+      if (m_saveBreaks) {
+        const std::string reason = "Broken-" + std::to_string(m_strainCount)
+            + "-" + std::to_string(breakCount);
+        m_networkOut->save(_network, m_strainCount, m_t, reason);
+      }
     }
 
-    double error = tools::norm(_network.getNodes().forces());
-    if (((error < m_forceTol) || (startEnergy - endEnergy < 1e-10))
-        && broken.size() == 0)
-    {
+    double forceError = tools::norm(_network.getNodes().forces());
+    bool converged =
+        (forceError < m_forceTol) || (startEnergy - endEnergy < 1e-10);
+    if (converged && broken.size() == 0) {
       return breakCount;
     }
     // std::cout << std::setprecision(10) << iter << " " << error << " "
@@ -339,28 +337,27 @@ auto networkV4::quasiStaticStrain::genTimeData(const network& _network,
 }
 
 auto networkV4::quasiStaticStrain::genBondData(
-    const network& _network, size_t _bondIndex) -> std::vector<writeableTypes>
+    const network& _network, const bond& _bond) -> std::vector<writeableTypes>
 {
   auto types = tools::uniqueBondTypes(_network.getBonds());
   auto stresses = _network.getStresses();
   auto globalStress = _network.getGlobalStress();
-  auto& b = _network.getBonds().get(_bondIndex);
 
   std::vector<writeableTypes> data;
   data.reserve(23 + 5 * types.size());
   data.emplace_back(m_strainCount);
   data.emplace_back(m_t);
-  data.emplace_back(enumString::bondType2Str.at(b.type()));
-  data.emplace_back(b.mu());
-  data.emplace_back(b.lambda());
-  data.emplace_back(b.naturalLength());
-  data.emplace_back(_network.bondStrain(b));
-  data.emplace_back(b.src());
-  data.emplace_back(b.dst());
-  data.emplace_back(_network.getNodes().position(b.src()).x);
-  data.emplace_back(_network.getNodes().position(b.src()).y);
-  data.emplace_back(_network.getNodes().position(b.dst()).x);
-  data.emplace_back(_network.getNodes().position(b.dst()).y);
+  data.emplace_back(enumString::bondType2Str.at(_bond.type()));
+  data.emplace_back(_bond.mu());
+  data.emplace_back(_bond.lambda());
+  data.emplace_back(_bond.naturalLength());
+  data.emplace_back(_network.bondStrain(_bond));
+  data.emplace_back(_bond.src());
+  data.emplace_back(_bond.dst());
+  data.emplace_back(_network.getNodes().position(_bond.src()).x);
+  data.emplace_back(_network.getNodes().position(_bond.src()).y);
+  data.emplace_back(_network.getNodes().position(_bond.dst()).x);
+  data.emplace_back(_network.getNodes().position(_bond.dst()).y);
   data.emplace_back(_network.getDomain().x);
   data.emplace_back(_network.getDomain().y);
   data.emplace_back(getStrain(_network));

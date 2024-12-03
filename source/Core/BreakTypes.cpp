@@ -1,7 +1,7 @@
-#include "BreakTypes.hpp"
-
-#include <random>
 #include <iostream>
+#include <random>
+
+#include "BreakTypes.hpp"
 
 networkV4::BreakTypes::BreakTypes() {}
 
@@ -20,22 +20,13 @@ void networkV4::NoBreaks::Data(const network& _network,
   _count = 0;
 }
 
-auto networkV4::NoBreaks::Break(network& _network,
-                                const integrator& _integrator)
-    -> std::vector<std::size_t>
+auto networkV4::NoBreaks::Break(
+    network& _network, const integrator& _integrator) -> std::vector<bond*>
 {
-  return std::vector<std::size_t>();
+  return std::vector<bond*>();
 }
 
-networkV4::StrainBreak::StrainBreak()
-{
-  throw std::runtime_error("lambda needs to be specified ");
-}
-
-networkV4::StrainBreak::StrainBreak(const std::vector<double>& _lambda)
-    : m_lambda(_lambda)
-{
-}
+networkV4::StrainBreak::StrainBreak() {}
 
 networkV4::StrainBreak::~StrainBreak() {}
 
@@ -47,46 +38,35 @@ void networkV4::StrainBreak::Data(const network& _network,
   const auto& bonds = _network.getBonds();
   _count = 0;
   _maxVal = -1e10;
-  for (size_t i = 0; i < bonds.size(); ++i) {
-    const auto& b = bonds.get(i);
-    if (!b.connected()) {
-      continue;
-    }
+  auto connected = [](const auto& _b) { return _b.connected(); };
+  auto connectedList = bonds | std::views::filter(connected);
+  for (const auto& b : connectedList) {
     const double strain = _network.bondStrain(b);
-    const double distAbove = strain - m_lambda[i];
-    _maxVal = std::max(_maxVal, distAbove);
-    if (distAbove >= 0.0) {
+    _maxVal = std::max(_maxVal, strain - b.lambda());
+    if (strain >= b.lambda()) {
       ++_count;
     }
   }
 }
 
-auto networkV4::StrainBreak::Break(network& _network,
-                                   const integrator& _integrator)
-    -> std::vector<std::size_t>
+auto networkV4::StrainBreak::Break(
+    network& _network, const integrator& _integrator) -> std::vector<bond*>
 {
+  std::vector<bond*> broken;
   auto& bonds = _network.getBonds();
-  std::vector<std::size_t> broken;
-  for (std::size_t i = 0; i < bonds.size(); ++i) {
-    auto& b = bonds.get(i);
-    if (!b.connected() || _network.bondStrain(b) < m_lambda[i]) {
-      continue;
+  auto connected = [](const auto& _b) { return _b.connected(); };
+  auto connectedList = bonds | std::views::filter(connected);
+  for (auto& b : connectedList) {
+    const double strain = _network.bondStrain(b);
+    if (strain < b.lambda()) {
+      b.connected() = false;
+      broken.push_back(&b);
     }
-    b.connected() = false;
-    broken.push_back(i);
   }
   return broken;
 }
 
-networkV4::EnergyBreak::EnergyBreak()
-{
-  throw std::runtime_error("Energy needs to be specified ");
-}
-
-networkV4::EnergyBreak::EnergyBreak(const std::vector<double>& _E)
-    : m_E(_E)
-{
-}
+networkV4::EnergyBreak::EnergyBreak() {}
 
 networkV4::EnergyBreak::~EnergyBreak() {}
 
@@ -98,45 +78,38 @@ void networkV4::EnergyBreak::Data(const network& _network,
   const auto& bonds = _network.getBonds();
   _count = 0;
   _maxVal = -1e10;
-  for (size_t i = 0; i < bonds.size(); ++i) {
-    const auto& b = bonds.get(i);
-    if (!b.connected()) {
-      continue;
-    }
-    const double energy = _network.bondEnergy(b);
-    const double distAbove = energy - m_E[i];
-    _maxVal = std::max(_maxVal, distAbove);
-    if (distAbove >= 0.0) {
+  auto connected = [](const auto& _b) { return _b.connected(); };
+  auto connectedList = bonds | std::views::filter(connected);
+  for (const auto& b : connectedList) {
+    const double strain = _network.bondEnergy(b);
+    _maxVal = std::max(_maxVal, strain - b.lambda());
+    if (strain >= b.lambda()) {
       ++_count;
     }
   }
 }
 
-auto networkV4::EnergyBreak::Break(network& _network,
-                                   const integrator& _integrator)
-    -> std::vector<std::size_t>
+auto networkV4::EnergyBreak::Break(
+    network& _network, const integrator& _integrator) -> std::vector<bond*>
 {
+  std::vector<bond*> broken;
   auto& bonds = _network.getBonds();
-  std::vector<std::size_t> broken;
-  for (std::size_t i = 0; i < bonds.size(); ++i) {
-    auto& b = bonds.get(i);
-    if (!b.connected() || _network.bondEnergy(b) < m_E[i]) {
-      continue;
+  auto connected = [](const auto& _b) { return _b.connected(); };
+  auto connectedList = bonds | std::views::filter(connected);
+  for (auto& b : connectedList) {
+    const double strain = _network.bondEnergy(b);
+    if (strain < b.lambda()) {
+      b.connected() = false;
+      broken.push_back(&b);
     }
-    b.connected() = false;
-    broken.push_back(i);
   }
   return broken;
 }
 
 networkV4::SGRBreak::SGRBreak() {}
 
-networkV4::SGRBreak::SGRBreak(const std::vector<double>& _E,
-                              double _T,
-                              double _tau0,
-                              unsigned long _seed)
-    : m_E(_E)
-    , m_T(_T)
+networkV4::SGRBreak::SGRBreak(double _T, double _tau0, unsigned long _seed)
+    : m_T(_T)
     , m_rT(1.0 / _T)
     , m_tau0(_tau0)
     , m_rtau0(1.0 / _tau0)
@@ -151,47 +124,53 @@ void networkV4::SGRBreak::Data(const network& _network,
                                double& _maxVal,
                                std::size_t& _count)
 {
+  auto rng = m_rng;
+
   const auto& bonds = _network.getBonds();
   _count = 0;
   _maxVal = -1e10;
-  auto rng = m_rng;
-  for (size_t i = 0; i < bonds.size(); i++) {
-    const auto& b = bonds.get(i);
-    if (!b.connected()) {
-      continue;
-    }
+
+  std::uniform_real_distribution<double> dist(0.0, 1.0);
+
+  auto connected = [](const auto& _b) { return _b.connected(); };
+  auto connectedList = bonds | std::views::filter(connected);
+  for (const auto& b : connectedList) {
     const double energy = _network.bondEnergy(b);
-    const double distAbove = energy - m_E[i];
-    const double rate = m_rtau0 * std::exp(-distAbove * m_rT);
-    std::exponential_distribution<double> dist(rate);
-    if (dist(rng) >= _integrator.getDt()) {
-      ++_count;
-    }
+    const double distAbove = energy - b.lambda();
     _maxVal = std::max(_maxVal, distAbove);
+
+    const double rate = m_rtau0 * std::exp(-distAbove * m_rT);
+    const double probOfBreak = 1 - std::exp(-rate * _integrator.getDt());
+    const double rand = dist(m_rng);
+
+    if (rand < probOfBreak) {
+      _count++;
+    }
   }
 }
 
 auto networkV4::SGRBreak::Break(network& _network,
                                 const integrator& _integrator)
-    -> std::vector<std::size_t>
+    -> std::vector<bond*>
 {
   auto& bonds = _network.getBonds();
-  std::vector<std::size_t> broken;
+  std::vector<bond*> broken;
   std::uniform_real_distribution<double> dist(0.0, 1.0);
-  for (size_t i = 0; i < bonds.size(); i++) {
-    auto& b = bonds.get(i);
-    if (!b.connected()) {
-      continue;
-    }
+
+  auto connected = [](const auto& _b) { return _b.connected(); };
+  auto connectedList = bonds | std::views::filter(connected);
+  for (auto& b : connectedList) {
     const double energy = _network.bondEnergy(b);
-    const double distAbove = energy - m_E[i];
+    const double distAbove = energy - b.lambda();
+
     const double rate = m_rtau0 * std::exp(-distAbove * m_rT);
     const double probOfBreak = 1 - std::exp(-rate * _integrator.getDt());
     const double rand = dist(m_rng);
+
     if (rand < probOfBreak) {
       b.connected() = false;
-      broken.push_back(i);
+      broken.push_back(&b);
     }
   }
-    return broken;
+  return broken;
 }

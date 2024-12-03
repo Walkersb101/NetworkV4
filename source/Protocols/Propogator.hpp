@@ -49,7 +49,7 @@ private:
                    const std::string& _reason,
                    std::size_t _breakCount) -> std::vector<writeableTypes>;
   auto genBondData(const network& _network,
-                   size_t _bondIndex) -> std::vector<writeableTypes>;
+                   const bond& _bond) -> std::vector<writeableTypes>;
 
 private:
   std::vector<double> m_strains = {};

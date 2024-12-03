@@ -42,7 +42,7 @@ private:
   auto genTimeData(const network& _network,
                    const std::string& _reason) -> std::vector<writeableTypes>;
   auto genBondData(const network& _network,
-                   size_t _bondIndex,
+                   const bond& _bond,
                    BreakTypes* _breakProtocol) -> std::vector<writeableTypes>;
 
 private:

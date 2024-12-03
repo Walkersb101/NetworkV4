@@ -2,9 +2,9 @@
 
 #include <trng/yarn2.hpp>
 
-#include "Misc/Enums.hpp"
-#include "Integration/Integrator.hpp"
 #include "Core/Network.hpp"
+#include "Integration/Integrator.hpp"
+#include "Misc/Enums.hpp"
 
 namespace networkV4
 {
@@ -20,7 +20,7 @@ public:
                     double& _maxVal,
                     std::size_t& _count) = 0;
   virtual auto Break(network& _network, const integrator& _integrator)
-      -> std::vector<std::size_t> = 0;
+      -> std::vector<bond*> = 0;
 };
 
 class NoBreaks : public BreakTypes
@@ -35,14 +35,13 @@ public:
             double& _maxVal,
             std::size_t& _count) override;
   auto Break(network& _network, const integrator& _integrator)
-      -> std::vector<std::size_t> override;
+      -> std::vector<bond*> override;
 };
 
 class StrainBreak : public BreakTypes
 {
 public:
   StrainBreak();
-  StrainBreak(const std::vector<double>& _lambda);
   virtual ~StrainBreak();
 
 public:
@@ -51,17 +50,13 @@ public:
             double& _maxVal,
             std::size_t& _count) override;
   auto Break(network& _network, const integrator& _integrator)
-      -> std::vector<std::size_t> override;
-
-private:
-  std::vector<double> m_lambda;
+      -> std::vector<bond*> override;
 };
 
 class EnergyBreak : public BreakTypes
 {
 public:
   EnergyBreak();
-  EnergyBreak(const std::vector<double>& _E);
   virtual ~EnergyBreak();
 
 public:
@@ -70,17 +65,16 @@ public:
             double& _maxVal,
             std::size_t& _count) override;
   auto Break(network& _network, const integrator& _integrator)
-      -> std::vector<std::size_t> override;
-
-private:
-  std::vector<double> m_E;
+      -> std::vector<bond*> override;
 };
 
 class SGRBreak : public BreakTypes
 {
 public:
   SGRBreak();
-  SGRBreak(const std::vector<double>& _E, double _T, double _tau0, unsigned long _seed);
+  SGRBreak(double _T,
+           double _tau0,
+           unsigned long _seed);
   virtual ~SGRBreak();
 
 public:
@@ -89,10 +83,9 @@ public:
             double& _maxVal,
             std::size_t& _count) override;
   auto Break(network& _network, const integrator& _integrator)
-      -> std::vector<std::size_t> override;
+      -> std::vector<bond*> override;
 
 private:
-std::vector<double> m_E;
   double m_T;
   double m_rT;
   double m_tau0;

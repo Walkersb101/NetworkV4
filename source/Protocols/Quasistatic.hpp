@@ -71,7 +71,7 @@ private:
                    const std::string& _reason,
                    std::size_t _breakCount) -> std::vector<writeableTypes>;
   auto genBondData(const network& _network,
-                   size_t _bondIndex) -> std::vector<writeableTypes>;
+                   const bond& _bond) -> std::vector<writeableTypes>;
 
 private:
   double m_maxStrain;
@@ -82,6 +82,9 @@ private:
   double m_forceTol = config::integrators::miminizer::tol;
   bool m_errorOnNotSingleBreak =
       config::protocols::quasiStaticStrain::errorOnNotSingleBreak;
+
+  std::size_t m_maxMinimizerIter = config::integrators::miminizer::maxIter;
+    double m_defaultDt = config::integrators::default_dt;
 
   double m_maxStep = 0.0;
   double m_strainGuessScale =

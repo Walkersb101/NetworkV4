@@ -168,7 +168,7 @@ void networkV4::propogator::breakMostStrained(network& _network, bondType _type)
   size_t maxIndex = getMostStrained(_network, m_breakType);
   bond& b = bonds.get(maxIndex);
   b.connected() = false;
-  m_dataOut->writeBondData(genBondData(_network, maxIndex));
+  m_dataOut->writeBondData(genBondData(_network, b));
 }
 
 auto networkV4::propogator::findSingleBreak(network& _network) -> bool
@@ -260,26 +260,25 @@ auto networkV4::propogator::genTimeData(const network& _network,
 }
 
 auto networkV4::propogator::genBondData(
-    const network& _network, size_t _bondIndex) -> std::vector<writeableTypes>
+    const network& _network, const bond& _bond) -> std::vector<writeableTypes>
 {
   auto types = tools::uniqueBondTypes(_network.getBonds());
   auto stresses = _network.getStresses();
   auto globalStress = _network.getGlobalStress();
-  auto& b = _network.getBonds().get(_bondIndex);
 
   std::vector<writeableTypes> data;
   data.reserve(23 + 5 * types.size());
   data.emplace_back(m_strainCount);
-  data.emplace_back(enumString::bondType2Str.at(b.type()));
-  data.emplace_back(b.mu());
-  data.emplace_back(b.naturalLength());
-  data.emplace_back(_network.bondStrain(b));
-  data.emplace_back(b.src());
-  data.emplace_back(b.dst());
-  data.emplace_back(_network.getNodes().position(b.src()).x);
-  data.emplace_back(_network.getNodes().position(b.src()).y);
-  data.emplace_back(_network.getNodes().position(b.dst()).x);
-  data.emplace_back(_network.getNodes().position(b.dst()).y);
+  data.emplace_back(enumString::bondType2Str.at(_bond.type()));
+  data.emplace_back(_bond.mu());
+  data.emplace_back(_bond.naturalLength());
+  data.emplace_back(_network.bondStrain(_bond));
+  data.emplace_back(_bond.src());
+  data.emplace_back(_bond.dst());
+  data.emplace_back(_network.getNodes().position(_bond.src()).x);
+  data.emplace_back(_network.getNodes().position(_bond.src()).y);
+  data.emplace_back(_network.getNodes().position(_bond.dst()).x);
+  data.emplace_back(_network.getNodes().position(_bond.dst()).y);
   data.emplace_back(_network.getDomain().x);
   data.emplace_back(_network.getDomain().y);
   data.emplace_back(getStrain(_network));

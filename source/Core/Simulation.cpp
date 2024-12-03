@@ -200,24 +200,20 @@ auto networkV4::Simulation::readBreakProtocol()
     }
     case networkV4::BreakType::Strain: {
       std::vector<double> lambda = m_network.getBonds().getLambdaVector();
-      return std::make_unique<networkV4::StrainBreak>(lambda);
+      return std::make_unique<networkV4::StrainBreak>();
     }
     case networkV4::BreakType::Energy: {
       std::vector<double> lambda;
-      if (!config.contains("E")) {
-        lambda = m_network.getBonds().getLambdaVector();
-      } else {
+      if (config.contains("E")) {
         double E = toml::find<double>(config, "E");
         lambda = std::vector<double>(m_network.getBonds().size(), E);
         m_network.getBonds().setLambdaVector(lambda);
       }
-      return std::make_unique<networkV4::EnergyBreak>(lambda);
+      return std::make_unique<networkV4::EnergyBreak>();
     }
     case networkV4::BreakType::SGR: {
       std::vector<double> lambda;
-      if (!config.contains("E")) {
-        lambda = m_network.getBonds().getLambdaVector();
-      } else {
+      if (config.contains("E")) {
         double E = toml::find<double>(config, "E");
         lambda = std::vector<double>(m_network.getBonds().size(), E);
         m_network.getBonds().setLambdaVector(lambda);
@@ -230,7 +226,7 @@ auto networkV4::Simulation::readBreakProtocol()
         throw std::runtime_error("T not specified");
       }
       double T = toml::find<double>(config, "T");
-      return std::make_unique<networkV4::SGRBreak>(lambda, tau0, T, m_seed);
+      return std::make_unique<networkV4::SGRBreak>(tau0, T, m_seed);
     }
     default: {
       throw std::runtime_error("BreakType not implemented");
