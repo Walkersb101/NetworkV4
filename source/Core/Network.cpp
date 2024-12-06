@@ -195,7 +195,7 @@ void networkV4::network::applyBond(const bond& _bond,
   // }
   const vec2d dist =
       minDist(_nodes.position(_bond.src()), _nodes.position(_bond.dst()));
-  const double length = dist.length();
+  const double length = dist.norm();
   const vec2d force = dist * (_bond.force(length) / length);
   _forces[_bond.src()] += force;
   _forces[_bond.dst()] -= force;
@@ -226,7 +226,7 @@ auto networkV4::network::computeEnergy() -> double
   for (const auto& bond : connectedList) {
     const vec2d dist =
         minDist(m_nodes.position(bond.src()), m_nodes.position(bond.dst()));
-    m_energy += bond.energy(dist.length());
+    m_energy += bond.energy(dist.norm());
   }
   return m_energy;
 }
@@ -365,12 +365,12 @@ auto networkV4::network::bondStrain(const bond& _bond) const -> double
 {
   const vec2d dist =
       minDist(m_nodes.position(_bond.src()), m_nodes.position(_bond.dst()));
-  return (dist.length() - _bond.naturalLength()) / _bond.naturalLength();
+  return (dist.norm() - _bond.naturalLength()) / _bond.naturalLength();
 }
 
 auto networkV4::network::bondEnergy(const bond& _bond) const -> double
 {
   const vec2d dist =
       minDist(m_nodes.position(_bond.src()), m_nodes.position(_bond.dst()));
-  return 0.5 * _bond.mu() * std::pow(dist.length() - _bond.naturalLength(), 2) / _bond.naturalLength();
+  return 0.5 * _bond.mu() * std::pow(dist.norm() - _bond.naturalLength(), 2) / _bond.naturalLength();
 }

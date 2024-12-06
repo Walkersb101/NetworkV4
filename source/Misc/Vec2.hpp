@@ -1,8 +1,10 @@
 #pragma once
 
-#include <cmath>
 #include <algorithm>
+#include <cmath>
 
+namespace Utils
+{
 template<class T>
 struct vec2
 {
@@ -127,8 +129,8 @@ public:
     x /= l;
     y /= l;
   }
-  auto length() const -> T { return std::sqrt(x * x + y * y); }
-  auto lengthSquared() const -> T { return x * x + y * y; }
+  auto norm() const -> T { return std::sqrt(x * x + y * y); }
+  auto normSquared() const -> T { return x * x + y * y; }
 
   auto abs() const -> vec2 { return vec2(std::abs(x), std::abs(y)); }
 
@@ -155,3 +157,4 @@ public:
 
 using vec2f = vec2<float>;
 using vec2d = vec2<double>;
+}  // namespace Utils

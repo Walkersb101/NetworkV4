@@ -2,7 +2,7 @@
 
 #include <cmath>
 
-// #include "Vec2.hpp"
+#include "Vec2.hpp"
 
 template<class T>
 struct tensor2

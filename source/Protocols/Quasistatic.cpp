@@ -196,7 +196,7 @@ std::vector<double> networkV4::forceMags(const network& _network)
   for (const auto& bond : bonds) {
     const vec2d dist =
         _network.minDist(position[bond.src()], position[bond.dst()]);
-    const double force = bond.force(dist.length());
+    const double force = bond.force(dist.norm());
     forces.push_back(force);
   }
   return forces;

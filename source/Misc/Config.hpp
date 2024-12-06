@@ -13,6 +13,8 @@
 #  define PAR
 #endif
 
+#define ROUND_ERROR_PRECISION 1.0e-14
+
 namespace config
 {
 

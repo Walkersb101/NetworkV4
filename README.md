@@ -1,6 +1,6 @@
-# NetworkV4
+# networkV4
 
-This is the NetworkV4 project.
+This is the networkV4 project.
 
 # Building and installing
 

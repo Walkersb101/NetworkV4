@@ -7,8 +7,8 @@
 #include "Misc/Enums.hpp"
 #include "Core/Nodes.hpp"
 #include "Core/Bonds.hpp"
-#include "Core/Tensor2.hpp"
-#include "Core/Vec2.hpp"
+#include "Misc/Tensor2.hpp"
+#include "Misc/Vec2.hpp"
 
 namespace networkV4
 {
@@ -78,11 +78,8 @@ public:
   auto getGlobalStress() const -> tensor2d;
 
 private:
-  vec2d m_domain;
-  vec2d m_restSize;
-
-  vec2d m_halfDomain;
-  vec2d m_yshift;
+  box m_domain;
+  box m_restSize;
 
   nodes m_nodes;
   bonds m_bonds;
@@ -91,9 +88,6 @@ private:
   tensor2d m_avgStress;
 
   double m_energy;
-
-  double m_shearStrain;
-  double m_elongationStrain;
 };
 
 }  // namespace networkV4

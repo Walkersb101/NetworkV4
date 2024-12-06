@@ -54,7 +54,7 @@ inline auto norm(const std::vector<vec2<U>>& _vec) -> double
                                _vec.end(),
                                0.0,
                                [](double _sum, const vec2<U>& _v)
-                               { return _sum + _v.lengthSquared(); });
+                               { return _sum + _v.normSquared(); });
   return std::sqrt(sum);
 }
 
@@ -72,7 +72,7 @@ inline auto maxLength(const std::vector<vec2<T>>& _vec) -> T
                          _vec.end(),
                          0.0,
                          [](double _max, const vec2<T>& _v)
-                         { return std::max(_max, _v.length()); });
+                         { return std::max(_max, _v.norm()); });
 }
 
 inline auto uniqueBondTypes(const networkV4::bonds& _bonds)

@@ -95,7 +95,7 @@ auto networkV4::Integrationtools::vectorDiffNorm(const std::vector<vec2d>& _src,
   }
   double sum = 0.0;
   for (std::size_t i = 0; i < _src.size(); ++i) {
-    sum += (_mask[i] != _invertmask) * (_src[i] - _dst[i]).lengthSquared();
+    sum += (_mask[i] != _invertmask) * (_src[i] - _dst[i]).normSquared();
   }
   return std::sqrt(sum);
 }
