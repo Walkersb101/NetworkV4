@@ -13,8 +13,7 @@ class nodes
 {
 public:
   nodes(bool _overdamped = false, bool _hasMass = true)
-      : m_overdamped(_overdamped)
-      , m_hasMass(_hasMass)
+      : m_hasMass(_hasMass)
   {
   }
 
@@ -23,11 +22,10 @@ public:
   void reserve(size_t _size);
 
 private:
-  std::vector<Utils::vec2d> m_positions;
-  std::vector<Utils::vec2d> m_forces;
   std::vector<size_t> m_globalIndices;
 
-  const bool m_overdamped;
+  std::vector<Utils::vec2d> m_positions;
+  std::vector<Utils::vec2d> m_forces;
   std::vector<Utils::vec2d> m_velocities;
 
   const bool m_hasMass;

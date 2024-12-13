@@ -5,7 +5,6 @@
 
 #include <toml.hpp>
 
-#include "Core/BreakTypes.hpp"
 #include "Core/Network.hpp"
 #include "Misc/Enums.hpp"
 #include "IO/NetworkOut.hpp"
@@ -49,10 +48,13 @@ private:
   toml::value m_config;
 
   std::filesystem::path m_networkPath;
+
   networkV4::loadVersion m_loadVersion;
   networkV4::dataOutType m_dataOutType;
+
   networkV4::networkOutType m_networkOutType;
   networkV4::protocolType m_protocolType;
+  
   networkV4::BreakType m_breakType;
 
   networkV4::network m_network;

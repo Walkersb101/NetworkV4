@@ -7,6 +7,7 @@
 #include "Misc/Enums.hpp"
 #include "Core/Nodes.hpp"
 #include "Core/Bonds.hpp"
+#include "Core/box.hpp"
 #include "Misc/Tensor2.hpp"
 #include "Misc/Vec2.hpp"
 
@@ -19,12 +20,6 @@ using stressMap =
 class network
 {
 public:
-  network();
-  ~network();
-
-public:
-  void loadFromBinV1(std::ifstream& _file, double _lambda);
-  void loadFromBinV2(std::ifstream& _file);
 
 public:
   auto getNodes() -> nodes&;
@@ -82,10 +77,7 @@ private:
   box m_restSize;
 
   nodes m_nodes;
-  bonds m_bonds;
-
-  stressMap m_stresses;
-  tensor2d m_avgStress;
+  bonded::bonds m_bonds;
 
   double m_energy;
 };

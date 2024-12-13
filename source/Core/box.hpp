@@ -7,56 +7,101 @@ namespace networkV4
 
 class box
 {
-  box(const Utils::vec2d& _a, const Utils::vec2d& _b)
-      : m_a(_a)
-      , m_b(_b)
+  box(const double _Lx, const double _Ly, const double _xy)
+      : m_Lx(_Lx)
+      , m_Ly(_Ly)
+      , m_xy(_xy)
+      , m_invLx(1.0 / _Lx)
+      , m_invLy(1.0 / _Ly)
+      , m_invxy(-_xy / (_Lx * _Ly))
   {
-    calculateInverseDeterminant();
   }
 
 public:
-  auto getA() const -> const Utils::vec2d& { return m_a; }
-  auto getB() const -> const Utils::vec2d& { return m_b; }
+  auto getLx() const -> double { return m_Lx; }
+  auto getLy() const -> double { return m_Ly; }
+  auto getxy() const -> double { return m_xy; }
 
-  void setA(const Utils::vec2d& _a)
+  void setLx(const double _Lx)
   {
-    m_a = _a;
-    calculateInverseDeterminant();
+    m_Lx = _Lx;
+    m_invLx = 1.0 / _Lx;
+    m_invxy = -m_xy / (_Lx * m_Ly);
+    m_halfLx = 0.5 * _Lx;
   }
-  void setB(const Utils::vec2d& _b)
+  void setLy(const double _Ly)
   {
-    m_b = _b;
-    calculateInverseDeterminant();
+    m_Ly = _Ly;
+    m_invLy = 1.0 / _Ly;
+    m_invxy = -m_xy / (m_Lx * _Ly);
+    m_halfLy = 0.5 * _Ly;
+  }
+
+  void setxy(const double _xy)
+  {
+    m_xy = _xy;
+    m_invxy = -_xy / (m_Lx * m_Ly);
   }
 
 public:
-  auto toFractional(const Utils::vec2d& _pos) const -> Utils::vec2d
+  inline auto lambda2x(const Utils::vec2d& _pos) const -> Utils::vec2d
   {
-    return Utils::vec2d(m_invDetertminant * (_pos.x * m_b.y - _pos.y * m_b.x),
-                        m_invDetertminant * (m_a.x * _pos.y - m_a.y * _pos.x));
+    return Utils::vec2d(m_Lx * _pos.x + m_xy * _pos.y, m_Ly * _pos.y);
   };
 
-  auto toCartesian(const Utils::vec2d& _pos) const -> Utils::vec2d
+  inline auto x2Lambda(const Utils::vec2d& _pos) const -> Utils::vec2d
   {
-    return Utils::vec2d(m_a.x * _pos.x + m_b.x * _pos.y,
-                        m_a.y * _pos.x + m_b.y * _pos.y);
+    return Utils::vec2d(m_invLx * _pos.x + m_invxy * _pos.y, m_invLy * _pos.y);
   };
 
-private:
-void calculateInverseDeterminant()
-{
-  const double determinant = m_a.x * m_b.y - m_a.y * m_b.x;
-  if (determinant == 0.0) {
-    throw("box::calculateInverseDeterminant: determinant is zero");
+public:
+  inline auto wrapPosition(const Utils::vec2d& _pos) const -> Utils::vec2d
+  {
+    Utils::vec2d lambda = x2Lambda(_pos);
+    while (lambda.x > 1.0)
+      lambda.x -= 1.0;
+    while (lambda.x < 0.0)
+      lambda.x += 1.0;
+    while (lambda.y > 1.0)
+      lambda.y -= 1.0;
+    while (lambda.y < 0.0)
+      lambda.y += 1.0;
+    return lambda2x(lambda);
   }
-  m_invDetertminant = 1.0 / determinant;
-}
+
+  inline auto minDist(const Utils::vec2d& _pos1,
+                      const Utils::vec2d& _pos2) const -> Utils::vec2d
+  {
+    Utils::vec2d dist = _pos2 - _pos1;
+    while (std::abs(dist.y) > m_halfLy) {
+      if (dist.y > 0.0) {
+        dist.y -= m_Ly;
+        dist.x -= m_xy;
+      } else {
+        dist.y += m_Ly;
+        dist.x += m_xy;
+      }
+    }
+    while (std::abs(dist.x) > m_halfLx) {
+      if (dist.x > 0.0)
+        dist.x -= m_Lx;
+      else
+        dist.x += m_Lx;
+    }
+    return dist;
+  }
 
 private:
-Utils::vec2d m_a;
-Utils::vec2d m_b;
+  double m_Lx;
+  double m_Ly;
+  double m_xy;
 
-double m_invDetertminant;
-}
+  double m_invLx;
+  double m_invLy;
+  double m_invxy;
+
+  double m_halfLx;
+  double m_halfLy;
+};
 
 }  // namespace networkV4

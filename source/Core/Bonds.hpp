@@ -17,11 +17,26 @@ namespace networkV4
 namespace bonded
 {
 
-struct BondList
+struct BondInfo
 {
   const std::size_t src;
   const std::size_t dst;
   const std::size_t id;
+};
+
+class bonds
+{
+
+public:
+
+
+private:
+    std::vector<BondInfo> m_globalMap;
+    std::vector<BondInfo> m_localMap;
+
+    std::vector<std::size_t> m_local2Global;
+
+    bondMap m_bonds;
 };
 
 using bondTypes = std::variant<Forces::VirtualBond, Forces::HarmonicBond>;

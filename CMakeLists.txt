@@ -12,7 +12,7 @@ project(
 add_library(
     NetworkV4_lib OBJECT
     source/Core/Bonds.cpp
-    source/Core/BreakTypes.cpp
+    #source/Core/BreakTypes.cpp
     source/Core/Network.cpp
     source/Core/Simulation.cpp
     source/Core/Nodes.cpp
