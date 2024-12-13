@@ -114,3 +114,22 @@ set_property(TARGET NetworkV4_exe PROPERTY OUTPUT_NAME networkV4)
 target_compile_features(NetworkV4_exe PRIVATE cxx_std_20)
 
 target_link_libraries(NetworkV4_exe PRIVATE NetworkV4_lib)
+
+# ---- Install rules ----
+
+if(NOT CMAKE_SKIP_INSTALL_RULES)
+  include(cmake/install-rules.cmake)
+endif()
+
+# ---- Developer mode ----
+
+if(NOT NetworkV4_DEVELOPER_MODE)
+  return()
+elseif(NOT PROJECT_IS_TOP_LEVEL)
+  message(
+      AUTHOR_WARNING
+      "Developer mode is intended for developers of NetworkV4"
+  )
+endif()
+
+//include(cmake/dev-mode.cmake)
