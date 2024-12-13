@@ -122,4 +122,4 @@ elseif(NOT PROJECT_IS_TOP_LEVEL)
   )
 endif()
 
-include(cmake/dev-mode.cmake)
+#include(cmake/dev-mode.cmake)
