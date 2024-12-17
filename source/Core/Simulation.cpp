@@ -1,30 +1,33 @@
 #include "Simulation.hpp"
 
 #include "Misc/EnumString.hpp"
-#include "Misc/Tools.hpp"
 
 networkV4::Simulation::Simulation(const std::filesystem::path& _path)
 {
-  tools::checkCanOpen(_path);
-  m_config = toml::parse(_path);
+    
 
-  loadTypes();
-  loadNetwork();
-  readDataOut();
-  readNetworkOut();
-  readRandom();
 
-  readProtocol();
+  //tools::checkCanOpen(_path);
+  //m_config = toml::parse(_path);
+//
+  //loadTypes();
+  //loadNetwork();
+  //readDataOut();
+  //readNetworkOut();
+  //readRandom();
+//
+  //readProtocol();
 }
 
 networkV4::Simulation::~Simulation() {}
 
 void networkV4::Simulation::run()
 {
-  m_protocol->initIO(m_network, m_dataOut, m_networkOut);
-  m_protocol->run(m_network);
+  //m_protocol->initIO(m_network, m_dataOut, m_networkOut);
+  //m_protocol->run(m_network);
 }
 
+/*
 void networkV4::Simulation::loadTypes()
 {
   if (!m_config.contains("LoadPath")) {
@@ -376,3 +379,4 @@ void networkV4::Simulation::readPropogator()
   m_protocol = std::make_unique<networkV4::propogator>(
       strains, strainType, bType, ESP, tol, maxStep, respectLambda);
 }
+*/

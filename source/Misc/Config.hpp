@@ -18,91 +18,100 @@
 namespace config
 {
 
+// Integrators configuration
 namespace integrators
 {
-extern double default_dt;
+inline double default_dt = 1e-3;
 
 namespace adaptiveIntegrator
 {
-extern double esp;
-extern std::size_t maxIter;
-
-extern double dtMin;
-extern double dtMax;
+inline double esp = 1e-3;
+inline std::size_t maxIter = 10;
+inline double dtMin = 1e-6;
+inline double dtMax = 1e-1;
 }  // namespace adaptiveIntegrator
 
 namespace adaptiveHeun
 {
-extern double qMin;
-extern double qMax;
+inline double qMin = 1e-3;
+inline double qMax = 1.2;
 }  // namespace adaptiveHeun
 
 namespace miminizer
 {
-extern std::size_t maxIter;
-extern double tol;
+inline std::size_t maxIter = 1e6;
+inline double tol = 1e-3;
 }  // namespace miminizer
 
 namespace fire2
 {
-extern double alpha0;
-extern std::size_t Ndelay;
-extern double finc;
-extern double fdec;
-extern double falpha;
-extern std::size_t Nnegmax;
-extern double dmax;
+inline double alpha0 = 0.25;
+inline std::size_t Ndelay = 5;
+inline double finc = 1.1;
+inline double fdec = 0.5;
+inline double falpha = 0.99;
+inline std::size_t Nnegmax = 2000;
+inline double dmax = 0.1;
 }  // namespace fire2
 
 namespace OverdampedAdaptiveMinimizer
 {
-extern double energyStepScale;
-extern double dmax;
-extern double fdec;
-}
+inline double energyStepScale = 0.5;
+inline double dmax = 0.1;
+inline double fdec = 0.5;
+}  // namespace OverdampedAdaptiveMinimizer
 }  // namespace integrators
 
+// Root methods configuration
 namespace rootMethods
 {
-extern double targetTol;
-extern double minTol;
+inline double targetTol = 1e-5;
+inline double minTol = 1e-10;
 
 namespace ITPMethod
 {
-extern size_t n0;
-extern double k1Scale;
-extern double k2;
+inline size_t n0 = 10;
+inline double k1Scale = 0.2;
+inline double k2 = 2.0;
 }  // namespace ITPMethod
 }  // namespace rootMethods
 
+// Protocols configuration
 namespace protocols
 {
 namespace quasiStaticStrain
 {
-extern bool errorOnNotSingleBreak;
-extern double strainGuessScale;
+inline bool errorOnNotSingleBreak = false;
+inline double strainGuessScale = 1.2;
 }  // namespace quasiStaticStrain
 
 namespace stepStrain
 {
-extern double stressScale;
-extern double timeScale;
+inline double stressScale = 0.9;
+inline double timeScale = 2.0;
 }  // namespace stepStrain
-
 }  // namespace protocols
 
+// IO configuration
 namespace IO
 {
-extern std::string timeDataName;
-extern std::string bondDataName;
-extern std::string outputType;
-extern size_t precision;
-}  // namespace IO
+namespace timeSeries
+{
+inline std::string timeDataName = "Data";
+inline std::string bondDataName = "Breaks";
+}  // namespace timeSeries
+namespace CSV
+{
+inline std::string outputType = "CSV";
+inline size_t precision = 16;
+}  // namespace CSV
 
+// HDF5 configuration
 namespace hdf5
 {
-extern std::size_t maxChunk;
-extern std::string fileName;
-} // namespace hdf5
+inline std::size_t maxChunk = 65536;
+inline std::string fileName = "output.h5";
+}  // namespace hdf5
+}  // namespace IO
 
 }  // namespace config

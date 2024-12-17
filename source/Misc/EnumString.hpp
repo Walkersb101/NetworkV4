@@ -2,7 +2,6 @@
 
 #include <string>
 #include <unordered_map>
-#include <bxzstr.hpp>      // For bxz::Compression
 #include "Enums.hpp"       // For external enum definitions like bondType, dataOutType, etc.
 
 namespace networkV4 {
@@ -21,56 +20,110 @@ using Str2LoadVersionMap = std::unordered_map<std::string, loadVersion>;
 using LoadVersion2StrMap = std::unordered_map<loadVersion, std::string>;
 using Str2StrainTypeMap = std::unordered_map<std::string, StrainType>;
 using StrainType2StrMap = std::unordered_map<StrainType, std::string>;
-using Str2BreakTypeMap = std::unordered_map<std::string, BreakType>;
-using BreakType2StrMap = std::unordered_map<BreakType, std::string>;
 using Str2ProtocolTypeMap = std::unordered_map<std::string, protocolType>;
 using ProtocolType2StrMap = std::unordered_map<protocolType, std::string>;
 using Str2RootMethodMap = std::unordered_map<std::string, rootMethod>;
 using RootMethod2StrMap = std::unordered_map<rootMethod, std::string>;
-using Str2CompressionMap = std::unordered_map<std::string, bxz::Compression>;
-using Compression2StrMap = std::unordered_map<bxz::Compression, std::string>;
-using CompressionExtMap = std::unordered_map<bxz::Compression, std::string>;
 
 // --- BondType ---
-extern const Str2BondTypeMap str2BondType;
-extern const BondType2StrMap bondType2Str;
+const Str2BondTypeMap str2BondType = {
+    {"Single", bondType::single},
+    {"Sacrificial", bondType::sacrificial},
+    {"Matrix", bondType::matrix},
+    {"Any", bondType::any}
+};
+
+const BondType2StrMap bondType2Str = {
+    {bondType::single, "Single"},
+    {bondType::sacrificial, "Sacrificial"},
+    {bondType::matrix, "Matrix"},
+    {bondType::any, "Any"}
+};
 
 // --- DataOutType ---
-extern const Str2DataOutTypeMap str2DataOutType;
-extern const DataOutType2StrMap dataOutType2Str;
+const Str2DataOutTypeMap str2DataOutType = {
+    {"CSV", dataOutType::CSV}
+};
+
+const DataOutType2StrMap dataOutType2Str = {
+    {dataOutType::CSV, "CSV"}
+};
 
 // --- NetworkOutType ---
-extern const Str2NetworkOutTypeMap str2NetworkOutType;
-extern const NetworkOutType2StrMap networkOutType2Str;
+const Str2NetworkOutTypeMap str2NetworkOutType = {
+    {"None", networkOutType::None},
+    {"BinV2", networkOutType::BinV2},
+    {"HDF5", networkOutType::HDF5}
+};
+
+const NetworkOutType2StrMap networkOutType2Str = {
+    {networkOutType::None, "None"},
+    {networkOutType::BinV2, "BinV2"},
+    {networkOutType::HDF5, "HDF5"}
+};
 
 // --- IntegratorType ---
-extern const Str2IntegratorTypeMap str2IntegratorType;
-extern const IntegratorType2StrMap integratorType2Str;
+const Str2IntegratorTypeMap str2IntegratorType = {
+    {"OverdampedEuler", integratorType::overdampedEuler},
+    {"OverdampedEulerHeun", integratorType::overdampedEulerHeun},
+    {"OverdampedAdaptiveEulerHeun", integratorType::overdampedAdaptiveEulerHeun},
+    {"FireMinimizer", integratorType::FireMinimizer},
+    {"OverdampedAdaptiveMinimizer", integratorType::OverdampedAdaptiveMinimizer}
+};
+
+const IntegratorType2StrMap integratorType2Str = {
+    {integratorType::overdampedEuler, "OverdampedEuler"},
+    {integratorType::overdampedEulerHeun, "OverdampedEulerHeun"},
+    {integratorType::overdampedAdaptiveEulerHeun, "OverdampedAdaptiveEulerHeun"},
+    {integratorType::FireMinimizer, "FireMinimizer"},
+    {integratorType::OverdampedAdaptiveMinimizer, "OverdampedAdaptiveMinimizer"}
+};
 
 // --- LoadVersion ---
-extern const Str2LoadVersionMap str2LoadVersion;
-extern const LoadVersion2StrMap loadVersion2Str;
+const Str2LoadVersionMap str2LoadVersion = {
+    {"BinV1", loadVersion::BinV1},
+    {"BinV2", loadVersion::BinV2}
+};
+
+const LoadVersion2StrMap loadVersion2Str = {
+    {loadVersion::BinV1, "BinV1"},
+    {loadVersion::BinV2, "BinV2"}
+};
 
 // --- StrainType ---
-extern const Str2StrainTypeMap str2StrainType;
-extern const StrainType2StrMap strainType2Str;
+const Str2StrainTypeMap str2StrainType = {
+    {"Shear", StrainType::Shear},
+    {"Elongation", StrainType::Elongation}
+};
 
-// --- BreakType ---
-extern const Str2BreakTypeMap str2BreakType;
-extern const BreakType2StrMap breakType2Str;
+const StrainType2StrMap strainType2Str = {
+    {StrainType::Shear, "Shear"},
+    {StrainType::Elongation, "Elongation"}
+};
 
 // --- ProtocolType ---
-extern const Str2ProtocolTypeMap str2ProtocolType;
-extern const ProtocolType2StrMap protocolType2Str;
+const Str2ProtocolTypeMap str2ProtocolType = {
+    {"QuasiStaticStrain", protocolType::QuasisaticStrain},
+    {"StepStrain", protocolType::StepStrain},
+    {"Propogator", protocolType::Propogator}
+};
+
+const ProtocolType2StrMap protocolType2Str = {
+    {protocolType::QuasisaticStrain, "QuasiStaticStrain"},
+    {protocolType::StepStrain, "StepStrain"},
+    {protocolType::Propogator, "Propogator"}
+};
 
 // --- RootMethod ---
-extern const Str2RootMethodMap str2RootMethod;
-extern const RootMethod2StrMap rootMethod2Str;
+const Str2RootMethodMap str2RootMethod = {
+    {"Bisection", rootMethod::Bisection},
+    {"ITP", rootMethod::ITP}
+};
 
-// --- Compression ---
-extern const Str2CompressionMap str2Compression;
-extern const Compression2StrMap compression2Str;
-extern const CompressionExtMap compressionExt;
+const RootMethod2StrMap rootMethod2Str = {
+    {rootMethod::Bisection, "Bisection"},
+    {rootMethod::ITP, "ITP"}
+};
 
 }  // namespace enumString
 }  // namespace networkV4

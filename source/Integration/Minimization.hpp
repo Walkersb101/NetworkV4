@@ -1,10 +1,8 @@
 #pragma once
 
-#include "Core/BreakTypes.hpp"
 #include "Integration/Integrator.hpp"
 #include "Integration/OverDamped.hpp"
 #include "Misc/Roots.hpp"
-#include "Misc/Tools.hpp"
 
 namespace networkV4
 {
@@ -47,8 +45,8 @@ public:
   void integrate(network& _network) override;
 
 private:
-  auto xdoty(const std::vector<vec2d>& _x,
-             const std::vector<vec2d>& _y) -> double;
+  auto xdoty(const std::vector<Utills::vec2d>& _x,
+             const std::vector<Utills::vec2d>& _y) -> double;
 
 private:
   double m_dt = config::integrators::default_dt;

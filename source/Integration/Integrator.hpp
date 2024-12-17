@@ -6,15 +6,13 @@
 
 #include "Core/Network.hpp"
 #include "Core/Nodes.hpp"
-#include "Core/Tensor2.hpp"
-#include "Core/Vec2.hpp"
-#include "Misc/EnumMap.hpp"
+
+#include "Misc/Tensor2.hpp"
+#include "Misc/Vec2.hpp"
 
 namespace networkV4
 {
 
-using stressMap =
-    EnumMap<bondType, tensor2d, bondType::single, bondType::matrix>;
 
 class integrator
 {
@@ -30,15 +28,16 @@ public:
 
 namespace Integrationtools
 {
-void overdampedMove(network& _network, double _dt);
+void overdampedMove(network& _network, double _dt, double _gamma = 1.0);
 void move(network& _network, double _dt);
 void updateVelocities(network& _network, double _alpha);
-void heunAverage(network& _network,
-                 const std::vector<vec2d>& _tempForces,
-                 double _dt);
-void copyVector(const std::vector<vec2d>& _src, std::vector<vec2d>& _dst);
-auto vectorDiffNorm(const std::vector<vec2d>& _src,
-                    const std::vector<vec2d>& _dst,
+void heunAverageOverdamped(network& _network,
+                 const std::vector<Utils::vec2d>& _tempForces,
+                 double _dt,
+                 double _gamma = 1.0);
+void copyVector(const std::vector<Utils::vec2d>& _src, std::vector<Utils::vec2d>& _dst);
+auto vectorDiffNorm(const std::vector<Utils::vec2d>& _src,
+                    const std::vector<Utils::vec2d>& _dst,
                     const std::vector<bool>& _mask,
                     bool _invertmask = false) -> double;
 }  // namespace Integrationtools

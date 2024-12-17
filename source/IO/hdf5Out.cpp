@@ -6,7 +6,6 @@
 
 #include "hdf5Out.hpp"
 
-#include <bxzstr.hpp>
 #include <highfive/highfive.hpp>
 
 #include "Core/Bonds.hpp"

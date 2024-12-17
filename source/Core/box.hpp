@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdexcept>
+
 #include "Misc/Vec2.hpp"
 
 namespace networkV4
@@ -11,10 +13,16 @@ class box
       : m_Lx(_Lx)
       , m_Ly(_Ly)
       , m_xy(_xy)
-      , m_invLx(1.0 / _Lx)
-      , m_invLy(1.0 / _Ly)
-      , m_invxy(-_xy / (_Lx * _Ly))
+      , m_halfLx(0.5 * _Lx)
+      , m_halfLy(0.5 * _Ly)
+      , m_area(_Lx * _Ly)
   {
+    if (_Lx <= 0.0 || _Ly <= 0.0) {
+      throw std::runtime_error("box::box: invalid box size");
+    }
+    m_invLx = 1.0 / _Lx;
+    m_invLy = 1.0 / _Ly;
+    m_invxy = -_xy / (_Lx * _Ly);
   }
 
 public:
@@ -24,17 +32,28 @@ public:
 
   void setLx(const double _Lx)
   {
+    if (_Lx <= 0.0) {
+      throw std::runtime_error("box::setLx: invalid box size");
+    }
+
     m_Lx = _Lx;
     m_invLx = 1.0 / _Lx;
     m_invxy = -m_xy / (_Lx * m_Ly);
     m_halfLx = 0.5 * _Lx;
+
+    m_area = _Lx * m_Ly;
   }
   void setLy(const double _Ly)
   {
+    if (_Ly <= 0.0) {
+      throw std::runtime_error("box::setLy: invalid box size");
+    }
+
     m_Ly = _Ly;
     m_invLy = 1.0 / _Ly;
     m_invxy = -m_xy / (m_Lx * _Ly);
     m_halfLy = 0.5 * _Ly;
+    m_area = m_Lx * _Ly;
   }
 
   void setxy(const double _xy)
@@ -42,6 +61,11 @@ public:
     m_xy = _xy;
     m_invxy = -_xy / (m_Lx * m_Ly);
   }
+
+public:
+  auto shearStrain() const -> const double { return m_xy / m_Ly; }
+  auto area() const -> const double { return m_area; }
+  auto getDomain() const -> const Utils::vec2d { return Utils::vec2d(m_Lx, m_Ly); }
 
 public:
   inline auto lambda2x(const Utils::vec2d& _pos) const -> Utils::vec2d
@@ -102,6 +126,8 @@ private:
 
   double m_halfLx;
   double m_halfLy;
+
+  double m_area;
 };
 
 }  // namespace networkV4

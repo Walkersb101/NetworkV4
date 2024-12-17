@@ -125,7 +125,7 @@ public:
 
   void normalize()
   {
-    T l = length();
+    T l = norm();
     x /= l;
     y /= l;
   }

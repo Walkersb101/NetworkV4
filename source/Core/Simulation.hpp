@@ -9,11 +9,11 @@
 #include "Misc/Enums.hpp"
 #include "IO/NetworkOut.hpp"
 #include "IO/DataOut.hpp"
-#include "IO/hdf5Out.hpp"
+//#include "IO/hdf5Out.hpp"
 #include "Protocols/Protocol.hpp"
-#include "Protocols/StepStrain.hpp"
-#include "Protocols/Quasistatic.hpp"
-#include "Protocols/Propogator.hpp"
+//#include "Protocols/StepStrain.hpp"
+//#include "Protocols/Quasistatic.hpp"
+//#include "Protocols/Propogator.hpp"
 
 namespace networkV4
 {
@@ -23,9 +23,11 @@ public:
   Simulation(const std::filesystem::path& _path);
   ~Simulation();
 
+
 public:
   void run();
 
+/*
 private:
   void loadTypes();
 
@@ -44,25 +46,13 @@ private:
   void readStepStrain();
   void readPropogator();
 
+*/
 private:
   toml::value m_config;
-
-  std::filesystem::path m_networkPath;
-
-  networkV4::loadVersion m_loadVersion;
-  networkV4::dataOutType m_dataOutType;
-
-  networkV4::networkOutType m_networkOutType;
-  networkV4::protocolType m_protocolType;
   
-  networkV4::BreakType m_breakType;
-
-  networkV4::network m_network;
+  //networkV4::network m_network;
   std::unique_ptr<networkV4::protocol> m_protocol;
-  std::unique_ptr<dataOut> m_dataOut;
-  std::unique_ptr<networkOut> m_networkOut;
-  std::unique_ptr<BreakTypes> m_breakProtocol;
-
-  unsigned long m_seed;
+  std::unique_ptr<IO::timeSeries::dataOut> m_dataOut;
+  std::unique_ptr<IO::networkDumps::networkOut> m_networkOut;
 };
 }  // namespace networkV4

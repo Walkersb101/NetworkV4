@@ -8,19 +8,24 @@
 
 #include "Core/Network.hpp"
 #include "Misc/Enums.hpp"
+#include "Misc/Config.hpp"
+
+namespace IO
+{
 
 using writeableTypes = std::variant<std::string, double, std::size_t>;
 
-
+namespace timeSeries
+{ 
 class dataOut
 {
 public:
-  dataOut(const std::filesystem::path& _timeDataPath,
-          const std::filesystem::path& _bondDataPath,
-          const std::string& _timeDataName,
-          const std::string& _bondName);
-  dataOut(const std::filesystem::path& _timeDataPath,
-          const std::filesystem::path& _bondDataPath);
+  dataOut(
+      const std::filesystem::path& _timeDataPath,
+      const std::filesystem::path& _bondDataPath,
+      const std::string& _timeDataName = config::IO::timeSeries::timeDataName,
+      const std::string& _bondName = config::IO::timeSeries::bondDataName);
+
   virtual ~dataOut();
 
 protected:
@@ -37,21 +42,5 @@ public:
   virtual void writeBondData(const std::vector<writeableTypes>& _data);
 };
 
-class CSVOut : public dataOut
-{
-public:
-  CSVOut(const std::filesystem::path& _timeDataPath,
-         const std::filesystem::path& _bondDataPath);
-  CSVOut(const std::filesystem::path& _timeDataPath,
-         const std::filesystem::path& _bondDataPath,
-         const std::string& _timeDataName,
-         const std::string& _bondName);
-  ~CSVOut();
-
-public:
-  void initFiles(const std::vector<std::string>& _dataHeader,
-                 const std::vector<std::string>& _bondHeader) override;
-
-  void writeTimeData(const std::vector<writeableTypes>& _data) override;
-  void writeBondData(const std::vector<writeableTypes>& _data) override;
-};
+}  // namespace timeSeries
+}  // namespace IO

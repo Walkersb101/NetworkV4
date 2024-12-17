@@ -2,7 +2,6 @@
 
 #include <cstdint>
 
-#include "Core/BreakTypes.hpp"
 #include "Core/Network.hpp"
 #include "IO/DataOut.hpp"
 #include "IO/NetworkOut.hpp"
@@ -14,7 +13,6 @@ class protocol
 {
 public:
   protocol();
-  protocol(StrainType _strainType, std::unique_ptr<BreakTypes>& _breakType);
   protocol(StrainType _strainType);
   virtual ~protocol();
 
@@ -26,14 +24,13 @@ public:
   virtual void run(network& _network);
 
   virtual void initIO(const network& _network,
-                      std::unique_ptr<dataOut>& _dataOut,
-                      std::unique_ptr<networkOut>& _networkOut);
+                      std::unique_ptr<IO::timeSeries::dataOut>& _dataOut,
+                      std::unique_ptr<IO::networkDumps::networkOut>& _networkOut);
 
 protected:
   StrainType m_strainType;
-  BreakTypes* m_breakProtocol;
-  dataOut* m_dataOut;
-  networkOut* m_networkOut;
+  IO::timeSeries::dataOut* m_dataOut;
+  IO::networkDumps::networkOut* m_networkOut;
 };
 
 std::vector<double> forceMags(const network& _network);

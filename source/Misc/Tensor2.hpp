@@ -4,6 +4,8 @@
 
 #include "Vec2.hpp"
 
+namespace Utils
+{
 template<class T>
 struct tensor2
 {
@@ -171,3 +173,4 @@ auto outer(const vec2<T>& _v1, const vec2<T>& _v2) -> tensor2<T> {
 
 using tensor2f = tensor2<float>;
 using tensor2d = tensor2<double>;
+} // namespace Utils

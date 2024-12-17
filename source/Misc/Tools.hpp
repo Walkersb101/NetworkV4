@@ -2,39 +2,21 @@
 
 #include <algorithm>
 #include <filesystem>
+#include <fstream>
 #include <numeric>
 #include <unordered_map>
 #include <vector>
 
-#include <bxzstr.hpp>
-
 #include "Core/Bonds.hpp"
 #include "Core/Network.hpp"
-#include "EnumMap.hpp"
 #include "EnumString.hpp"
 #include "Enums.hpp"
-#include "Core/Vec2.hpp"
+#include "Misc/Vec2.hpp"
 
 namespace networkV4
 {
 namespace tools
 {
-template<typename Enum,
-         typename ValueType,
-         Enum MinEnumValue,
-         Enum MaxEnumValue>
-inline auto averageMaps(
-    const EnumMap<Enum, ValueType, MinEnumValue, MaxEnumValue>& _map1,
-    const EnumMap<Enum, ValueType, MinEnumValue, MaxEnumValue>& _map2)
-    -> EnumMap<Enum, ValueType, MinEnumValue, MaxEnumValue>
-{
-  EnumMap<Enum, ValueType, MinEnumValue, MaxEnumValue> result;
-  for (size_t i = to_index(MinEnumValue); i <= to_index(MaxEnumValue); ++i) {
-    const Enum key = static_cast<Enum>(i);
-    result[key] = (_map1[key] + _map2[key]) / 2;
-  }
-  return result;
-}
 
 template<typename T>
 inline auto norm(const std::vector<T>& _vec) -> double
@@ -48,18 +30,18 @@ inline auto norm(const std::vector<T>& _vec) -> double
 }
 
 template<typename U>
-inline auto norm(const std::vector<vec2<U>>& _vec) -> double
+inline auto norm(const std::vector<Utils::vec2<U>>& _vec) -> double
 {
   const double sum = std::accumulate(_vec.begin(),
                                _vec.end(),
                                0.0,
-                               [](double _sum, const vec2<U>& _v)
+                               [](double _sum, const Utils::vec2<U>& _v)
                                { return _sum + _v.normSquared(); });
   return std::sqrt(sum);
 }
 
 template<typename T>
-inline auto maxLength(const std::vector<vec2<T>>& _vec) -> T
+inline auto maxLength(const std::vector<Utils::vec2<T>>& _vec) -> T
 {
   // double max = 0.0;
   // for (size_t i = 0; i < _vec.size(); ++i) {
@@ -71,54 +53,29 @@ inline auto maxLength(const std::vector<vec2<T>>& _vec) -> T
   return std::accumulate(_vec.begin(),
                          _vec.end(),
                          0.0,
-                         [](double _max, const vec2<T>& _v)
+                         [](double _max, const Utils::vec2<T>& _v)
                          { return std::max(_max, _v.norm()); });
 }
 
-inline auto uniqueBondTypes(const networkV4::bonds& _bonds)
-    -> std::vector<networkV4::bondType>
-{
-  std::vector<networkV4::bondType> types;
-  for (const auto& bond : _bonds) {
-    if (std::find(types.begin(), types.end(), bond.type()) == types.end()) {
-      types.push_back(bond.type());
-    }
-  }
-  return types;
-}
 
 template<typename T>
-inline auto maxAbsComponent(const std::vector<vec2<T>>& _vec) -> T
+inline auto maxAbsComponent(const std::vector<Utils::vec2<T>>& _vec) -> T
 {
-    double max = 0.0;
-    size_t maxIndex = 0;
-    for (size_t i = 0; i < _vec.size(); ++i) {
-        if (std::abs(_vec[i].x) > max){
-            max = std::abs(_vec[i].x);
-            maxIndex = i;
-        }
-        if (std::abs(_vec[i].y) > max){
-            max = std::abs(_vec[i].y);
-            maxIndex = i;
-        }
-    }
-    return max;
-
-  //return std::accumulate(_vec.begin(),
-  //                       _vec.end(),
-  //                       0.0,
-  //                       [](double _max, const vec2<T>& _v)
-  //                       { return std::max(_max, _v.abs().max()); });
+  return std::accumulate(_vec.begin(),
+                         _vec.end(),
+                         0.0,
+                         [](double _max, const Utils::vec2<T>& _v)
+                         { return std::max(_max, _v.abs().max()); });
 }
 
-inline auto xdoty(const std::vector<vec2d>& _vec1, const std::vector<vec2d>& _vec2) -> double
+inline auto xdoty(const std::vector<Utils::vec2d>& _vec1, const std::vector<Utils::vec2d>& _vec2) -> double
 {
   return std::inner_product(_vec1.begin(),
                             _vec1.end(),
                             _vec2.begin(),
                             0.0,
                             std::plus<double>(),
-                            [](const vec2d& _v1, const vec2d& _v2)
+                            [](const Utils::vec2d& _v1, const Utils::vec2d& _v2)
                             { return _v1.dot(_v2); });
 }
 

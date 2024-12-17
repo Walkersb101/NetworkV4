@@ -47,14 +47,6 @@ enum class StrainType : std::uint8_t
   Elongation,
 };
 
-enum class BreakType : std::uint8_t
-{
-  None,
-  Strain,
-  Energy,
-  SGR,
-};
-
 enum class protocolType : std::uint8_t
 {
   QuasisaticStrain,
