@@ -20,9 +20,11 @@ add_library(
     #source/Integration/Minimization.cpp
     #source/Integration/OverDamped.cpp
 
-    source/IO/DataOut.cpp
+    source/IO/BaseIO.cpp
+    source/IO/TimeSeries/DataOut.cpp
     #source/IO/hdf5Out.cpp
-    source/IO/NetworkOut.cpp
+    source/IO/NetworkDump/NetworkOut.cpp
+    source/IO/Input/NetworkIn.cpp
     
     source/Protocols/Protocol.cpp
     #source/Protocols/StepStrain.cpp

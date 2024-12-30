@@ -69,6 +69,11 @@ public:
   auto getBreak(std::size_t _index) const -> const breakTypes&;
 
 public:
+    auto getGlobalInfo() const -> const std::vector<BondInfo>&;
+    auto getTypes() const -> const std::vector<bondTypes>&;
+    auto getBreaks() const -> const std::vector<breakTypes>&;
+
+public:
   void addTag(std::size_t _index, std::size_t _tag);
   void removeTag(std::size_t _index, std::size_t _tag);
   auto getTagIds(std::size_t _index) const -> const std::vector<std::size_t>&;
@@ -96,10 +101,10 @@ public:
   size_t size() const;
 
 public:
-  void addBond(size_t _src,
+  auto addBond(size_t _src,
                size_t _dst,
                const bondTypes& _bond = Forces::VirtualBond {},
-               const breakTypes& _break = BreakTypes::None {});
+               const breakTypes& _break = BreakTypes::None {}) -> size_t;
 
 public:
   auto getLocalInfo(std::size_t _index) const -> const LocalBondInfo&;

@@ -6,32 +6,53 @@
 
 #include "Core/Bonds.hpp"
 #include "Core/Nodes.hpp"
-#include "Core/box.hpp"
 #include "Core/Stresses.hpp"
+#include "Core/box.hpp"
 #include "Misc/Enums.hpp"
 #include "Misc/Tensor2.hpp"
 #include "Misc/Vec2.hpp"
 
 namespace networkV4
 {
+
+using bondQueue = std::deque<std::tuple<size_t, bonded::bondTypes, bonded::breakTypes>>;
+
 class network
 {
 public:
-    network() = delete;
-    network(const box& _box, const nodes& _nodes, const bonded::bonds& _bonds);
+  network() = delete;
+  network(const box& _box, const size_t _N, const size_t _B);
 
 public:
-  auto getNodes() -> nodes&;
+  auto getNodes()
+      -> nodes&;  // TODO: make so Input and intergrators can access nodes
   auto getNodes() const -> const nodes&;
 
-  auto getBonds() -> bonded::bonds&;
+  auto getBonds() -> bonded::bonds&;  // TODO: make so Input and intergrators
+                                      // can access nodes
   auto getBonds() const -> const bonded::bonds&;
 
   auto getEnergy() const -> const double;
 
   auto getRestBox() const -> const box;
   auto getBox() const -> const box;
-  auto getBox() -> box&;
+
+  auto getTags() -> tagMap&;
+  auto getTags() const -> const tagMap&;
+
+public:
+  auto getStresses() -> stresses&; // TODO: make so Input and intergrators can access nodes
+  auto getStresses() const -> const stresses&;
+
+  auto getBreakQueue() -> bondQueue&; // TODO: make so Input and intergrators can access nodes
+  auto getBreakQueue() const -> const bondQueue&;
+
+public:
+    double getShearStrain() const;
+    auto getElongationStrain() const -> Utils::vec2d;
+
+    void shear(double _step);
+    void setBox(const box& _box);
 
 public:
   void computeForces();
@@ -50,9 +71,9 @@ private:
   nodes m_nodes;
   bonded::bonds m_bonds;
 
-  std::deque<std::pair<size_t, bonded::breakTypes>> m_breakQueue;
+  bondQueue m_breakQueue;
 
-  tagMap m_tags;  // TODO: fill with defined tags (broken)
+  tagMap m_tags;
 };
 
 }  // namespace networkV4

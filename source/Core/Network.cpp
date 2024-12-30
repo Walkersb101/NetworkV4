@@ -13,6 +13,20 @@
 #include "Misc/Tensor2.hpp"
 #include "Misc/Vec2.hpp"
 
+networkV4::network::network(const box& _box, const size_t _N, const size_t _B)
+    : m_box(_box)
+    , m_restbox(_box)
+    , m_energy(0.0)
+    , m_stresses()
+    , m_nodes(_N)
+    , m_bonds(_B)
+    , m_breakQueue()
+    , m_tags()
+{
+  // add default tags
+  m_tags.add("broken");
+}
+
 auto networkV4::network::getNodes() -> nodes&
 {
   return m_nodes;
@@ -53,6 +67,70 @@ auto networkV4::network::getBox() -> box&
   return m_box;
 }
 
+auto networkV4::network::getTags() -> tagMap&
+{
+  return m_tags;
+}
+
+auto networkV4::network::getTags() const -> const tagMap&
+{
+  return m_tags;
+}
+
+auto networkV4::network::getStresses() -> stresses&
+{
+  return m_stresses;
+}
+
+auto networkV4::network::getStresses() const -> const stresses&
+{
+  return m_stresses;
+}
+
+auto networkV4::network::getBreakQueue() -> bondQueue&
+{
+  return m_breakQueue;
+}
+
+auto networkV4::network::getBreakQueue() const -> const bondQueue&
+{
+  return m_breakQueue;
+}
+
+double networkV4::network::getShearStrain() const
+{
+  return m_box.shearStrain();
+}
+
+auto networkV4::network::getElongationStrain() const -> Utils::vec2d
+{
+  return (m_box.getDomain() - m_restbox.getDomain()) / m_restbox.getDomain();
+}
+
+void networkV4::network::shear(double _step)
+{
+  double dxy = _step * m_box.getLy();
+  m_box.setxy(m_box.getxy() + dxy);
+  std::transform(m_nodes.positions().begin(),
+                 m_nodes.positions().end(),
+                 m_nodes.positions().begin(),
+                 [&](const Utils::vec2d& _pos)
+                 { return _pos + Utils::vec2d(_step * _pos.y, 0.0); });
+}
+
+void networkV4::network::setBox(const box& _box)
+{
+  std::transform(m_nodes.positions().begin(),
+                 m_nodes.positions().end(),
+                 m_nodes.positions().begin(),
+                 [&](Utils::vec2d& _pos)
+                 {
+                   const auto plambda = m_box.x2Lambda(_pos);
+                   return _box.lambda2x(plambda);
+                 });
+  m_box = _box;
+}
+
 inline auto evalForce(const networkV4::bonded::bondTypes& _bond,
                       const Utils::vec2d& _dist) -> std::optional<Utils::vec2d>
 {
@@ -75,41 +153,6 @@ inline auto evalBreak(const networkV4::bonded::breakTypes& _break,
   return std::visit([_dist](const auto& _break) -> bool
                     { return _break.checkBreak(_dist); },
                     _break);
-}
-
-void networkV4::network::applyBond(const bonded::LocalBondInfo& _binfo,
-                                   bool _evalBreak)
-{
-  const auto& type = m_bonds.getMap().getType(_binfo.index);
-  const auto& breakType = m_bonds.getMap().getBreak(_binfo.index);
-  const auto& tags = m_bonds.getMap().getTagIds(_binfo.index);
-
-  const Utils::vec2d dist = m_box.minDist(m_nodes.positions()[_binfo.src],
-                                          m_nodes.positions()[_binfo.dst]);
-
-  if (_evalBreak && evalBreak(breakType, dist)) {
-    m_breakQueue.push_back(std::make_pair(_binfo.index, breakType));  // TODO: needs to be reduced over openmp
-
-    m_bonds.getMap().setType(_binfo.index, Forces::VirtualBond {});
-    m_bonds.getMap().setBreak(_binfo.index, BreakTypes::None {});
-    m_bonds.getMap().addTag(_binfo.index, m_tags.get("broken"));
-    return;
-  }
-
-  const auto force = evalForce(type, dist);
-
-  if (force) {
-    m_nodes.forces()[_binfo.src] += force.value();
-    m_nodes.forces()[_binfo.dst] -= force.value();
-
-    m_stresses.distribute(Utils::outer(dist, force.value()) / m_box.area(),
-                          tags);  // TODO: needs to be reduced over openmp
-  }
-
-  auto energy = evalEnergy(type, dist);
-  if (energy) {
-    m_energy += energy.value();  // TODO: needs to be reduced over openmp
-  }
 }
 
 void networkV4::network::computeForces()
@@ -135,6 +178,44 @@ auto networkV4::network::computeEnergy() -> double
     }
   }
   return m_energy;
+}
+
+void networkV4::network::applyBond(const bonded::LocalBondInfo& _binfo,
+                                   bool _evalBreak)
+{
+  const auto& type = m_bonds.getMap().getType(_binfo.index);
+  const auto& breakType = m_bonds.getMap().getBreak(_binfo.index);
+  const auto& tags = m_bonds.getMap().getTagIds(_binfo.index);
+
+  const Utils::vec2d dist = m_box.minDist(m_nodes.positions()[_binfo.src],
+                                          m_nodes.positions()[_binfo.dst]);
+
+  if (_evalBreak && evalBreak(breakType, dist)) {
+    m_breakQueue.emplace_back(
+        _binfo.index,
+        type,
+        breakType);  // TODO: needs to be reduced over openmp
+
+    m_bonds.getMap().setType(_binfo.index, Forces::VirtualBond {});
+    m_bonds.getMap().setBreak(_binfo.index, BreakTypes::None {});
+    m_bonds.getMap().addTag(_binfo.index, m_tags.get("broken"));
+    return;
+  }
+
+  const auto force = evalForce(type, dist);
+
+  if (force) {
+    m_nodes.forces()[_binfo.src] += force.value();
+    m_nodes.forces()[_binfo.dst] -= force.value();
+
+    m_stresses.distribute(Utils::outer(dist, force.value()) / m_box.area(),
+                          tags);  // TODO: needs to be reduced over openmp
+  }
+
+  auto energy = evalEnergy(type, dist);
+  if (energy) {
+    m_energy += energy.value();  // TODO: needs to be reduced over openmp
+  }
 }
 
 /*

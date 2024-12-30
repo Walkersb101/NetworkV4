@@ -9,7 +9,8 @@ namespace networkV4
 
 class box
 {
-  box(const double _Lx, const double _Ly, const double _xy)
+public:
+  box(const double _Lx, const double _Ly, const double _xy = 0.0)
       : m_Lx(_Lx)
       , m_Ly(_Ly)
       , m_xy(_xy)
@@ -23,6 +24,10 @@ class box
     m_invLx = 1.0 / _Lx;
     m_invLy = 1.0 / _Ly;
     m_invxy = -_xy / (_Lx * _Ly);
+  }
+  box(const Utils::vec2d& _domain, const double _xy = 0.0)
+      : box(_domain.x, _domain.y, _xy)
+  {
   }
 
 public:
@@ -65,7 +70,10 @@ public:
 public:
   auto shearStrain() const -> const double { return m_xy / m_Ly; }
   auto area() const -> const double { return m_area; }
-  auto getDomain() const -> const Utils::vec2d { return Utils::vec2d(m_Lx, m_Ly); }
+  auto getDomain() const -> const Utils::vec2d
+  {
+    return Utils::vec2d(m_Lx, m_Ly);
+  }
 
 public:
   inline auto lambda2x(const Utils::vec2d& _pos) const -> Utils::vec2d

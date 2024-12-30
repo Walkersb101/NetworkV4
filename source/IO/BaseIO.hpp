@@ -9,28 +9,28 @@ namespace IO
 
 auto validFolder(const std::filesystem::path& _dirPath) -> bool;
 
-class baseOut
+class baseIO
 {
 protected:
-  baseOut();
-  virtual ~baseOut() = 0;
+  baseIO();
+  virtual ~baseIO() = 0;
 };
 
-class folderOut : public baseOut
+class folderIO : public baseIO
 {
 protected:
-  folderOut(const std::filesystem::path& _dirPath);
-  virtual ~folderOut() = 0;
+  folderIO(const std::filesystem::path& _dirPath);
+  virtual ~folderIO() = 0;
 
 protected:
     std::filesystem::path m_dirPath;
 };
 
-class fileOut : public baseOut
+class fileIO : public baseIO
 {
 protected:
-  fileOut(const std::filesystem::path& _filePath);
-  virtual ~fileOut() = 0;
+  fileIO(const std::filesystem::path& _filePath);
+  virtual ~fileIO() = 0;
 
 protected:
     std::filesystem::path m_filePath;

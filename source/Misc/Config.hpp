@@ -114,4 +114,10 @@ inline std::string fileName = "output.h5";
 }  // namespace hdf5
 }  // namespace IO
 
+namespace partition
+{
+    inline std::size_t mortonRes = 1024;
+    inline std::size_t passes = 2;
+}
+
 }  // namespace config

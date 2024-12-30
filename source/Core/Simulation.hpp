@@ -7,8 +7,12 @@
 
 #include "Core/Network.hpp"
 #include "Misc/Enums.hpp"
-#include "IO/NetworkOut.hpp"
-#include "IO/DataOut.hpp"
+
+#include "IO/NetworkDump/NetworkOut.hpp"
+#include "IO/TimeSeries/DataOut.hpp"
+
+#include "IO/Input/Binv2.hpp"
+
 //#include "IO/hdf5Out.hpp"
 #include "Protocols/Protocol.hpp"
 //#include "Protocols/StepStrain.hpp"
@@ -52,7 +56,7 @@ private:
   
   //networkV4::network m_network;
   std::unique_ptr<networkV4::protocol> m_protocol;
-  std::unique_ptr<IO::timeSeries::dataOut> m_dataOut;
-  std::unique_ptr<IO::networkDumps::networkOut> m_networkOut;
+  std::unique_ptr<IO::timeSeries::timeSeriesOut> m_dataOut;
+  std::unique_ptr<IO::networkDumps::networkDump> m_networkOut;
 };
 }  // namespace networkV4

@@ -29,9 +29,9 @@ public:
                const Utils::vec2d& _velocity = Utils::vec2d(0.0, 0.0),
                double _mass = 1.0,
                const Utils::vec2d& _force = Utils::vec2d(0.0, 0.0));
-  void addNode(const Utils::vec2d& _position,
+  auto addNode(const Utils::vec2d& _position,
                const Utils::vec2d& _velocity = Utils::vec2d(0.0, 0.0),
-               double _mass = 1.0);
+               double _mass = 1.0) -> size_t;
 
 public:
   auto indices() const -> const std::vector<size_t>&;

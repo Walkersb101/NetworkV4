@@ -154,8 +154,8 @@ private:
   std::vector<size_t> m_partition;
   std::vector<std::uint_fast64_t> m_mortonHash;
 
-  const size_t m_mortonRes = 1024;  // TODO: make this a parameter
-  const size_t m_passes = 2;  // TODO: make this a parameter
+  const size_t m_mortonRes = config::partition::mortonRes;
+  const size_t m_passes = config::partition::passes;
 };
 
 }  // namespace partition

@@ -6,7 +6,7 @@
 class tagMap
 {
 public:
-  tagMap();
+  tagMap() {}
 
 public:
   void add(std::size_t _id, const std::string& _name)
@@ -21,9 +21,8 @@ public:
 
   auto add(const std::string& _name) -> size_t const
   {
-    const auto id = getFirstUnusedId();
-    add(id, _name);
-    return id;
+    add(updateNextIndex(), _name);
+    return m_nextId;
   }
 
   auto get(const std::string& _name) const -> size_t const
@@ -55,16 +54,16 @@ public:
   }
 
 private:
-  auto getFirstUnusedId() const -> size_t const
+  auto updateNextIndex() -> size_t const
   {
-    size_t id = 0;
-    while (m_tagId2Name.find(id) != m_tagId2Name.end()) {
-      ++id;
+    while (m_tagId2Name.find(m_nextId) != m_tagId2Name.end()) {
+      m_nextId++;
     }
-    return id;
+    return m_nextId;
   }
 
 private:
   std::unordered_map<std::size_t, std::string> m_tagId2Name;
   std::unordered_map<std::string, std::size_t> m_tagName2Id;
+  size_t m_nextId;
 };

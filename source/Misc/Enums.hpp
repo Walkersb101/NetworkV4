@@ -6,13 +6,6 @@
 
 namespace networkV4
 {
-enum class bondType : std::uint8_t
-{
-  single,
-  sacrificial,
-  matrix,
-  any,
-};
 
 enum class dataOutType : std::uint8_t
 {

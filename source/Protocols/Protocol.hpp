@@ -3,8 +3,8 @@
 #include <cstdint>
 
 #include "Core/Network.hpp"
-#include "IO/DataOut.hpp"
-#include "IO/NetworkOut.hpp"
+#include "IO/NetworkDump/NetworkOut.hpp"
+#include "IO/TimeSeries/DataOut.hpp"
 #include "Misc/Enums.hpp"
 
 namespace networkV4
@@ -24,13 +24,13 @@ public:
   virtual void run(network& _network);
 
   virtual void initIO(const network& _network,
-                      std::unique_ptr<IO::timeSeries::dataOut>& _dataOut,
-                      std::unique_ptr<IO::networkDumps::networkOut>& _networkOut);
+                      std::unique_ptr<IO::timeSeries::timeSeriesOut>& _dataOut,
+                      std::unique_ptr<IO::networkDumps::networkDump>& _networkOut);
 
 protected:
   StrainType m_strainType;
-  IO::timeSeries::dataOut* m_dataOut;
-  IO::networkDumps::networkOut* m_networkOut;
+  IO::timeSeries::timeSeriesOut* m_dataOut;
+  IO::networkDumps::networkDump* m_networkOut;
 };
 
 std::vector<double> forceMags(const network& _network);

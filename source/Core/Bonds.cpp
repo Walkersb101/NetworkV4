@@ -6,9 +6,8 @@
 
 #include "Bonds.hpp"
 
-#include <range/v3/view/enumerate.hpp>
 #include <range/v3/algorithm.hpp>
-
+#include <range/v3/view/enumerate.hpp>
 
 // -------------------------------------------------------------------------- //
 
@@ -83,6 +82,24 @@ auto networkV4::bonded::bondMap::getBreak(std::size_t _index) const
 {
   checkIndex(_index);
   return m_breakTypes[_index];
+}
+
+auto networkV4::bonded::bondMap::getGlobalInfo() const
+    -> const std::vector<BondInfo>&
+{
+  return m_globalMap;
+}
+
+auto networkV4::bonded::bondMap::getTypes() const
+    -> const std::vector<bondTypes>&
+{
+  return m_types;
+}
+
+auto networkV4::bonded::bondMap::getBreaks() const
+    -> const std::vector<breakTypes>&
+{
+  return m_breakTypes;
 }
 
 void networkV4::bonded::bondMap::addTag(std::size_t _index, std::size_t _tag)
@@ -166,10 +183,10 @@ auto networkV4::bonded::bonds::size() const -> std::size_t
   return m_localMap.size();
 }
 
-void networkV4::bonded::bonds::addBond(size_t _src,
+auto networkV4::bonded::bonds::addBond(size_t _src,
                                        size_t _dst,
                                        const bondTypes& _bond,
-                                       const breakTypes& _break)
+                                       const breakTypes& _break) -> size_t
 {
   if (_src == _dst) {
     throw("bonds::addBond: src and dst are the same");
@@ -183,6 +200,7 @@ void networkV4::bonded::bonds::addBond(size_t _src,
   m_bonds.setGlobalInfo(index, _src, _dst);
   m_bonds.setType(index, _bond);
   m_bonds.setBreak(index, _break);
+  return index;
 }
 
 auto networkV4::bonded::bonds::getLocalInfo(std::size_t _index) const

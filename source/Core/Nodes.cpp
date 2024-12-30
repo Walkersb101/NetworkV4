@@ -3,9 +3,9 @@
 
 #include "Core/Nodes.hpp"
 
-#include <range/v3/view/zip.hpp>
-#include <range/v3/view/enumerate.hpp>
 #include <range/v3/algorithm.hpp>
+#include <range/v3/view/enumerate.hpp>
+#include <range/v3/view/zip.hpp>
 
 networkV4::nodes::nodes(const size_t _size)
 {
@@ -61,13 +61,15 @@ void networkV4::nodes::addNode(size_t _globalIndex,
   pushNode(_globalIndex, _position, _velocity, _mass, _force);
 }
 
-void networkV4::nodes::addNode(const Utils::vec2d& _position,
+auto networkV4::nodes::addNode(const Utils::vec2d& _position,
                                const Utils::vec2d& _velocity,
-                               double _mass)
+                               double _mass) -> size_t
 {
   // TODO: check if tags have been set
-  pushNode(nextIndex(), _position, _velocity, _mass, Utils::vec2d(0.0, 0.0));
+  size_t index = nextIndex();
+  pushNode(index, _position, _velocity, _mass, Utils::vec2d(0.0, 0.0));
   m_nextIndex++;
+  return index;
 }
 
 auto networkV4::nodes::indices() const -> const std::vector<size_t>&
@@ -134,11 +136,11 @@ auto networkV4::nodes::getNodeMap() const -> const NodeMap
   return nodeMap;
 }
 
-void networkV4::nodes::reorder(const auto& _order,
-                               auto fn)
+void networkV4::nodes::reorder(const auto& _order, auto fn)
 {
   if (_order.size() != size()) {
-    throw std::runtime_error("nodes::reorder: order size does not match node size");
+    throw std::runtime_error(
+        "nodes::reorder: order size does not match node size");
   }
 
   ranges::sort(ranges::view::zip(_order,

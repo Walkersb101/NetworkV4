@@ -6,9 +6,8 @@
 
 #include "Protocol.hpp"
 
-#include "Core/Network.hpp"
 #include "Integration/Integrator.hpp"
-#include "IO/DataOut.hpp"
+
 #include "Misc/Config.hpp"
 #include "Misc/Tools.hpp"
 #include "Misc/Roots.hpp"
@@ -28,7 +27,7 @@ double networkV4::protocol::getStrain(const network& _network) const
 {
   switch (m_strainType) {
     case StrainType::Shear:
-      return 0.0;//_network.getShearStrain();
+      return _network.getShearStrain();
     case StrainType::Elongation:
       return 0.0;//_network.getElongationStrain(); //TODO: Fix this
     default:
@@ -40,11 +39,11 @@ void networkV4::protocol::strain(network& _network, double _step)
 {
   switch (m_strainType) {
     case StrainType::Shear: {
-      //_network.shear(_step);
+        _network.shear(_step);
       break;
     }
     case StrainType::Elongation: {
-      //_network.elongate(_step);
+      //_network.elongate(_step); //TODO: Fix this
       break;
     }
     default:
@@ -55,7 +54,7 @@ void networkV4::protocol::strain(network& _network, double _step)
 void networkV4::protocol::run(network& _network) {}
 
 void networkV4::protocol::initIO(const network& _network,
-                                 std::unique_ptr<IO::timeSeries::dataOut>& _dataOut,
-                                 std::unique_ptr<IO::networkDumps::networkOut>& _networkOut)
+                                 std::unique_ptr<IO::timeSeries::timeSeriesOut>& _dataOut,
+                                 std::unique_ptr<IO::networkDumps::networkDump>& _networkOut)
 {
 }

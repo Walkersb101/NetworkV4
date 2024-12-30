@@ -50,6 +50,7 @@ inline auto isZstdCompressed(const std::string& _data)
   const unsigned char b3 =
       *reinterpret_cast<const unsigned char*>(_data.data() + 3);
   return (b0 == 0x28 && b1 == 0xB5 && b2 == 0x2F && b3 == 0xFD);
+}
 }  // namespace zstd
 }  // namespace Compression
 }  // namespace IO

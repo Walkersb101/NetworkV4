@@ -1,6 +1,6 @@
 #include <fstream>
 
-#include "IO/BaseOut.hpp"
+#include "IO/BaseIO.hpp"
 
 auto IO::validFolder(const std::filesystem::path& _dirPath) -> bool
 {
@@ -14,12 +14,12 @@ auto IO::validFolder(const std::filesystem::path& _dirPath) -> bool
       == std::filesystem::perms::owner_write;
 }
 
-IO::baseOut::baseOut() {}
+IO::baseIO::baseIO() {}
 
-IO::baseOut::~baseOut() {}
+IO::baseIO::~baseIO() {}
 
-IO::folderOut::folderOut(const std::filesystem::path& _dirPath)
-    : baseOut()
+IO::folderIO::folderIO(const std::filesystem::path& _dirPath)
+    : baseIO()
     , m_dirPath(_dirPath)
 {
   if (!validFolder(_dirPath)) {
@@ -28,10 +28,10 @@ IO::folderOut::folderOut(const std::filesystem::path& _dirPath)
   }
 }
 
-IO::folderOut::~folderOut() {}
+IO::folderIO::~folderIO() {}
 
-IO::fileOut::fileOut(const std::filesystem::path& _filePath)
-    : baseOut()
+IO::fileIO::fileIO(const std::filesystem::path& _filePath)
+    : baseIO()
     , m_filePath(_filePath)
 {
   // check if the parent directory exists
