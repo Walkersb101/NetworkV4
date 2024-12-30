@@ -37,9 +37,7 @@ void heunAverageOverdamped(network& _network,
                  double _gamma = 1.0);
 void copyVector(const std::vector<Utils::vec2d>& _src, std::vector<Utils::vec2d>& _dst);
 auto vectorDiffNorm(const std::vector<Utils::vec2d>& _src,
-                    const std::vector<Utils::vec2d>& _dst,
-                    const std::vector<bool>& _mask,
-                    bool _invertmask = false) -> double;
+                    const std::vector<Utils::vec2d>& _dst) -> double;
 }  // namespace Integrationtools
 
 }  // namespace networkV4

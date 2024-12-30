@@ -33,7 +33,7 @@ public:
 
 private:
   double m_dt = config::integrators::default_dt;
-  std::vector<vec2d> m_frn;
+  std::vector<Utils::vec2d> m_frn;
 };
 
 class OverdampedAdaptiveEulerHeun : public integrator
@@ -55,8 +55,8 @@ private:
 
   double m_esp = config::integrators::adaptiveIntegrator::esp;
 
-  std::vector<vec2d> m_frn;
-  std::vector<vec2d> m_frnbar;
+  std::vector<Utils::vec2d> m_frn;
+  std::vector<Utils::vec2d> m_frnbar;
 
   double m_qMin = config::integrators::adaptiveHeun::qMin;
   double m_qMax = config::integrators::adaptiveHeun::qMax;

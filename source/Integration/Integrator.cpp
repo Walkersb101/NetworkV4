@@ -1,11 +1,14 @@
-#include "Integrator.hpp"
-
 #include <algorithm>
 #include <cstddef>
 #include <numeric>
 #include <stdexcept>
 
-#include <range/v3/all.hpp>
+#include "Integrator.hpp"
+
+#include <range/v3/numeric/accumulate.hpp>
+#include <range/v3/range/conversion.hpp>
+#include <range/v3/view/transform.hpp>
+#include <range/v3/view/zip.hpp>
 
 #include "Core/Network.hpp"
 #include "Core/Nodes.hpp"
@@ -84,32 +87,14 @@ void networkV4::Integrationtools::heunAverageOverdamped(
   auto& velocities = _network.getNodes().velocities();
   auto& forces = _network.getNodes().forces();
 
-  double invgamma = 1.0 / _gamma;
-  double overdampedScale = _dt * invgamma;
+  double overdampedScale = _dt / _gamma;
 
-  std::transform(positions.begin(),
-                 positions.end(),
-                 _tempForces.begin(),
-                 positions.begin(),
-                 [overdampedScale](const auto& position, const auto& force)
-                 { return position - force * overdampedScale; }); // x_{n} = x'_{n+1} - f(x_{n}) * dt / gamma
-  std::transform(forces.begin(),
-                 forces.end(),
-                 _tempForces.begin(),
-                 forces.begin(),
-                 [](const auto& force, const auto& tempForce)
-                 { return (force + tempForce) * 0.5; }); // f_{n+1} = 0.5 * (f(x_{n}) + f(x'_{n+1}))
-  std::transform(forces.begin(),
-                 forces.end(),
-                 velocities.begin(),
-                 [invgamma](const auto& force)
-                 { return force * invgamma; }); // v_{n+1} = f_{n+1} / gamma
-  std::transform(positions.begin(),
-                 positions.end(),
-                 velocities.begin(),
-                 positions.begin(),
-                 [_dt](const auto& position, const auto& velocity)
-                 { return position + velocity * _dt; }); // x_{n+1} = x_{n} + v_{n+1} * dt
+  for (auto [position, velocity, force, tempForce] :
+       ranges::views::zip(positions, velocities, forces, _tempForces))
+  {
+    position += (force - tempForce) * overdampedScale;
+    force = (force + tempForce) * 0.5;
+  }
 }
 
 void networkV4::Integrationtools::copyVector(
@@ -119,25 +104,17 @@ void networkV4::Integrationtools::copyVector(
   std::copy(_src.begin(), _src.end(), _dst.begin());
 }
 
-#include <range/v3/all.hpp>
-
-auto networkV4::Integrationtools::vectorDiffNorm(const std::vector<Utils::vec2d>& _src,
-                                                 const std::vector<Utils::vec2d>& _dst,
-                                                 const std::vector<bool>& _mask,
-                                                 bool _invertmask) -> double
+auto networkV4::Integrationtools::vectorDiffNorm(
+    const std::vector<Utils::vec2d>& _src,
+    const std::vector<Utils::vec2d>& _dst) -> double
 {
-  if (_src.size() != _dst.size() || _src.size() != _mask.size()) {
+  if (_src.size() != _dst.size()) {
     throw std::invalid_argument(
         "vectorDiffNorm: vectors must be of equal size");
   }
-
-  auto sum = ranges::accumulate(
-      ranges::views::zip(_src, _dst, _mask) |
-      ranges::views::transform([_invertmask](const auto& t) {
-        const auto& [src, dst, mask] = t;
-        return mask != _invertmask ? (src - dst).normSquared() : 0.0;
-      }),
-      0.0);
-
+  double sum = 0;
+  for (auto [src, dst] : ranges::views::zip(_src, _dst)) {
+    sum += (src - dst).normSquared();
+  }
   return std::sqrt(sum);
 }

@@ -38,7 +38,7 @@ void networkV4::OverdampedEulerHeun::integrate(network& _network)
   Integrationtools::overdampedMove(_network,
                                    m_dt);  // rbar_{n+1} = r_n + f(r_n) * dt
   _network.computeForces();
-  Integrationtools::heunAverage(
+  Integrationtools::heunAverageOverdamped(
       _network,
       m_frn,
       m_dt);  // r_{n+1} = rn + 0.5 * (f(r_n) + f(rbar_{n+1})) * dt
@@ -78,17 +78,17 @@ void networkV4::OverdampedAdaptiveEulerHeun::integrate(network& _network)
     _network.computeForces();
     Integrationtools::copyVector(networkNodes.forces(),
                                  m_frnbar);  // f(rbar_{n+1})
-    Integrationtools::heunAverage(
+    Integrationtools::heunAverageOverdamped(
         _network,
         m_frn,  // r_{n+1} = rn + 0.5 * (f(r_n) + f(rbar_{n+1})) * dt
         m_dt);  // = rbar_{n+1} + 0.5 * (f(rbar_{n+1}) - f(r_n)) * dt
     _network.computeForces();
 
     const double forceError = Integrationtools::vectorDiffNorm(
-        networkNodes.forces(), m_frnbar,
-        networkNodes.fixed(), true);  // |f(rbar_{n+1}) - f(r_n)|
-    const double q = std::clamp(std::pow(m_esp / forceError, 2), m_qMin, m_qMax);
-    
+        networkNodes.forces(), m_frnbar);  // |f(rbar_{n+1}) - f(r_n)|
+    const double q =
+        std::clamp(std::pow(m_esp / forceError, 2), m_qMin, m_qMax);
+
     if (q > 1.0)
       break;
     error = (m_dt == m_dtMin || std::isnan(q));
