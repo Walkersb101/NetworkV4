@@ -16,7 +16,7 @@ add_library(
     source/Core/Nodes.cpp
     source/Core/Simulation.cpp
 
-    source/Integration/Integrator.cpp
+    #source/Integration/Integrator.cpp
     #source/Integration/Minimization.cpp
     #source/Integration/OverDamped.cpp
 
@@ -26,7 +26,7 @@ add_library(
     source/IO/NetworkDump/NetworkOut.cpp
     source/IO/Input/NetworkIn.cpp
     
-    source/Protocols/Protocol.cpp
+    #source/Protocols/Protocol.cpp
     #source/Protocols/StepStrain.cpp
     #source/Protocols/Quasistatic.cpp
     #source/Protocols/Propogator.cpp

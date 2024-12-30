@@ -11,149 +11,6 @@
 
 // -------------------------------------------------------------------------- //
 
-networkV4::bonded::bondMap::bondMap() {}
-
-networkV4::bonded::bondMap::bondMap(std::size_t _size)
-{
-  resize(_size);
-}
-
-void networkV4::bonded::bondMap::clear()
-{
-  m_types.clear();
-  m_breakTypes.clear();
-  m_tags.clear();
-}
-
-void networkV4::bonded::bondMap::resize(std::size_t _size)
-{
-  m_types.resize(_size);
-  m_breakTypes.resize(_size);
-  m_tags.resize(_size);
-}
-
-const std::size_t networkV4::bonded::bondMap::size() const
-{
-  if (m_types.size() != m_breakTypes.size() || m_types.size() != m_tags.size())
-  {
-    throw("bondMap::size: inconsistent sizes");
-  }
-  return m_types.size();
-}
-
-void networkV4::bonded::bondMap::setGlobalInfo(std::size_t _index,
-                                               size_t _src,
-                                               size_t _dst)
-{
-  checkIndex(_index);
-  m_globalMap[_index] = BondInfo(_src, _dst);
-}
-
-void networkV4::bonded::bondMap::setType(std::size_t _index,
-                                         const bondTypes& _bond)
-{
-  checkIndexSet(_index);
-  m_types[_index] = _bond;
-}
-
-void networkV4::bonded::bondMap::setBreak(std::size_t _index,
-                                          const breakTypes& _break)
-{
-  checkIndexSet(_index);
-  m_breakTypes[_index] = _break;
-}
-
-auto networkV4::bonded::bondMap::getGlobalInfo(std::size_t _index) const
-    -> const BondInfo&
-{
-  checkIndex(_index);
-  return m_globalMap[_index];
-}
-
-auto networkV4::bonded::bondMap::getType(std::size_t _index) const
-    -> const bondTypes&
-{
-  checkIndex(_index);
-  return m_types[_index];
-}
-
-auto networkV4::bonded::bondMap::getBreak(std::size_t _index) const
-    -> const breakTypes&
-{
-  checkIndex(_index);
-  return m_breakTypes[_index];
-}
-
-auto networkV4::bonded::bondMap::getGlobalInfo() const
-    -> const std::vector<BondInfo>&
-{
-  return m_globalMap;
-}
-
-auto networkV4::bonded::bondMap::getTypes() const
-    -> const std::vector<bondTypes>&
-{
-  return m_types;
-}
-
-auto networkV4::bonded::bondMap::getBreaks() const
-    -> const std::vector<breakTypes>&
-{
-  return m_breakTypes;
-}
-
-void networkV4::bonded::bondMap::addTag(std::size_t _index, std::size_t _tag)
-{
-  checkIndex(_index);
-  if (!hasTag(_index, _tag)) {
-    m_tags[_index].push_back(_tag);
-  }
-}
-
-void networkV4::bonded::bondMap::removeTag(std::size_t _index, std::size_t _tag)
-{
-  checkIndex(_index);
-  if (!hasTag(_index, _tag)) {
-    return;  // TODO: add log if trying to remove tag that does not exist
-  }
-  auto& tags = m_tags[_index];
-  tags.erase(std::remove(tags.begin(), tags.end(), _tag), tags.end());
-}
-
-auto networkV4::bonded::bondMap::getTagIds(std::size_t _index) const
-    -> const std::vector<std::size_t>&
-{
-  checkIndex(_index);
-  return m_tags[_index];
-}
-
-auto networkV4::bonded::bondMap::hasTag(std::size_t _index,
-                                        std::size_t _tag) const -> bool const
-{
-  checkIndex(_index);
-  const auto& tags = m_tags[_index];
-  return std::find(tags.begin(), tags.end(), _tag) != tags.end();
-}
-
-void networkV4::bonded::bondMap::checkIndex(std::size_t _index) const
-{
-  if (_index >= m_types.size()) {
-    throw("bondMap::checkIndex: index out of bounds");  // TODO: maybe this
-                                                        // shouldn't throw?
-  }
-}
-
-void networkV4::bonded::bondMap::checkIndexSet(std::size_t _index) const
-{
-  checkIndex(_index);
-  const auto& binfo = m_globalMap[_index];
-  if (binfo.src == 0 && binfo.dst == 0) {
-    throw("bondMap::checkIndexSet: index not set");
-  }
-}
-
-// -------------------------------------------------------------------------- //
-
 networkV4::bonded::bonds::bonds(const size_t _size)
 {
   reserve(_size);
@@ -161,26 +18,25 @@ networkV4::bonded::bonds::bonds(const size_t _size)
 
 void networkV4::bonded::bonds::clear()
 {
-  m_localMap.clear();
-  m_id2Local.clear();
   m_bonds.clear();
+  m_types.clear();
+  m_breakTypes.clear();
 }
 
 void networkV4::bonded::bonds::reserve(std::size_t _size)
 {
-  m_localMap.reserve(_size);
-  m_id2Local.reserve(_size);
-  m_bonds.resize(_size);
+  m_bonds.reserve(_size);
+  m_types.reserve(_size);
+  m_breakTypes.reserve(_size);
 }
 
 auto networkV4::bonded::bonds::size() const -> std::size_t
 {
-  if (m_localMap.size() != m_id2Local.size()
-      || m_localMap.size() != m_bonds.size())
+  if (m_bonds.size() != m_types.size() || m_bonds.size() != m_breakTypes.size())
   {
     throw("bonds::size: inconsistent sizes");
   }
-  return m_localMap.size();
+  return m_bonds.size();
 }
 
 auto networkV4::bonded::bonds::addBond(size_t _src,
@@ -192,46 +48,79 @@ auto networkV4::bonded::bonds::addBond(size_t _src,
     throw("bonds::addBond: src and dst are the same");
   }
   const std::size_t index = m_bonds.size();
-  m_localMap.emplace_back(_src, _dst, index);
-  m_id2Local.push_back(index);
-  if (m_bonds.size() <= index) {
-    m_bonds.resize(index + 1);
-  }
-  m_bonds.setGlobalInfo(index, _src, _dst);
-  m_bonds.setType(index, _bond);
-  m_bonds.setBreak(index, _break);
+
+  m_bonds.emplace_back(_src, _dst, index);
+  m_types.emplace_back(_bond);
+  m_breakTypes.emplace_back(_break);
+
   return index;
 }
 
-auto networkV4::bonded::bonds::getLocalInfo(std::size_t _index) const
-    -> const LocalBondInfo&
-{
-  checkIndex(_index);
-  return m_localMap[m_id2Local[_index]];
-}
-
-auto networkV4::bonded::bonds::getLocal() const
-    -> const std::vector<LocalBondInfo>&
-{
-  return m_localMap;
-}
-
-auto networkV4::bonded::bonds::getMap() const
-    -> const networkV4::bonded::bondMap&
+auto networkV4::bonded::bonds::getBonds() const -> const std::vector<BondInfo>&
 {
   return m_bonds;
 }
 
-auto networkV4::bonded::bonds::getMap() -> networkV4::bonded::bondMap&
+auto networkV4::bonded::bonds::getTypes() const -> const std::vector<bondTypes>&
+{
+  return m_types;
+}
+
+auto networkV4::bonded::bonds::getBreaks() const
+    -> const std::vector<breakTypes>&
+{
+  return m_breakTypes;
+}
+
+auto networkV4::bonded::bonds::getBonds() -> std::vector<BondInfo>&
 {
   return m_bonds;
+}
+
+auto networkV4::bonded::bonds::getTypes() -> std::vector<bondTypes>&
+{
+  return m_types;
+}
+
+auto networkV4::bonded::bonds::getBreaks() -> std::vector<breakTypes>&
+{
+  return m_breakTypes;
+}
+
+auto networkV4::bonded::bonds::gatherBonds() const -> std::vector<BondInfo>
+{
+  std::vector<BondInfo> bonds;
+  bonds.resize(size(), BondInfo(0, 0, 0));
+  for (const auto& bond : m_bonds) {
+    bonds[bond.index] = bond;
+  }
+  return bonds;
+}
+
+auto networkV4::bonded::bonds::gatherTypes() const -> std::vector<bondTypes>
+{
+  std::vector<bondTypes> types;
+  types.resize(size());
+  for (const auto& [type, bond] : ranges::views::zip(m_types, m_bonds)) {
+    types[bond.index] = type;
+  }
+  return types;
+}
+
+auto networkV4::bonded::bonds::gatherBreaks() const -> std::vector<breakTypes>
+{
+  std::vector<breakTypes> breaks;
+  breaks.resize(size());
+  for (const auto& [brk, bond] : ranges::views::zip(m_breakTypes, m_bonds)) {
+    breaks[bond.index] = brk;
+  }
+  return breaks;
 }
 
 void networkV4::bonded::bonds::remap(const NodeMap& _nodeMap)
 {
-  for (auto [i, bond] : ranges::views::enumerate(m_localMap)) {
-    m_localMap[i] =
-        LocalBondInfo(_nodeMap.at(bond.src), _nodeMap.at(bond.dst), i);
+  for (auto [i, bond] : ranges::views::enumerate(m_bonds)) {
+    m_bonds[i] = BondInfo(_nodeMap.at(bond.src), _nodeMap.at(bond.dst), i);
   }
 }
 
@@ -241,23 +130,23 @@ void networkV4::bonded::bonds::reorder(const auto& _order, auto fn)
     throw("bonds::reorder: order size does not match bond size");
   }
 
-  ranges::sort(ranges::view::zip(_order, m_localMap),
+  ranges::sort(ranges::view::zip(_order, m_bonds, m_types, m_breakTypes),
                [fn](const auto& _a, const auto& _b)
                { return fn(std::get<0>(_a), std::get<0>(_b)); });
 }
 
-void networkV4::bonded::bonds::flip()
+void networkV4::bonded::bonds::flipSrcDst()
 {
-  for (auto& bond : m_localMap) {
+  for (auto& bond : m_bonds) {
     if (bond.src > bond.dst) {
       std::swap(bond.src, bond.dst);
     }
   }
 }
 
-void networkV4::bonded::bonds::checkIndex(std::size_t _index) const
+void networkV4::bonded::bonds::boundsCheck(std::size_t _index) const
 {
-  if (_index >= m_localMap.size()) {
+  if (_index >= size()) {
     throw("bonds::checkIndex: index out of bounds");
   }
 }

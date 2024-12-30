@@ -7,7 +7,6 @@
 
 #include "Misc/Config.hpp"
 #include "Misc/Vec2.hpp"
-#include "TagMap.hpp"
 
 namespace networkV4
 {
@@ -55,12 +54,6 @@ public:
       auto fn = [](const auto& _a, const auto& _b) { return _a < _b; });
 
 public:
-  void addTag(std::size_t _index, std::size_t _tag);
-  void removeTag(std::size_t _index, std::size_t _tag);
-
-  auto hasTag(std::size_t _index, std::size_t _tag) const -> bool const;
-
-public:
   auto nextIndex() -> size_t;
   auto hasIndex(size_t _index) const -> bool;
 
@@ -85,8 +78,6 @@ private:
   std::vector<Utils::vec2d> m_forces;
 
   std::vector<double> m_masses;
-
-  std::unordered_map<size_t, std::vector<size_t>> m_tags;
 
   size_t m_nextIndex = 0;
 };

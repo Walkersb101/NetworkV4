@@ -3,6 +3,11 @@
 #include <string>
 #include <unordered_map>
 
+namespace Utils
+{
+namespace Tags
+{
+
 class tagMap
 {
 public:
@@ -67,3 +72,6 @@ private:
   std::unordered_map<std::string, std::size_t> m_tagName2Id;
   size_t m_nextId;
 };
+
+}  // namespace Tags
+}  // namespace Utils

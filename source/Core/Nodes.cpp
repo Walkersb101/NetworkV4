@@ -153,41 +153,6 @@ void networkV4::nodes::reorder(const auto& _order, auto fn)
                { return fn(std::get<0>(_a), std::get<0>(_b)); });
 }
 
-void networkV4::nodes::addTag(std::size_t _index, std::size_t _tag)
-{
-  if (hasTag(_index, _tag)) {
-    return;  // TODO: add log if trying to add tag that already exists
-  }
-  if (m_tags.find(_index) == m_tags.end()) {
-    // tagList for this index does not exist
-    if (!hasIndex(_index)) {  // check if node with this index exists
-      throw std::runtime_error("nodes::addTag: index does not exist");
-    }
-    m_tags.insert({_index, {_tag}});
-  } else {
-    m_tags.at(_index).push_back(_tag);
-  }
-}
-
-void networkV4::nodes::removeTag(std::size_t _index, std::size_t _tag)
-{
-  if (!hasTag(_index, _tag)) {
-    return;  // TODO: add log if trying to remove tag that does not exist
-  }
-  auto& tags = m_tags.at(_index);
-  tags.erase(std::remove(tags.begin(), tags.end(), _tag), tags.end());
-}
-
-auto networkV4::nodes::hasTag(std::size_t _index,
-                              std::size_t _tag) const -> bool const
-{
-  if (m_tags.find(_index) == m_tags.end()) {
-    return false;
-  }
-  const auto& tags = m_tags.at(_index);
-  return std::find(tags.begin(), tags.end(), _tag) != tags.end();
-}
-
 auto networkV4::nodes::nextIndex() -> size_t
 {
   while (hasIndex(m_nextIndex)) {

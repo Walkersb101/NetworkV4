@@ -9,13 +9,16 @@
 #include "Core/Stresses.hpp"
 #include "Core/box.hpp"
 #include "Misc/Enums.hpp"
+#include "Misc/Tags/TagMap.hpp"
+#include "Misc/Tags/TagStorage.hpp"
 #include "Misc/Tensor2.hpp"
 #include "Misc/Vec2.hpp"
 
 namespace networkV4
 {
 
-using bondQueue = std::deque<std::tuple<size_t, bonded::bondTypes, bonded::breakTypes>>;
+using bondQueue =
+    std::deque<std::tuple<size_t, bonded::bondTypes, bonded::breakTypes>>;
 
 class network
 {
@@ -37,29 +40,40 @@ public:
   auto getRestBox() const -> const box;
   auto getBox() const -> const box;
 
-  auto getTags() -> tagMap&;
-  auto getTags() const -> const tagMap&;
+  auto getTags() -> Utils::Tags::tagMap&;
+  auto getTags() const -> const Utils::Tags::tagMap&;
+
+  auto getBondTags() -> Utils::Tags::tagStorage&;
+  auto getBondTags() const -> const Utils::Tags::tagStorage&;
+
+  auto getNodeTags() -> Utils::Tags::tagStorage&;
+  auto getNodeTags() const -> const Utils::Tags::tagStorage&;
 
 public:
-  auto getStresses() -> stresses&; // TODO: make so Input and intergrators can access nodes
+  auto getStresses()
+      -> stresses&;  // TODO: make so Input and intergrators can access nodes
   auto getStresses() const -> const stresses&;
 
-  auto getBreakQueue() -> bondQueue&; // TODO: make so Input and intergrators can access nodes
+  auto getBreakQueue()
+      -> bondQueue&;  // TODO: make so Input and intergrators can access nodes
   auto getBreakQueue() const -> const bondQueue&;
 
 public:
-    double getShearStrain() const;
-    auto getElongationStrain() const -> Utils::vec2d;
+  double getShearStrain() const;
+  auto getElongationStrain() const -> Utils::vec2d;
 
-    void shear(double _step);
-    void setBox(const box& _box);
+  void shear(double _step);
+  void setBox(const box& _box);
 
 public:
   void computeForces();
   auto computeEnergy() -> double;
 
 private:
-  void applyBond(const bonded::LocalBondInfo& _binfo, bool _evalBreak = false);
+  void applyBond(const bonded::BondInfo& _binfo,
+                 bonded::bondTypes& _type,
+                 bonded::breakTypes& _break,
+                 bool _evalBreak = false);
 
 private:
   box m_box;
@@ -73,7 +87,9 @@ private:
 
   bondQueue m_breakQueue;
 
-  tagMap m_tags;
+  Utils::Tags::tagMap m_tags;
+  Utils::Tags::tagStorage m_bondTags;
+  Utils::Tags::tagStorage m_nodeTags;
 };
 
 }  // namespace networkV4

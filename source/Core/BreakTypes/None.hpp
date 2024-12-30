@@ -14,12 +14,11 @@ public:
   None() {};
 
 public:
-  bool checkBreak(const Utils::vec2d& _r) const {
-  return false;
-}
-  std::optional<double> thresholdData(const Utils::vec2d& _r) const {
-  return {};
-}
+  bool checkBreak(const Utils::vec2d& _r) const { return false; }
+  std::optional<double> thresholdData(const Utils::vec2d& _r) const
+  {
+    return {};
+  }
 };
 }  // namespace BreakTypes
 }  // namespace networkV4

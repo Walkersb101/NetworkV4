@@ -84,7 +84,7 @@ public:
       }
 
       size_t index = bonds.addBond(index1, index2, type, breakType);
-      bonds.getMap().addTag(index, matrix ? matrixTag : sacrificationTag);
+      network.getBondTags().addTag(index, matrix ? matrixTag : sacrificationTag);
     }
     network.getStresses().init(matrixTag);
     network.getStresses().init(sacrificationTag);
