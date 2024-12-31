@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "Misc/Tags/TagMap.hpp"
@@ -25,44 +26,50 @@ public:
 
   void resize(std::size_t _size)
   {
-    m_tags.resize(_size);
+    m_tags.reserve(_size);
     // TODO: add log if resizing to smaller size
   }
 
   auto size() const -> const std::size_t { return m_tags.size(); }
 
 public:
+  void initIndex(std::size_t _index) { m_tags.insert({_index, {}}); }
+
   void addTag(std::size_t _index, std::size_t _tag)
   {
-    boundsCheck(_index);
-    if (!contains(m_tags[_index], _tag)) {
-      m_tags[_index].push_back(_tag);
+    if (keyExists(_index) && !contains(m_tags.at(_index), _tag)) {
+      m_tags.at(_index).push_back(_tag);
+    } else {
+      m_tags.insert({_index, {_tag}});
     }
   }
 
   void removeTag(std::size_t _index, std::size_t _tag)
   {
-    boundsCheck(_index);
-    if (contains(m_tags[_index], _tag)) {
+    if (keyExists(_index) && contains(m_tags[_index], _tag)) {
       m_tags[_index].erase(
           std::remove(m_tags[_index].begin(), m_tags[_index].end(), _tag),
           m_tags[_index].end());
     }
   }
 
-  auto getTagIds(std::size_t _index) const -> const std::vector<std::size_t>&
+  auto getTagIds(std::size_t _index) -> std::vector<std::size_t>
   {
-    boundsCheck(_index);
-    return m_tags[_index];
+    if (keyExists(_index)) {
+      initIndex(_index);
+    } 
+    return m_tags.at(_index);
   }
 
   auto getTagStrings(std::size_t _index,
-                    const tagMap& _tagMap) const -> std::vector<std::string>
+                     const tagMap& _tagMap) const -> std::vector<std::string>
   {
-    boundsCheck(_index);
+    if (!keyExists(_index)) {
+      return {};
+    }
     std::vector<std::string> tagStrings;
-    tagStrings.reserve(m_tags[_index].size());
-    for (const auto& tag : m_tags[_index]) {
+    tagStrings.reserve(m_tags.at(_index).size());
+    for (const auto& tag : m_tags.at(_index)) {
       tagStrings.push_back(_tagMap.get(tag));
     }
     return tagStrings;
@@ -70,17 +77,11 @@ public:
 
   auto hasTag(std::size_t _index, std::size_t _tag) const -> bool const
   {
-    boundsCheck(_index);
-    return contains(m_tags[_index], _tag);
+    return keyExists(_index) && contains(m_tags.at(_index), _tag);
   }
 
 private:
-  void boundsCheck(std::size_t _index) const
-  {
-    if (_index >= m_tags.size()) {
-      throw("tagStorage::boundsCheck: index out of bounds");
-    }
-  }
+  bool keyExists(std::size_t _index) const { return m_tags.contains(_index); }
 
   bool contains(const std::vector<size_t>& _tags, std::size_t _tag) const
   {
@@ -88,7 +89,7 @@ private:
   }
 
 private:
-  std::vector<std::vector<size_t>> m_tags;
+  std::unordered_map<size_t, std::vector<size_t>> m_tags;
 };
 
 }  // namespace Tags
