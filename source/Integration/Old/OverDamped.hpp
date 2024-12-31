@@ -5,21 +5,6 @@
 namespace networkV4
 {
 
-class overdampedEuler : public integrator
-{
-public:
-  overdampedEuler();
-  overdampedEuler(double _dt);
-  ~overdampedEuler();
-
-public:
-  void integrate(network& _network) override;
-  auto getDt() const -> double;
-
-private:
-  double m_dt = config::integrators::default_dt;
-};
-
 class OverdampedEulerHeun : public integrator
 {
 public:

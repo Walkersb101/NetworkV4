@@ -92,7 +92,7 @@ void networkV4::Integrationtools::heunAverageOverdamped(
   for (auto [position, velocity, force, tempForce] :
        ranges::views::zip(positions, velocities, forces, _tempForces))
   {
-    position += (force - tempForce) * overdampedScale;
+    position += (force - tempForce) * overdampedScale * 0.5;
     force = (force + tempForce) * 0.5;
   }
 }

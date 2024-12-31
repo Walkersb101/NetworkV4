@@ -23,19 +23,21 @@ namespace integrators
 {
 inline double default_dt = 1e-3;
 
-namespace adaptiveIntegrator
+namespace adaptive
 {
-inline double esp = 1e-3;
 inline std::size_t maxIter = 10;
+
 inline double dtMin = 1e-6;
 inline double dtMax = 1e-1;
-}  // namespace adaptiveIntegrator
 
-namespace adaptiveHeun
-{
 inline double qMin = 1e-3;
 inline double qMax = 1.2;
-}  // namespace adaptiveHeun
+
+inline double espRel = 1e-3;
+inline double espAbs = 1e-3;
+
+
+}  // namespace adaptiveIntegrator
 
 namespace miminizer
 {
