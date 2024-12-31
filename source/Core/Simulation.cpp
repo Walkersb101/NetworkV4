@@ -4,7 +4,8 @@
 
 networkV4::Simulation::Simulation(const std::filesystem::path& _path)
 {
-    
+    IO::NetworkIn::BinV2In binv2("/home/sam/Documents/Code/NetworkV4/test/DoubleTest.bin");
+    network net = binv2.load();
 
 
   //tools::checkCanOpen(_path);
