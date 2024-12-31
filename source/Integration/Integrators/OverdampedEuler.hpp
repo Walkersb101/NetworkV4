@@ -3,7 +3,8 @@
 #include <algorithm>
 #include <vector>
 
-#include "Core/Nodes.hpp"
+#include "Core/Network.hpp"
+#include "IntegratorBase.hpp"
 #include "Overdamped.hpp"
 
 namespace networkV4
@@ -11,28 +12,33 @@ namespace networkV4
 namespace integration
 {
 
-class OverdampedEuler : public Overdamped
+class OverdampedEuler
+    : public Overdamped
+    , public IntegratorBase
 {
 public:
   OverdampedEuler() = default;
-  OverdampedEuler(double _gamma)
+  OverdampedEuler(double _gamma, double _dt)
       : Overdamped(_gamma)
+      , IntegratorBase(_dt)
   {
   }
   ~OverdampedEuler() override = default;
 
-  void step(networkV4::nodes& _nodes, double _dt)
+  void step(network& _network) override
   {
-    std::transform(_nodes.forces().begin(),
-                   _nodes.forces().end(),
-                   _nodes.velocities().begin(),
+    auto& nodes = _network.getNodes();
+
+    std::transform(nodes.forces().begin(),
+                   nodes.forces().end(),
+                   nodes.velocities().begin(),
                    [this](const auto& force) { return force * m_invGamma; });
-    std::transform(_nodes.positions().begin(),
-                   _nodes.positions().end(),
-                   _nodes.velocities().begin(),
-                   _nodes.positions().begin(),
-                   [_dt](const auto& position, const auto& velocity)
-                   { return position + velocity * _dt; });
+    std::transform(nodes.positions().begin(),
+                   nodes.positions().end(),
+                   nodes.velocities().begin(),
+                   nodes.positions().begin(),
+                   [](const auto& position, const auto& velocity)
+                   { return position + velocity * m_dt; });
   }
 };
 

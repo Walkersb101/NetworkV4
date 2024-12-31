@@ -6,6 +6,7 @@
 #include <range/v3/view/zip.hpp>
 
 #include "Core/Network.hpp"
+#include "IntegratorBase.hpp"
 #include "Overdamped.hpp"
 
 namespace networkV4
@@ -13,19 +14,22 @@ namespace networkV4
 namespace integration
 {
 
-class OverdampedEulerHeun : public Overdamped
+class OverdampedEulerHeun
+    : public Overdamped
+    , public IntegratorBase
 {
 public:
   OverdampedEulerHeun() = default;
-  OverdampedEulerHeun(double _gamma)
+  OverdampedEulerHeun(double _gamma, double _dt)
       : Overdamped(_gamma)
+      , IntegratorBase(_dt)
   {
   }
   ~OverdampedEulerHeun() override = default;
 
-  void step(network& _network, double _dt)
+  void step(network& _network) override
   {
-    const double overdampedScale = _dt * m_invGamma;
+    const double overdampedScale = m_dt * m_invGamma;
 
     networkV4::nodes& nodes = _network.getNodes();
     m_fn = nodes.forces();
@@ -33,7 +37,7 @@ public:
                    nodes.positions().end(),
                    nodes.forces().begin(),
                    nodes.positions().begin(),
-                   [_dt](const auto& position, const auto& force)
+                   [](const auto& position, const auto& force)
                    { return position + force * overdampedScale; });
 
     _network.computeForces();

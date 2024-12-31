@@ -66,14 +66,17 @@ public:
   void setBox(const box& _box);
 
 public:
-  void computeForces();
+  void computeForces(bool _evalBreak = false);
   auto computeEnergy() -> double;
+  void computeBreaks();
 
 private:
-  void applyBond(const bonded::BondInfo& _binfo,
+  void evalBreak(const Utils::vec2d& _dist,
+                 const bonded::BondInfo& _binfo,
                  bonded::bondTypes& _type,
-                 bonded::breakTypes& _break,
-                 bool _evalBreak = false);
+                 bonded::breakTypes& _break);
+
+  void applyforce(const bonded::BondInfo& _binfo, const Utils::vec2d& _force);
 
 private:
   box m_box;

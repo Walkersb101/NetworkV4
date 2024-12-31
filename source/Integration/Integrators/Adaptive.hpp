@@ -12,17 +12,6 @@ namespace networkV4
 namespace integration
 {
 
-struct dtOut
-{
-  dtOut(double _dt, double _nextdt)
-      : dt(_dt)
-      , nextdt(_nextdt)
-  {
-  }
-  const double dt;
-  const double nextdt;
-};
-
 struct AdaptiveParams
 {
   AdaptiveParams(size_t _maxInnerIter,
@@ -60,8 +49,13 @@ public:
   }
   virtual ~Adaptive() = default;
 
+public:
+    auto getNexDt() const -> double { return m_nextDt; }
+
 protected:
   AdaptiveParams m_params;
+
+  double m_nextDt = config::integrators::default_dt;
 };
 
 }  // namespace integration

@@ -17,15 +17,15 @@ public:
   {
     for (std::size_t i = 0; i < _steps; ++i) {
       integrator.step();
-      if (_stopFunction()) {
+      if (_stopFunction())
         break;
-      }
     }
   }
 
-private:
-    integrator m_integrator;
-    
+private: 
+integrator m_integrator;
+double m_t;
+
 };
 
 }  // namespace Integration
