@@ -7,25 +7,31 @@ namespace networkV4
 namespace Integration
 {
 
-template<typename integrator>
+template<typename Integrator>
 class Run
 {
 public:
-  Run() = default;
+  Run() = delete;
+  Run(Integrator _integrator)
+      : m_integrator(_integrator)
+  {
+  }
   ~Run() = default;
-  void run(std::size_t _steps, auto _stopFunction)
+
+  template<typename StopFunction>
+  void run(network& _network, std::size_t _steps, StopFunction _stopFunction)
   {
     for (std::size_t i = 0; i < _steps; ++i) {
-      integrator.step();
-      if (_stopFunction())
+      m_integrator.step(_network);
+      m_t += m_integrator.getDt();
+      if (_stopFunction(m_t, m_integrator.getDt(), _network))
         break;
     }
   }
 
-private: 
-integrator m_integrator;
-double m_t;
-
+private:
+  Integrator m_integrator;
+  double m_t = 0.0;
 };
 
 }  // namespace Integration
