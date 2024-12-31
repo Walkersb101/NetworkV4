@@ -228,8 +228,8 @@ void networkV4::network::evalBreak(const Utils::vec2d& _dist,
 void networkV4::network::applyforce(const bonded::BondInfo& _binfo,
                                     const Utils::vec2d& _force)
 {
-  m_nodes.forces()[_binfo.src] += _force;
-  m_nodes.forces()[_binfo.dst] -= _force;
+  m_nodes.forces()[_binfo.src] -= _force;
+  m_nodes.forces()[_binfo.dst] += _force;
 
   const auto& tags = m_bondTags.getTagIds(_binfo.index);
   const auto stress = Utils::outer(_force, _force) / m_box.area();

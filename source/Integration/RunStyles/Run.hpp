@@ -2,9 +2,13 @@
 
 #include <cstddef>
 
+#include "Integration/Integrators/OverdampedEuler.hpp"
+#include "Integration/Integrators/OverdampedEulerHeun.hpp"
+#include "Integration/Integrators/AdaptiveOverdampedEulerHeun.hpp"
+
 namespace networkV4
 {
-namespace Integration
+namespace integration
 {
 
 template<typename Integrator>
@@ -21,7 +25,9 @@ public:
   template<typename StopFunction>
   void run(network& _network, std::size_t _steps, StopFunction _stopFunction)
   {
-    for (std::size_t i = 0; i < _steps; ++i) {
+    size_t startStep = m_steps;
+    size_t targetSteps = _steps + startStep;
+    while (m_steps++ < targetSteps) {
       m_integrator.step(_network);
       m_t += m_integrator.getDt();
       if (_stopFunction(m_t, m_integrator.getDt(), _network))
@@ -32,6 +38,7 @@ public:
 private:
   Integrator m_integrator;
   double m_t = 0.0;
+  size_t m_steps = 0;
 };
 
 }  // namespace Integration

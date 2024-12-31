@@ -14,6 +14,7 @@ namespace integration
 
 struct AdaptiveParams
 {
+    AdaptiveParams() = default;
   AdaptiveParams(size_t _maxInnerIter,
                  double _dtMin,
                  double _dtMax,
@@ -42,7 +43,7 @@ struct AdaptiveParams
 class Adaptive
 {
 public:
-  Adaptive();
+  Adaptive() = default;
   Adaptive(AdaptiveParams _params)
       : m_params(_params)
   {
@@ -53,7 +54,7 @@ public:
     auto getNexDt() const -> double { return m_nextDt; }
 
 protected:
-  AdaptiveParams m_params;
+  AdaptiveParams m_params = AdaptiveParams();
 
   double m_nextDt = config::integrators::default_dt;
 };

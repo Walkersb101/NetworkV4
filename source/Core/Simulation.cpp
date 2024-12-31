@@ -1,31 +1,47 @@
 #include "Simulation.hpp"
 
-//#include "Misc/EnumString.hpp"
+// #include "Misc/EnumString.hpp"
 
 networkV4::Simulation::Simulation(const std::filesystem::path& _path)
 {
-    IO::NetworkIn::BinV2In binv2("/home/sam/Documents/Code/NetworkV4/test/DoubleTest.bin");
-    network net = binv2.load();
+  IO::NetworkIn::BinV2In binv2(
+      "/home/sam/Documents/Code/NetworkV4/test/DoubleTest.bin");
+  network net = binv2.load();
 
+  net.computeForces();
+  net.setBox(box({25, 23 * 23 / 25}, 0.0));
+  net.computeForces();
 
-  //tools::checkCanOpen(_path);
-  //m_config = toml::parse(_path);
-//
-  //loadTypes();
-  //loadNetwork();
-  //readDataOut();
-  //readNetworkOut();
-  //readRandom();
-//
-  //readProtocol();
+  auto stopfn = [](double t, double dt, network& net)
+  {
+    if (t > 10) {
+      return true;
+    }
+    return false;
+  };
+
+  integration::Run<integration::AdaptiveOverdampedEulerHeun> run {integration::AdaptiveOverdampedEulerHeun()};
+
+  run.run(net, 10000, stopfn);
+
+  // tools::checkCanOpen(_path);
+  // m_config = toml::parse(_path);
+  //
+  // loadTypes();
+  // loadNetwork();
+  // readDataOut();
+  // readNetworkOut();
+  // readRandom();
+  //
+  // readProtocol();
 }
 
 networkV4::Simulation::~Simulation() {}
 
 void networkV4::Simulation::run()
 {
-  //m_protocol->initIO(m_network, m_dataOut, m_networkOut);
-  //m_protocol->run(m_network);
+  // m_protocol->initIO(m_network, m_dataOut, m_networkOut);
+  // m_protocol->run(m_network);
 }
 
 /*
@@ -90,13 +106,11 @@ void networkV4::Simulation::readDataOut()
   if (outConfig.contains("OutputPath")) {
     dataPath = toml::find<std::string>(outConfig, "OutputPath");
     statesPath = toml::find<std::string>(outConfig, "OutputPath");
-  } else if (outConfig.contains("DataPath") && outConfig.contains("BondPath")) {
-    dataPath = toml::find<std::string>(outConfig, "DataPath");
-    statesPath = toml::find<std::string>(outConfig, "BondPath");
-  } else {
-    throw std::runtime_error(
-        "OutputPath value (or Both DataPath and BondPath found in "
-        "config file");
+  } else if (outConfig.contains("DataPath") && outConfig.contains("BondPath"))
+{ dataPath = toml::find<std::string>(outConfig, "DataPath"); statesPath =
+toml::find<std::string>(outConfig, "BondPath"); } else { throw
+std::runtime_error( "OutputPath value (or Both DataPath and BondPath found in
+" "config file");
   }
 
   const std::string timeDataName = toml::find_or<std::string>(
@@ -290,14 +304,14 @@ void networkV4::Simulation::readQuasistatic()
   const double ESP = toml::find_or<double>(
       quasiConfig, "ESP", config::integrators::adaptiveIntegrator::esp);
   const double tol =
-      toml::find_or<double>(quasiConfig, "Tol", config::rootMethods::targetTol);
-  const bool errorOnNotSingleBreak = toml::find_or<bool>(
-      quasiConfig,
-      "ErrorOnNotSingleBreak",
+      toml::find_or<double>(quasiConfig, "Tol",
+config::rootMethods::targetTol); const bool errorOnNotSingleBreak =
+toml::find_or<bool>( quasiConfig, "ErrorOnNotSingleBreak",
       config::protocols::quasiStaticStrain::errorOnNotSingleBreak);
   const double maxStep =
       toml::find_or<double>(quasiConfig, "MaxStep", maxStrain);
-  const bool saveBreaks = toml::find_or<bool>(quasiConfig, "SaveBreaks", false);
+  const bool saveBreaks = toml::find_or<bool>(quasiConfig, "SaveBreaks",
+false);
 
   m_protocol =
       std::make_unique<networkV4::quasiStaticStrain>(maxStrain,

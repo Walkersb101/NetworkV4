@@ -49,7 +49,7 @@ public:
                      nodes.positions().end(),
                      nodes.forces().begin(),
                      nodes.positions().begin(),
-                     [](const auto& position, const auto& force)
+                     [overdampedScale](const auto& position, const auto& force)
                      { return position + force * overdampedScale; });
 
       _network.computeForces();
@@ -67,9 +67,9 @@ public:
 
       const double estimatedError = errorEstimate(nodes);
       const double estimatedQ = std::pow(0.5 / estimatedError, 2);
-      const double q = std::clamp(estimatedQ, m_params.qMin, m_params.qMax);
+      q = std::clamp(estimatedQ, m_params.qMin, m_params.qMax);
 
-      error = (m_dt == m_params.dtMin || std::isnan(q));
+      error = (std::isnan(q) || (m_dt == m_params.dtMin && q < 1.0));
       if (q > 1.0 || error)
         break;
 
@@ -80,6 +80,7 @@ public:
     if (error)
       throw std::runtime_error("Adaptive Euler Heun failed to converge");
     m_nextDt = std::clamp(m_dt * q, m_params.dtMin, m_params.dtMax);
+    _network.computeForces();
   }
 
 private:
@@ -94,7 +95,8 @@ private:
     {
       const double E = (frnbar - frn).norm() * errorScale;
       const double tau = m_params.espAbs + m_params.espRel * (rnp1 - rn).norm();
-      sum += pow(E / tau, 2);
+      const double test = pow(E / tau, 2);
+      sum += std::pow(E / tau, 2);
     }
     return std::sqrt(sum);
   }

@@ -28,7 +28,7 @@ public:
 public:
   networkV4::network load() override
   {
-    std::ifstream file(m_filePath, std::ios::binary);
+    std::ifstream file(m_filePath, std::ios::in | std::ios::binary);
     if (!file) {
       throw std::runtime_error("File " + m_filePath.string()
                                + " cannot be opened.");
@@ -51,7 +51,7 @@ public:
 
     auto& tags = network.getTags();
     size_t matrixTag = tags.add("Matrix");
-    size_t sacrificationTag = tags.add("Sacrification");
+    size_t sacrificationTag = tags.add("Sacrificial");
 
     networkV4::bonded::bonds& bonds = network.getBonds();
     for (size_t i = 0; i < B; ++i) {
@@ -71,9 +71,9 @@ public:
 
       networkV4::bonded::bondTypes type;
       if (connected) {
-        type = networkV4::Forces::VirtualBond();
-      } else {
         type = networkV4::Forces::HarmonicBond(constant, naturalLength, true);
+      } else {
+        type = networkV4::Forces::VirtualBond();
       }
 
       networkV4::bonded::breakTypes breakType;
@@ -84,7 +84,8 @@ public:
       }
 
       size_t index = bonds.addBond(index1, index2, type, breakType);
-      network.getBondTags().addTag(index, matrix ? matrixTag : sacrificationTag);
+      network.getBondTags().addTag(index,
+                                   matrix ? matrixTag : sacrificationTag);
     }
     network.getStresses().init(matrixTag);
     network.getStresses().init(sacrificationTag);

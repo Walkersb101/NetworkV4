@@ -13,6 +13,8 @@
 
 #include "IO/Input/Binv2.hpp"
 
+#include "Integration/RunStyles/Run.hpp"
+
 //#include "IO/hdf5Out.hpp"
 #include "Protocols/Protocol.hpp"
 //#include "Protocols/StepStrain.hpp"

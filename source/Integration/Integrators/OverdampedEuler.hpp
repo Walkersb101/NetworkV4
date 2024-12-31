@@ -37,7 +37,7 @@ public:
                    nodes.positions().end(),
                    nodes.velocities().begin(),
                    nodes.positions().begin(),
-                   [](const auto& position, const auto& velocity)
+                   [this](const auto& position, const auto& velocity)
                    { return position + velocity * m_dt; });
   }
 };

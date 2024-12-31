@@ -37,7 +37,7 @@ public:
                    nodes.positions().end(),
                    nodes.forces().begin(),
                    nodes.positions().begin(),
-                   [](const auto& position, const auto& force)
+                   [overdampedScale](const auto& position, const auto& force)
                    { return position + force * overdampedScale; });
 
     _network.computeForces();

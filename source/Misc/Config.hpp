@@ -33,7 +33,7 @@ inline double dtMax = 1e-1;
 inline double qMin = 1e-3;
 inline double qMax = 1.2;
 
-inline double espRel = 1e-3;
+inline double espRel = 0.0;//1e-3;
 inline double espAbs = 1e-3;
 
 

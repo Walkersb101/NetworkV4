@@ -40,14 +40,25 @@ IO::fileIO::fileIO(const std::filesystem::path& _filePath)
         "Directory " + _filePath.parent_path().string() + " does not exist.";
     throw std::runtime_error(err);
   }
-  // check if the file can be opened in write mode
-  std::ofstream ofs(_filePath, std::ios::out);
-  if (!ofs) {
-    std::string err =
-        "File " + _filePath.string() + " cannot be opened in write mode.";
-    throw std::runtime_error(err);
+  // check if the file exists
+  if (std::filesystem::exists(_filePath)) {
+    // check if the file can be opened in read mode
+    std::ifstream ifs(_filePath, std::ios::in);
+    if (!ifs) {
+      std::string err =
+          "File " + _filePath.string() + " cannot be opened in read mode.";
+      throw std::runtime_error(err);
+    }
+    ifs.close();
+  } else {
+    // check if the file can be created
+    std::ofstream ofs(_filePath, std::ios::out);
+    if (!ofs) {
+      std::string err = "File " + _filePath.string() + " cannot be created.";
+      throw std::runtime_error(err);
+    }
+    ofs.close();
   }
-  ofs.close();
 }
 
 IO::fileIO::~fileIO() {}
