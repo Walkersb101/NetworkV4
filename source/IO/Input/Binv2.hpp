@@ -88,6 +88,8 @@ public:
     }
     network.getStresses().init(matrixTag);
     network.getStresses().init(sacrificationTag);
+
+    return network;
   };
 
   template<typename T>

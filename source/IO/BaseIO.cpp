@@ -49,3 +49,5 @@ IO::fileIO::fileIO(const std::filesystem::path& _filePath)
   }
   ofs.close();
 }
+
+IO::fileIO::~fileIO() {}
