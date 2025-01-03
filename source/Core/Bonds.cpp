@@ -127,17 +127,6 @@ void networkV4::bonded::bonds::remap(const NodeMap& _nodeMap)
   }
 }
 
-void networkV4::bonded::bonds::reorder(const auto& _order, auto fn)
-{
-  if (_order.size() != size()) {
-    throw("bonds::reorder: order size does not match bond size");
-  }
-
-  ranges::sort(ranges::view::zip(_order, m_bonds, m_types, m_breakTypes),
-               [fn](const auto& _a, const auto& _b)
-               { return fn(std::get<0>(_a), std::get<0>(_b)); });
-}
-
 void networkV4::bonded::bonds::flipSrcDst()
 {
   for (auto& bond : m_bonds) {

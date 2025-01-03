@@ -13,6 +13,7 @@ add_library(
     NetworkV4_lib OBJECT
     source/Core/Bonds.cpp
     source/Core/Network.cpp
+    source/Core/NetworkOMP.cpp
     source/Core/Nodes.cpp
     source/Core/Simulation.cpp
 

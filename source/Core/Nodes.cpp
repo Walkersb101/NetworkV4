@@ -136,23 +136,6 @@ auto networkV4::nodes::getNodeMap() const -> const NodeMap
   return nodeMap;
 }
 
-void networkV4::nodes::reorder(const auto& _order, auto fn)
-{
-  if (_order.size() != size()) {
-    throw std::runtime_error(
-        "nodes::reorder: order size does not match node size");
-  }
-
-  ranges::sort(ranges::view::zip(_order,
-                                 m_globalIndices,
-                                 m_positions,
-                                 m_velocities,
-                                 m_forces,
-                                 m_masses),
-               [fn](const auto& _a, const auto& _b)
-               { return fn(std::get<0>(_a), std::get<0>(_b)); });
-}
-
 auto networkV4::nodes::nextIndex() -> size_t
 {
   while (hasIndex(m_nextIndex)) {

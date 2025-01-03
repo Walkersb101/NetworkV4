@@ -62,10 +62,24 @@ public:
 
 public:
   void remap(const NodeMap& _nodeMap);
-  void reorder(
-      const auto& _order,
-      auto fn = [](const auto& _a, const auto& _b) { return _a < _b; });
   void flipSrcDst();
+
+public:
+  template<typename Order>
+  void reorder(
+      Order _order,
+      auto fn = [](const auto& _a, const auto& _b) { return _a < _b; })
+  {
+    {
+      if (_order.size() != size()) {
+        throw("bonds::reorder: order size does not match bond size");
+      }
+
+      ranges::sort(ranges::view::zip(_order, m_bonds, m_types, m_breakTypes),
+                   [fn](const auto& _a, const auto& _b)
+                   { return fn(std::get<0>(_a), std::get<0>(_b)); });
+    }
+  }
 
 private:
   void boundsCheck(std::size_t _index) const;

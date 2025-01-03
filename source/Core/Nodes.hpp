@@ -4,6 +4,7 @@
 #include <set>
 #include <unordered_map>
 #include <vector>
+#include <range/v3/all.hpp>
 
 #include "Misc/Config.hpp"
 #include "Misc/Vec2.hpp"
@@ -49,9 +50,25 @@ public:
   auto getNodeMap() const -> const NodeMap;
 
 public:
+  template<typename Order>
   void reorder(
-      const auto& _order,
-      auto fn = [](const auto& _a, const auto& _b) { return _a < _b; });
+      Order _order,
+      auto fn = [](const auto& _a, const auto& _b) { return _a < _b; })
+  {
+    if (_order.size() != size()) {
+      throw std::runtime_error(
+          "nodes::reorder: order size does not match node size");
+    }
+
+    ranges::sort(ranges::view::zip(_order,
+                                   m_globalIndices,
+                                   m_positions,
+                                   m_velocities,
+                                   m_forces,
+                                   m_masses),
+                 [fn](const auto& _a, const auto& _b)
+                 { return fn(std::get<0>(_a), std::get<0>(_b)); });
+  }
 
 public:
   auto nextIndex() -> size_t;

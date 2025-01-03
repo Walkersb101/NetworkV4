@@ -17,7 +17,7 @@ networkV4::Simulation::Simulation(const std::filesystem::path& _path)
 
   auto stopfn = [](double t, double dt, network& net)
   {
-    if (t > 10) {
+    if (t > 1) {
       return true;
     }
     return false;
@@ -29,6 +29,16 @@ networkV4::Simulation::Simulation(const std::filesystem::path& _path)
   //run.run(net, 10000, stopfn);
 
   hdf5Out.save(net, 0, 0.0, "test");
+
+  partition::PartitionGenerator partGen;
+  partGen.assignNodes(net.getNodes().positions(), net.getBox());
+  partGen.sortNodes(net.getNodes());
+  partGen.sortBonds(net.getBonds(), net.getNodes());
+  auto parts = partGen.generatePartitions(net.getNodes(), net.getBonds());
+
+  net.computeForces();
+
+  net.computeForces(parts, partGen.getPasses());
 
   // tools::checkCanOpen(_path);
   // m_config = toml::parse(_path);

@@ -59,6 +59,8 @@ private:
   size_t m_bondsEnd;
 };
 
+using Partitions = std::vector<Partition>;
+
 class PartitionGenerator
 {
 public:
@@ -118,9 +120,9 @@ public:
   {
     const NodeMap nodeMap = _nodes.getNodeMap();
     _bonds.remap(nodeMap);
-    _bonds.flip();
+    _bonds.flipSrcDst();
 
-    for (auto [i, bond] : ranges::view::enumerate(_bonds.getLocal())) {
+    for (auto [i, bond] : ranges::view::enumerate(_bonds.getBonds())) {
       const size_t srcPar = m_partition[bond.src];
       const size_t dstPar = m_partition[bond.dst];
 
@@ -137,7 +139,7 @@ public:
           "in the same partition or in seperate passes");
     }
 
-    _bonds.reorder(_bonds.getLocal(),
+    _bonds.reorder(_bonds.getBonds(),
                    [](const auto& _a, const auto& _b)
                    {
                      if (_a.src < _b.src)  // Sort by source node
@@ -146,6 +148,42 @@ public:
                        return false;
                      return _a.dst < _b.dst;  // Sort by destination node
                    });
+  }
+
+  auto getPasses() const -> size_t { return m_passes; }
+
+  auto generatePartitions(const nodes& _nodes, const bonded::bonds& _bonds)
+      -> Partitions
+  {
+    Partitions partitions;
+    partitions.reserve(m_partitionsCount);
+
+    const auto partitionSize = _nodes.size() / m_partitionsCount;
+    for (size_t i = 0; i < m_partitionsCount; ++i) {
+        auto nodefirst = std::find(m_partition.begin(), m_partition.end(), i);
+        auto nodelast = std::find(m_partition.rbegin(), m_partition.rend(), i).base();
+
+        const size_t nodesStart = std::distance(m_partition.begin(), nodefirst);
+        const size_t nodesEnd = std::distance(m_partition.begin(), nodelast);
+
+        auto bondfirst = std::find_if(_bonds.getBonds().begin(), _bonds.getBonds().end(),
+                                      [&](const auto& _bond)
+                                      {
+                                        return m_partition[_bond.src] == i;
+                                      });
+        auto bondlast = std::find_if(_bonds.getBonds().rbegin(), _bonds.getBonds().rend(),
+                                        [&](const auto& _bond)
+                                        {
+                                        return m_partition[_bond.src] == i;
+                                        }).base();
+        
+        const size_t bondsStart = std::distance(_bonds.getBonds().begin(), bondfirst);
+        const size_t bondsEnd = std::distance(_bonds.getBonds().begin(), bondlast);
+
+        partitions.emplace_back(i, nodesStart, nodesEnd, bondsStart, bondsEnd);
+    }
+
+    return partitions;
   }
 
 private:
