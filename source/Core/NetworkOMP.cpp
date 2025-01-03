@@ -54,7 +54,7 @@ void networkV4::network::computePass(auto _parts, bool _evalBreak)
           m_breakQueue.emplace_back(
               bond.index,
               type,
-              brk);  // TODO: needs to be reduced over openmp
+              brk);
 
           type = Forces::VirtualBond {};
           brk = BreakTypes::None {};
@@ -71,7 +71,7 @@ void networkV4::network::computePass(auto _parts, bool _evalBreak)
         const auto& tags = m_bondTags.getTagIds(bond.index);
         const auto stress = Utils::outer(force.value(), dist) / m_box.area();
         m_stresses.distribute(stress,
-                              tags);  // TODO: needs to be reduced over openmp
+                              tags); 
       }
 
       const auto energy = bonded::visitEnergy(type, dist);
@@ -79,7 +79,6 @@ void networkV4::network::computePass(auto _parts, bool _evalBreak)
         m_energy += energy.value();
       }
     }
-    std::cout << m_stresses.total().xx << std::endl;
   }
 }
 #endif
