@@ -56,9 +56,9 @@ public:
   auto getBreaks() -> std::vector<breakTypes>&;
 
 public:
-  auto gatherBonds() const -> std::vector<BondInfo>;
-  auto gatherTypes() const -> std::vector<bondTypes>;
-  auto gatherBreaks() const -> std::vector<breakTypes>;
+  auto gatherBonds() const -> std::vector<BondInfo> const;
+  auto gatherTypes() const -> std::vector<bondTypes> const;
+  auto gatherBreaks() const -> std::vector<breakTypes> const;
 
 public:
   void remap(const NodeMap& _nodeMap);

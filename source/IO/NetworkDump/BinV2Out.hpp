@@ -43,12 +43,15 @@ public:
 
     std::stringstream ss;
 
-    const auto& nodes = _net.getNodes();
-    const auto& bondMap = _net.getBonds().getMap();
     const auto& box = _net.getBox();
 
+    const auto& nodes = _net.getNodes();
+
+    const auto& bonds = _net.getBonds();
+    const auto& bondTags = _net.getBondTags();
+
     append(ss, nodes.size());  // Append the size of the nodes
-    append(ss, bondMap.size());  // Append the size of the bonds
+    append(ss, bonds.size());  // Append the size of the bonds
 
     append(ss, box.getDomain());
     append(ss, box.shearStrain());
@@ -57,13 +60,17 @@ public:
       append(ss, pos);
     }
 
-    auto matrixTag = _net.getTags().get("matrix");
+    const auto matrixTag = _net.getTags().get("matrix");
 
-    for (const auto& [i, info, type, breakType] :
-         ranges::views::zip(ranges::views::iota(0ul, bondMap.size()),
-                            bondMap.getGlobalInfo(),
-                            bondMap.getTypes(),
-                            bondMap.getBreaks()))
+    const auto globalBondInfo = bonds.gatherBonds();
+    const auto globalBondType = bonds.gatherTypes();
+    const auto globalBondBreak = bonds.gatherBreaks();
+
+    for (const auto [i, info, type, breakType] :
+         ranges::views::zip(ranges::views::iota(0ul, bonds.size()),
+                            globalBondInfo,
+                            globalBondType,
+                            globalBondBreak))
     {
       if (!(std::holds_alternative<networkV4::Forces::VirtualBond>(type)
             || std::holds_alternative<networkV4::Forces::HarmonicBond>(
@@ -83,11 +90,12 @@ public:
       bool connected =
           std::holds_alternative<networkV4::Forces::HarmonicBond>(type);
       append(ss, connected);
-      append(ss, bondMap.hasTag(i, matrixTag));
+      append(ss, bondTags.hasTag(i, matrixTag));
       if (connected) {
         append(ss, std::get<networkV4::Forces::HarmonicBond>(type).r0());
         append(ss, std::get<networkV4::Forces::HarmonicBond>(type).k());
-        std::visit([&ss, this](const auto& _breakType) { append(ss, _breakType); },
+        std::visit([&ss, this](const auto& _breakType)
+                   { append(ss, _breakType); },
                    breakType);
       } else {
         append(ss, 0.0);

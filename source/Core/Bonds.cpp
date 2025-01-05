@@ -87,7 +87,7 @@ auto networkV4::bonded::bonds::getBreaks() -> std::vector<breakTypes>&
   return m_breakTypes;
 }
 
-auto networkV4::bonded::bonds::gatherBonds() const -> std::vector<BondInfo>
+auto networkV4::bonded::bonds::gatherBonds() const -> std::vector<BondInfo> const
 {
   std::vector<BondInfo> bonds;
   bonds.resize(size(), BondInfo(0, 0, 0));
@@ -97,7 +97,7 @@ auto networkV4::bonded::bonds::gatherBonds() const -> std::vector<BondInfo>
   return bonds;
 }
 
-auto networkV4::bonded::bonds::gatherTypes() const -> std::vector<bondTypes>
+auto networkV4::bonded::bonds::gatherTypes() const -> std::vector<bondTypes> const
 {
   std::vector<bondTypes> types;
   types.resize(size());
@@ -107,7 +107,7 @@ auto networkV4::bonded::bonds::gatherTypes() const -> std::vector<bondTypes>
   return types;
 }
 
-auto networkV4::bonded::bonds::gatherBreaks() const -> std::vector<breakTypes>
+auto networkV4::bonded::bonds::gatherBreaks() const -> std::vector<breakTypes> const
 {
   std::vector<breakTypes> breaks;
   breaks.resize(size());
