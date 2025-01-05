@@ -8,123 +8,10 @@
 
 #include <highfive/highfive.hpp>
 
-#include "Core/Bonds.hpp"
-#include "Core/Network.hpp"
-#include "Core/Nodes.hpp"
-#include "IO/NetworkOut.hpp"
-#include "Misc/Config.hpp"
-#include "Misc/Tools.hpp"
-
-networkOutHDF5::networkOutHDF5(const std::filesystem::path& _path,
-                               const networkV4::network& _net)
-    : networkOut(_path)
-{
-  HighFive::DataSetCreateProps props;
-
-  const auto filePath = _path / config::hdf5::fileName;
-  // create or overwrite file
-  HighFive::File file(filePath,
-                      HighFive::File::Overwrite);  // create or overwrite file
-
-  writeHeader(file);
-  initParticles(file, _net);
-  initConnectivity(file, _net);
-  initObservations(file, _net);
-}
-
-networkOutHDF5::~networkOutHDF5() {}
-
-void networkOutHDF5::save(const networkV4::network& _net,
-                          const std::size_t _step,
-                          const double _time,
-                          const std::string& _type) const
-{
-  const auto filePath = m_path / config::hdf5::fileName;
-  HighFive::File file(filePath, HighFive::File::ReadWrite);
-
-  auto allParticles = file.getGroup("particles").getGroup("all");
-
-  // write box
-  auto boxEdges = allParticles.getGroup("box").getGroup("edges");
-  saveBox(boxEdges, _net, _step, _time);
-
-  // write positions
-  auto positions = allParticles.getGroup("positions");
-  savePositions(positions, _net, _step, _time);
-
-  // write observations
-  auto sacrificialObs = file.getGroup("observables/sacrificialConnected");
-  saveConnected(
-      sacrificialObs, _net, _step, _time, networkV4::bondType::sacrificial);
-
-  auto matrixObs = file.getGroup("observables/matrixConnected");
-  saveConnected(matrixObs, _net, _step, _time, networkV4::bondType::matrix);
-
-  auto typeObs = file.getGroup("observables/logType");
-  auto step = typeObs.getDataSet("step");
-  saveScalar(step, _step);
-
-  auto time = typeObs.getDataSet("time");
-  saveScalar(time, _time);
-
-  auto value = typeObs.getDataSet("value");
-  saveScalar(value, _type);
-
-  file.flush();
-}
-
-void networkOutHDF5::writeHeader(HighFive::File& _file) const
-{
-  auto h5md = createOrGetGroup(_file, "h5md");
-  // create version attribute
-  h5md.createAttribute("version", std::array<int, 2> {1, 1});
-
-  // create author group
-  // TODO: add author from config
-  auto author = h5md.createGroup("author");
-  author.createAttribute<std::string>("name", "Network V4");
-
-  // create creator group
-  auto creator = h5md.createGroup("creator");
-  creator.createAttribute<std::string>("name", "HighFive");
-  creator.createAttribute<std::string>("version", "v3.0.0-beta1");
-}
-
-void networkOutHDF5::initParticles(HighFive::File& _file,
+void networkOutHDF5::initParticles(HighFive::File _file,
                                    const networkV4::network& _net)
 {
-  auto particles = createOrGetGroup(_file, "particles");
-  auto allParticles = createOrGetGroup(particles, "all");
-
-  initBox(allParticles);
-
-  // create positions group
-  auto positions = createOrGetGroup(allParticles, "positions");
-  size_t posChunkSize =
-      findChunkSize(_net.getNodes().size(), config::hdf5::maxChunk / 2);
-
-  createDataSet<int>(positions,
-                     "step",
-                     std::vector<std::size_t> {0},
-                     std::vector<std::size_t> {HighFive::DataSpace::UNLIMITED},
-                     std::vector<hsize_t> {1},
-                     false);
-  createDataSet<double>(
-      positions,
-      "time",
-      std::vector<std::size_t> {0},
-      std::vector<std::size_t> {HighFive::DataSpace::UNLIMITED},
-      std::vector<hsize_t> {1},
-      false);
-
-  createDataSet<double>(
-      positions,
-      "value",
-      std::vector<std::size_t> {0, _net.getNodes().size(), 2},
-      std::vector<std::size_t> {
-          HighFive::DataSpace::UNLIMITED, _net.getNodes().size(), 2},
-      std::vector<hsize_t> {1, posChunkSize, 2},
-      true);
+  
 }
 
 void networkOutHDF5::initBox(HighFive::Group& _group) const
@@ -132,31 +19,11 @@ void networkOutHDF5::initBox(HighFive::Group& _group) const
   auto box = createOrGetGroup(_group, "box");
   box.createAttribute("dimension", 2);
   box.createAttribute("boundary", std::array<bool, 2> {true, true});
+
   auto edges = createOrGetGroup(box, "edges");
-
-  // Scalar Properties
-  createDataSet<int>(edges,
-                     "step",
-                     std::vector<std::size_t> {0},
-                     std::vector<std::size_t> {HighFive::DataSpace::UNLIMITED},
-                     std::vector<hsize_t> {1},
-                     false);
-  createDataSet<double>(
-      edges,
-      "time",
-      std::vector<std::size_t> {0},
-      std::vector<std::size_t> {HighFive::DataSpace::UNLIMITED},
-      std::vector<hsize_t> {1},
-      false);
-
-  // Matrix Properties
-  createDataSet<double>(
-      edges,
-      "value",
-      std::vector<std::size_t> {0, 2, 2},
-      std::vector<std::size_t> {HighFive::DataSpace::UNLIMITED, 2, 2},
-      std::vector<hsize_t> {1, 2, 2},
-      true);
+  initScalarDataset<int>(edges, "step");
+  initScalarDataset<double>(edges, "time");
+  initMatrixDataset<double>(edges, "value");
 }
 
 void networkOutHDF5::initConnectivity(HighFive::File& _file,
@@ -357,7 +224,7 @@ void networkOutHDF5::saveBox(HighFive::Group& _group,
       .write(data);
 }
 
-void networkOutHDF5::savePositions(HighFive::Group& _group,
+void networkOutHDF5::savePositions(HighFive::Group _group,
                                    const networkV4::network& _net,
                                    const std::size_t _step,
                                    const double _time) const
@@ -372,7 +239,8 @@ void networkOutHDF5::savePositions(HighFive::Group& _group,
   std::vector<std::vector<double>> data;
   data.reserve(_net.getNodes().size());
   for (const auto& pos : _net.getNodes().positions()) {
-    const vec2d shearOffset = vec2d((_net.getShearStrain() * pos.y) - offset, 0.0);
+    const vec2d shearOffset =
+        vec2d((_net.getShearStrain() * pos.y) - offset, 0.0);
     const vec2d TriPos = _net.wrapedPosition(pos - shearOffset) + shearOffset;
     data.push_back({TriPos.x, TriPos.y});
   }
@@ -404,6 +272,7 @@ void networkOutHDF5::saveConnected(HighFive::Group& _group,
                                      _net.getBonds().end(),
                                      [&_type](const networkV4::bond& b)
                                      { return b.type() == _type; });
+
   auto isvalid = [&_type](const auto& _b) { return _b.type() == _type; };
   auto connectedList = _net.getBonds() | std::views::filter(isvalid);
 
