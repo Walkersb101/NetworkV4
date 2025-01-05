@@ -78,9 +78,9 @@ public:
 
       networkV4::bonded::breakTypes breakType;
       if (connected) {
-        breakType = networkV4::BreakTypes::None();
+        breakType = networkV4::BreakTypes::StrainBreak(lambda, naturalLength);
       } else {
-        breakType = networkV4::BreakTypes::StrainBreak(lambda);
+        breakType = networkV4::BreakTypes::None();
       }
 
       size_t index = bonds.addBond(index1, index2, type, breakType);
