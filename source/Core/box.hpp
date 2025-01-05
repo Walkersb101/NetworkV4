@@ -74,6 +74,10 @@ public:
   {
     return Utils::vec2d(m_Lx, m_Ly);
   }
+  auto getBox() const -> std::vector<std::vector<double>> const
+  {
+    return {{m_Lx, 0.0}, {m_xy, m_Ly}};
+  }
 
 public:
   inline auto lambda2x(const Utils::vec2d& _pos) const -> Utils::vec2d

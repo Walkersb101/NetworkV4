@@ -11,6 +11,9 @@
 #include "IO/NetworkDump/NetworkOut.hpp"
 #include "IO/TimeSeries/DataOut.hpp"
 
+#include "IO/NetworkDump/hdf5Out.hpp"
+#include "IO/NetworkDump/BinV2Out.hpp"
+
 #include "IO/Input/Binv2.hpp"
 
 #include "Integration/RunStyles/Run.hpp"

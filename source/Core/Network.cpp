@@ -153,7 +153,8 @@ void networkV4::network::computeForces(bool _evalBreak)
   m_energy = 0.0;
   m_stresses.zero();
   m_nodes.zeroForce();
-  for (const auto& [bond, type, brk] : ranges::views::zip(
+
+  for (auto&& [bond, type, brk] : ranges::views::zip(
            m_bonds.getBonds(), m_bonds.getTypes(), m_bonds.getBreaks()))
   {
     const auto& pos1 = m_nodes.positions()[bond.src];
@@ -166,12 +167,12 @@ void networkV4::network::computeForces(bool _evalBreak)
 
     const auto force = bonded::visitForce(type, dist);
     if (force) {
-      applyforce(bond, force.value());
+      applyforce(bond, dist, force.value());
     }
 
     const auto energy = bonded::visitEnergy(type, dist);
     if (energy) {
-      m_energy += energy.value();  // TODO: needs to be reduced over openmp
+      m_energy += energy.value();
     }
   }
 }
@@ -216,7 +217,7 @@ void networkV4::network::evalBreak(const Utils::vec2d& _dist,
   if (broken) {
     m_breakQueue.emplace_back(_binfo.index,
                               _type,
-                              _break);  // TODO: needs to be reduced over openmp
+                              _break);
 
     _type = Forces::VirtualBond {};
     _break = BreakTypes::None {};
@@ -226,12 +227,13 @@ void networkV4::network::evalBreak(const Utils::vec2d& _dist,
 }
 
 void networkV4::network::applyforce(const bonded::BondInfo& _binfo,
+                                    const Utils::vec2d& _dist,
                                     const Utils::vec2d& _force)
 {
   m_nodes.forces()[_binfo.src] -= _force;
   m_nodes.forces()[_binfo.dst] += _force;
 
   const auto& tags = m_bondTags.getTagIds(_binfo.index);
-  const auto stress = Utils::outer(_force, _force) / m_box.area();
-  m_stresses.distribute(stress, tags);  // TODO: needs to be reduced over openmp
+  const auto stress = Utils::outer(_force, _dist) / m_box.area();
+  m_stresses.distribute(stress, tags);
 }

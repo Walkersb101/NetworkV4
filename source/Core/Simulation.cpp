@@ -8,6 +8,9 @@ networkV4::Simulation::Simulation(const std::filesystem::path& _path)
       "/home/sam/Documents/Code/NetworkV4/test/DoubleTest.bin");
   network net = binv2.load();
 
+  IO::networkDumps::networkOutHDF5 hdf5Out(
+      "/home/sam/Documents/Code/NetworkV4/test/DoubleTest.h5", net);
+
   net.computeForces();
   net.setBox(box({25, 23 * 23 / 25}, 0.0));
   net.computeForces();
@@ -20,9 +23,12 @@ networkV4::Simulation::Simulation(const std::filesystem::path& _path)
     return false;
   };
 
-  integration::Run<integration::AdaptiveOverdampedEulerHeun> run {integration::AdaptiveOverdampedEulerHeun()};
+  integration::Run<integration::AdaptiveOverdampedEulerHeun> run {
+      integration::AdaptiveOverdampedEulerHeun()};
 
-  run.run(net, 10000, stopfn);
+  //run.run(net, 10000, stopfn);
+
+  hdf5Out.save(net, 0, 0.0, "test");
 
   // tools::checkCanOpen(_path);
   // m_config = toml::parse(_path);

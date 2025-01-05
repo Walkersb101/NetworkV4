@@ -8,24 +8,6 @@
 
 #include <highfive/highfive.hpp>
 
-void networkOutHDF5::initParticles(HighFive::File _file,
-                                   const networkV4::network& _net)
-{
-  
-}
-
-void networkOutHDF5::initBox(HighFive::Group& _group) const
-{
-  auto box = createOrGetGroup(_group, "box");
-  box.createAttribute("dimension", 2);
-  box.createAttribute("boundary", std::array<bool, 2> {true, true});
-
-  auto edges = createOrGetGroup(box, "edges");
-  initScalarDataset<int>(edges, "step");
-  initScalarDataset<double>(edges, "time");
-  initMatrixDataset<double>(edges, "value");
-}
-
 void networkOutHDF5::initConnectivity(HighFive::File& _file,
                                       const networkV4::network& _net) const
 {
@@ -53,12 +35,7 @@ void networkOutHDF5::initBondType(HighFive::File& _file,
   HighFive::Group connectivity =
       createOrGetGroup(_file, "particles/all/connectivity");
 
-  auto value = createDataSet<int>(connectivity,
-                                  _name,
-                                  std::vector<std::size_t> {count, 2},
-                                  std::vector<std::size_t> {count, 2},
-                                  std::vector<hsize_t> {count, 2},
-                                  true);
+  auto value = initMatrixDataset<int>(connectivity, _name, {count, 2}, true);
   value.createAttribute(
       "particles_group",
       HighFive::Reference(createOrGetGroup(_file, "particles"),
@@ -203,65 +180,6 @@ void networkOutHDF5::initObservations(HighFive::File& _file,
       false);
 }
 
-void networkOutHDF5::saveBox(HighFive::Group& _group,
-                             const networkV4::network& _net,
-                             const std::size_t _step,
-                             const double _time) const
-{
-  auto step = _group.getDataSet("step");
-  saveScalar(step, _step);
-
-  auto time = _group.getDataSet("time");
-  saveScalar(time, _time);
-
-  auto value = _group.getDataSet("value");
-  const std::vector<std::vector<double>> data = {
-      {_net.getDomain().x, 0},
-      {_net.getDomain().y * _net.getShearStrain(), _net.getDomain().y}};
-  value.resize({time.getSpace().getDimensions()[0], 2, 2});
-  value.select({time.getSpace().getDimensions()[0] - 1, 0, 0}, {1, 2, 2})
-      .squeezeMemSpace({0})
-      .write(data);
-}
-
-void networkOutHDF5::savePositions(HighFive::Group _group,
-                                   const networkV4::network& _net,
-                                   const std::size_t _step,
-                                   const double _time) const
-{
-  auto step = _group.getDataSet("step");
-  saveScalar(step, _step);
-
-  auto time = _group.getDataSet("time");
-  saveScalar(time, _time);
-
-  const double offset = _net.getShearStrain() * _net.getDomain().y * 0.5;
-  std::vector<std::vector<double>> data;
-  data.reserve(_net.getNodes().size());
-  for (const auto& pos : _net.getNodes().positions()) {
-    const vec2d shearOffset =
-        vec2d((_net.getShearStrain() * pos.y) - offset, 0.0);
-    const vec2d TriPos = _net.wrapedPosition(pos - shearOffset) + shearOffset;
-    data.push_back({TriPos.x, TriPos.y});
-  }
-
-  auto value = _group.getDataSet("value");
-  // const double* data =
-  //     reinterpret_cast<const double*>(_net.getNodes().positions().data());
-
-  value.resize({time.getSpace().getDimensions()[0], _net.getNodes().size(), 2});
-  // value
-  //     .select({time.getSpace().getDimensions()[0] - 1, 0, 0},
-  //             {1, _net.getNodes().size(), 2})
-  //     .squeezeMemSpace({0})
-  //     .write_raw(data);
-  value
-      .select({time.getSpace().getDimensions()[0] - 1, 0, 0},
-              {1, _net.getNodes().size(), 2})
-      .squeezeMemSpace({0})
-      .write(data);
-}
-
 void networkOutHDF5::saveConnected(HighFive::Group& _group,
                                    const networkV4::network& _net,
                                    const std::size_t _step,
@@ -294,17 +212,4 @@ void networkOutHDF5::saveConnected(HighFive::Group& _group,
   value.select({time.getSpace().getDimensions()[0] - 1, 0}, {1, count})
       .squeezeMemSpace({0})
       .write(data);
-}
-
-size_t networkOutHDF5::findChunkSize(const size_t _size,
-                                     const size_t _maxSize) const
-{
-  size_t maxi = 1;
-  if (_size < _maxSize)
-    return _size;
-  for (size_t i = 2; i <= _maxSize; i++) {
-    if (_size % i == 0)
-      maxi = std::max(maxi, i);
-  }
-  return maxi;
 }

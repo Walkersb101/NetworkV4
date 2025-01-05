@@ -6,6 +6,7 @@
 
 #include "Core/Bonds.hpp"
 #include "Core/Nodes.hpp"
+#include "Core/Partition.hpp"
 #include "Core/Stresses.hpp"
 #include "Core/box.hpp"
 #include "Misc/Enums.hpp"
@@ -67,6 +68,7 @@ public:
 
 public:
   void computeForces(bool _evalBreak = false);
+
   auto computeEnergy() -> double;
   void computeBreaks();
 
@@ -76,7 +78,19 @@ private:
                  bonded::bondTypes& _type,
                  bonded::breakTypes& _break);
 
-  void applyforce(const bonded::BondInfo& _binfo, const Utils::vec2d& _force);
+  void applyforce(const bonded::BondInfo& _binfo,
+                  const Utils::vec2d& _dist,
+                  const Utils::vec2d& _force);
+
+#if defined(_OPENMP)
+public:
+  void computeForces(const partition::Partitions& _parts,
+                     size_t _passes,
+                     bool _evalBreak = false);
+
+private:
+  void computePass(auto _parts, bool _evalBreak = false);
+#endif
 
 private:
   box m_box;
@@ -94,5 +108,12 @@ private:
   Utils::Tags::tagStorage m_bondTags;
   Utils::Tags::tagStorage m_nodeTags;
 };
+
+inline void merge(bondQueue& _b1, const bondQueue& _b2)
+{
+  _b1.insert(_b1.end(), _b2.begin(), _b2.end());
+}
+
+#pragma omp declare reduction(+ : bondQueue : merge(omp_out, omp_in))
 
 }  // namespace networkV4
