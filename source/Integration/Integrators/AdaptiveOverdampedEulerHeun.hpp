@@ -24,10 +24,12 @@ public:
   AdaptiveOverdampedEulerHeun() = default;
   AdaptiveOverdampedEulerHeun(double _gamma,
                               const AdaptiveParams& _params,
-                              double _dt = config::integrators::default_dt)
+                              double _dt = config::integrators::default_dt,
+                              bool _decent = false)
       : Overdamped(_gamma)
       , Adaptive(_params)
       , IntegratorBase(_dt)
+      , decent(_decent)
   {
   }
   ~AdaptiveOverdampedEulerHeun() override = default;
@@ -36,9 +38,14 @@ public:
   {
     m_dt = m_nextDt;
     double q = m_params.qMin;
-    bool error = false;
     size_t iter = 0;
     networkV4::nodes& nodes = _network.getNodes();
+
+    bool error = false;
+    bool qGood = false;
+    bool energyGood = false;
+
+    double startEnergy = decent ? _network.getEnergy() : 0.0;
 
     m_rn = nodes.positions();
     m_frn = nodes.forces();
@@ -70,7 +77,10 @@ public:
       q = std::clamp(estimatedQ, m_params.qMin, m_params.qMax);
 
       error = (std::isnan(q) || (m_dt == m_params.dtMin && q < 1.0));
-      if (q > 1.0 || error)
+      q = (q > 1.0);
+      energyGood = !decent || (_network.getEnergy() < startEnergy);
+
+      if ((q && energyGood) || error)
         break;
 
       nodes.positions() = m_rn;
@@ -105,6 +115,8 @@ private:
   std::vector<Utils::vec2d> m_rn;
   std::vector<Utils::vec2d> m_frn;
   std::vector<Utils::vec2d> m_frnbar;
+
+  bool decent = false;
 };
 
 }  // namespace integration

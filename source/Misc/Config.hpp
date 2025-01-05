@@ -42,7 +42,8 @@ inline double espAbs = 1e-3;
 namespace miminizer
 {
 inline std::size_t maxIter = 1e6;
-inline double tol = 1e-3;
+inline double Ftol = 1e-6;
+inline double Etol = 1e-6;
 }  // namespace miminizer
 
 namespace fire2

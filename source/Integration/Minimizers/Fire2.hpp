@@ -1,0 +1,200 @@
+#pragma once
+
+#include <numeric>
+
+#include <range/v3/view/zip.hpp>
+
+#include "MinimiserBase.hpp"
+
+namespace networkV4
+{
+namespace minimisation
+{
+
+static constexpr double EPS_ENERGY = 1e-8;
+
+struct Fire2Params
+{
+  Fire2Params() = default;
+  Fire2Params(double _alpha0,
+              size_t _Ndelay,
+              double _finc,
+              double _fdec,
+              double _falpha,
+              size_t _Nnegmax,
+              double _dmax,
+              double _dtMin,
+              double _dtMax)
+      : alpha0(_alpha0)
+      , Ndelay(_Ndelay)
+      , finc(_finc)
+      , fdec(_fdec)
+      , falpha(_falpha)
+      , Nnegmax(_Nnegmax)
+      , dmax(_dmax)
+      , dtMin(_dtMin)
+      , dtMax(_dtMax)
+  {
+  }
+  double alpha0 = config::integrators::fire2::alpha0;
+  size_t Ndelay = config::integrators::fire2::Ndelay;
+  double finc = config::integrators::fire2::finc;
+  double fdec = config::integrators::fire2::fdec;
+  double falpha = config::integrators::fire2::falpha;
+  size_t Nnegmax = config::integrators::fire2::Nnegmax;
+  double dmax = config::integrators::fire2::dmax;
+
+  double dtMin = config::integrators::adaptive::dtMin;
+  double dtMax = config::integrators::adaptive::dtMax;
+};
+
+class fire2 : public minimiserBase
+{
+  fire2() = default;
+  fire2(
+      double Ftol, double Etol, size_t maxIter, Fire2Params _params, double _dt)
+      : minimiserBase(Ftol, Etol, maxIter)
+      , m_params(_params)
+      , m_dt(_dt)
+  {
+  }
+
+public:
+  void minimise(network& _network) override
+  {
+    size_t Npos = 0;
+    size_t Nneg = 0;
+    double alpha = m_params.alpha0;
+
+    double scale1, scale2, vdotf, vdotv, fdotf;
+
+    nodes& nodes = _network.getNodes();
+    auto& vels = nodes.velocities();
+    auto& forces = nodes.forces();
+
+    _network.computeForces();
+    double Eprev = _network.getEnergy();
+    double Ecurr = _network.getEnergy();
+
+    fdotf = xdoty(forces, forces);
+    if (fdotf < m_Ftol * m_Ftol) {
+      return;
+    }
+
+    nodes.zeroVelocity();
+    //updateVelocities(_network, m_dt);
+
+    size_t iter = 0;
+    while (iter++ < m_maxIter) {
+      vdotf = xdoty(vels, forces);
+      if (vdotf > 0.0) {
+        Npos++;
+        Nneg = 0;
+
+        vdotv = xdoty(vels, vels);
+        fdotf = xdoty(forces, forces);
+
+        scale1 = 1.0 - alpha;
+        scale2 = fdotf <= 1e-20 ? 0.0 : (alpha * std::sqrt(vdotv / fdotf));
+
+        if (Npos > m_params.Ndelay) {
+          m_dt = std::min(m_dt * m_params.finc, m_params.dtMax);
+          alpha *= m_params.falpha;
+        }
+      } else {
+        Nneg++;
+        Npos = 0;
+
+        if (Nneg > m_params.Nnegmax) {
+          break;
+        }
+        if (iter > m_params.Ndelay) {
+          m_dt = std::max(m_dt * m_params.fdec, m_params.dtMin);
+          alpha = m_params.alpha0;
+        }
+        move(_network, -0.5 * m_dt);
+        nodes.zeroVelocity();
+      }
+      
+      updateVelocities(_network, m_dt);
+
+      //double maxAbsVel = maxAbsComponent(vels);
+      //m_dt =
+      //    std::max(std::min(m_dt, m_params.dmax / maxAbsVel), m_params.dtMin);
+
+      if (vdotf > 0.0) {
+        for (auto [vel, force] : ranges::views::zip(vels, forces)) {
+          vel = (vel * scale1) + (force * scale2);
+        }
+      }
+      move(_network, m_dt);
+
+      Eprev = Ecurr;
+      _network.computeForces();
+      Ecurr = _network.getEnergy();
+
+      if (fabs(Ecurr - Eprev)
+          < m_Etol * 0.5 * (fabs(Ecurr) + fabs(Eprev) + EPS_ENERGY))
+        return;
+
+      fdotf = xdoty(forces, forces);
+      if (fdotf < m_Ftol * m_Ftol) {
+        return;
+      }
+    }
+  }
+
+private:
+  // auto norm(const std::vector<Utils::vec2d>& _vec) -> double
+  //{
+  //   return std::sqrt(xdoty(_vec, _vec));
+  // }
+
+  auto xdoty(const std::vector<Utils::vec2d>& _x,
+             const std::vector<Utils::vec2d>& _y) -> double
+  {
+    return std::inner_product(_x.begin(),
+                              _x.end(),
+                              _y.begin(),
+                              0.0,
+                              std::plus<double>(),
+                              [](Utils::vec2d _a, Utils::vec2d _b)
+                              { return _a.dot(_b); });
+  }
+
+  auto maxAbsComponent(const std::vector<Utils::vec2d>& _vec) -> double
+  {
+    return std::accumulate(_vec.begin(),
+                           _vec.end(),
+                           0.0,
+                           [](double _max, const Utils::vec2d& _v)
+                           { return std::max(_max, _v.abs().max()); });
+  }
+
+  void updateVelocities(network& _network, double _alpha)
+  {
+    for (auto [vel, force, mass] :
+         ranges::views::zip(_network.getNodes().velocities(),
+                            _network.getNodes().forces(),
+                            _network.getNodes().masses()))
+    {
+      vel += force * _alpha / mass;
+    }
+  }
+
+  void move(network& _network, double _alpha)
+  {
+    for (auto [pos, vel] : ranges::views::zip(_network.getNodes().positions(),
+                                              _network.getNodes().velocities()))
+    {
+      pos += vel * _alpha;
+    }
+  }
+
+private:
+  Fire2Params m_params = Fire2Params();
+  double m_dt = config::integrators::default_dt;
+};
+
+}  // namespace minimisation
+}  // namespace networkV4
