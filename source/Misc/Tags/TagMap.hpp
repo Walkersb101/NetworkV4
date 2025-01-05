@@ -14,6 +14,8 @@ public:
   tagMap() {}
 
 public:
+  auto size() const -> size_t const { return m_tagId2Name.size(); }
+
   void add(std::size_t _id, const std::string& _name)
   {
     if (m_tagId2Name.find(_id) != m_tagId2Name.end()) {
@@ -56,6 +58,20 @@ public:
   auto has(std::size_t _id) const -> bool const
   {
     return m_tagId2Name.find(_id) != m_tagId2Name.end();
+  }
+
+  auto getVecs() const
+      -> const std::pair<std::vector<std::size_t>, std::vector<std::string>>
+  {
+    std::vector<std::size_t> ids;
+    std::vector<std::string> names;
+
+    for (const auto& [id, name] : m_tagId2Name) {
+      ids.push_back(id);
+      names.push_back(name);
+    }
+
+    return {ids, names};
   }
 
 private:

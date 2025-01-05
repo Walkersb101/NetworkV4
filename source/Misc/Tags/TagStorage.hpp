@@ -53,12 +53,13 @@ public:
     }
   }
 
-  auto getTagIds(std::size_t _index) -> std::vector<std::size_t>
+  auto getTagIds(std::size_t _index) const -> std::vector<std::size_t>
   {
     if (keyExists(_index)) {
-      initIndex(_index);
-    } 
-    return m_tags.at(_index);
+      return m_tags.at(_index);
+    } else {
+        return {};
+    }
   }
 
   auto getTagStrings(std::size_t _index,

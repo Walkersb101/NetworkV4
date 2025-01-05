@@ -32,7 +32,7 @@ public:
     writeHeader(file, _author);
     initParticles(file, _net);
     initConnectivity(file, _net);
-    // initObservations(file, _net);
+    initObservations(file, _net);
   }
   ~networkOutHDF5() {};
 
@@ -63,21 +63,30 @@ public:
     saveScalar(positions.getDataSet("time"), _time);
     saveMatrix(positions.getDataSet("value"), poses);
 
-    /* TODO: Simulation Dependent
-    // write observations
-    auto sacrificialObs = file.getGroup("observables/sacrificialConnected");
-    saveConnected(
-        sacrificialObs, _net, _step, _time, networkV4::bondType::sacrificial);
+    // TODO: Simulation Dependent
+    const auto types = _net.getBonds().gatherTypes();
 
-    auto matrixObs = file.getGroup("observables/matrixConnected");
-    saveConnected(matrixObs, _net, _step, _time, networkV4::bondType::matrix);
-    */
+    // write observations
+    auto connectedGroup = file.getGroup("observables/connected");
+    std::vector<bool> connected;
+    connected.reserve(_net.getBonds().size());
+
+    for (const auto& typ : types) {
+      if (std::holds_alternative<networkV4::Forces::HarmonicBond>(typ)) {
+        connected.push_back(true);
+      } else {
+        connected.push_back(false);
+      }
+    }
+    saveScalar(connectedGroup.getDataSet("step"), _step);
+    saveScalar(connectedGroup.getDataSet("time"), _time);
+    saveVector(connectedGroup.getDataSet("value"), connected);
 
     // write type
-    // auto typeObs = file.getGroup("observables/logType");
-    // saveScalar<int>(typeObs.getDataSet("step"), _step);
-    // saveScalar<int>(typeObs.getDataSet("time"), _time);
-    // saveScalar<std::string>(typeObs.getDataSet("value"), _type);
+    auto typeObs = file.getGroup("observables/logType");
+    saveScalar<int>(typeObs.getDataSet("step"), _step);
+    saveScalar<double>(typeObs.getDataSet("time"), _time);
+    saveScalar<std::string>(typeObs.getDataSet("value"), _type);
 
     file.flush();
   }
@@ -130,54 +139,107 @@ private:
         HighFive::Reference(createOrGetGroup(_file, "particles"),
                             createOrGetGroup(_file, "particles/all")));
 
+    const auto bondInfo = _net.getBonds().gatherBonds();
+    const auto types = _net.getBonds().gatherTypes();
+    const auto breaks = _net.getBonds().gatherBreaks();
+
     std::vector<size_t> connections;
     connections.reserve(_net.getBonds().size() * 2);
-    for (const networkV4::bonded::BondInfo& bond : _net.getBonds().getBonds()) {
+    for (const networkV4::bonded::BondInfo& bond : bondInfo) {
       connections.emplace_back(bond.src);
       connections.emplace_back(bond.dst);
     }
     bonds.reshapeMemSpace({connections.size()}).write(connections);
 
     auto params = createOrGetGroup(_file, "parameter");
-    auto bondParameters = initMatrixDataset<double>(params, "Bonds", {3, 2}, true);
+    auto bondParameters = initMatrixDataset<double>(
+        params, "Bonds", {_net.getBonds().size(), 3}, true);
+
     std::vector<double> data;
     data.reserve(_net.getBonds().size() * 3);
-    for (auto [bond, type, brk] :
-         ranges::views::zip(_net.getBonds().getBonds(),
-                            _net.getBonds().getTypes(),
-                            _net.getBonds().getBreaks()))
-    {
-        if (std::holds_alternative<networkV4::bonded::Forces::HarmonicBond>(type)) {
-          const auto& bondType = std::get<networkV4::bonded::Forces::HarmonicBond>(type);
-          data.push_back(bondType.mu());
-          data.push_back(bondType.r0());
-          data.push_back(bondType.lambda());
-        } else {
-          data.push_back(0.0);
-          data.push_back(0.0);
-          data.push_back(0.0);
-        }
+    for (auto [type, brk] : ranges::views::zip(types, breaks)) {
+      if (std::holds_alternative<networkV4::Forces::HarmonicBond>(type)) {
+        const auto& bondType = std::get<networkV4::Forces::HarmonicBond>(type);
+        data.push_back(bondType.k());
+        data.push_back(bondType.r0());
+      } else {
+        data.push_back(0.0);
+        data.push_back(0.0);
+      }
+      if (std::holds_alternative<networkV4::BreakTypes::StrainBreak>(brk)) {
+        const auto& breakType =
+            std::get<networkV4::BreakTypes::StrainBreak>(brk);
+        data.push_back(breakType.lambda());
+      } else {
+        data.push_back(0.0);
+      }
     }
     bondParameters.reshapeMemSpace({data.size()}).write(data);
+
+    auto map = _net.getTags().getVecs();
+
+    auto tagGroup = createOrGetGroup(params, "tags");
+    auto keys =
+        createDataSet<size_t>(tagGroup,
+                              "keys",
+                              std::vector<std::size_t> {0},
+                              std::vector<std::size_t> {_net.getTags().size()},
+                              std::vector<hsize_t> {1},
+                              true);
+    keys.write(map.first);
+
+    auto variable_stringtype = HighFive::VariableLengthStringType();
+    tagGroup
+        .createDataSet("values",
+                       HighFive::DataSpace({_net.getTags().size()},
+                                           {_net.getTags().size()}),
+                       variable_stringtype)
+        .write(map.second);
+
+    auto tags = std::vector<std::vector<bool>>(_net.getBonds().size());
+    for (size_t i = 0; i < _net.getBonds().size(); ++i) {
+      tags[i].reserve(_net.getTags().size());
+      for (auto key : map.first) {
+        tags[i].push_back(_net.getBondTags().hasTag(i, key));
+      }
+    }
+    auto bondTags = createDataSet<bool>(
+        tagGroup,
+        "bondTags",
+        std::vector<std::size_t> {_net.getBonds().size(),
+                                  _net.getTags().size()},
+        std::vector<std::size_t> {_net.getBonds().size(),
+                                  _net.getTags().size()},
+        std::vector<hsize_t> {_net.getBonds().size(), _net.getTags().size()},
+        true);
+    bondTags.write(tags);
   }
-  // void initBondType(HighFive::File& _file,
-  //                   const std::string& _name,
-  //                   const networkV4::network& _net,
-  //                   const networkV4::bondType _type) const;
-  // void initObservations(HighFive::File& _file,
-  //                       const networkV4::network& _net) const;
+  void initObservations(HighFive::File _file,
+                        const networkV4::network& _net) const
+  {
+    auto connected = createOrGetGroup(_file, "observables/connected");
+    initScalarDataset<int>(connected, "step");
+    initScalarDataset<double>(connected, "time");
+    createDataSet<bool>(
+        connected,
+        "value",
+        std::vector<std::size_t> {0, _net.getBonds().size()},
+        std::vector<std::size_t> {HighFive::DataSpace::UNLIMITED,
+                                  _net.getBonds().size()},
+        std::vector<hsize_t> {1, _net.getBonds().size()},
+        true);
 
-private:
-  // void saveConnected(HighFive::Group& _group,
-  //                    const networkV4::network& _net,
-  //                    const std::size_t _step,
-  //                    const double _time,
-  //                    const networkV4::bondType _type) const;
-
-private:
-  // void saveConnectivity2Dataset(HighFive::DataSet& _dataset,
-  //                               const networkV4::bonds& _bonds,
-  //                               const networkV4::bondType _type) const;
+    auto logType = createOrGetGroup(_file, "observables/logType");
+    initScalarDataset<int>(logType, "step");
+    initScalarDataset<double>(logType, "time");
+    createDataSet<std::string>(
+        logType,
+        "value",
+        std::vector<std::size_t> {0},
+        std::vector<std::size_t> {HighFive::DataSpace::UNLIMITED},
+        std::vector<hsize_t> {1},
+        false);
+  }
 
 private:
   template<typename T>
@@ -196,6 +258,14 @@ private:
     const auto dataSetDims = _dataset.getSpace().getDimensions();
     _dataset.resize({dataSetDims[0] + 1});
     _dataset.select({dataSetDims[0]}, {1}).write(_data);
+  }
+
+  template<typename T>
+  void saveVector(HighFive::DataSet _dataset, const std::vector<T>& _data) const
+  {
+    const auto dataSetDims = _dataset.getSpace().getDimensions();
+    _dataset.resize({dataSetDims[0] + 1, dataSetDims[1]});
+    _dataset.select({dataSetDims[0], 0}, {1, dataSetDims[1]}).squeezeMemSpace({0}).write(_data);
   }
 
   template<typename T>
