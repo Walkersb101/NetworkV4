@@ -4,6 +4,9 @@
 #include <cstddef>
 #include <stdexcept>
 
+#include "Misc/Config.hpp"
+#include "Misc/Utils.hpp"
+
 namespace networkV4
 {
 namespace roots
@@ -46,7 +49,7 @@ public:
 
     double alpha = 1.0;  // m_iters % 3 == 0 ? 0.5 : 1.0;
     double xf = (alpha * _fb * _a - _fa * _b) / (alpha * _fb - _fa);
-    double sigma = tools::sign(xhalf - xf);
+    double sigma = Utils::sign(xhalf - xf);
     double xt = delta <= std::abs(xf - xhalf) ? xf + sigma * delta : xhalf;
     double xITP = std::abs(xt - xhalf) <= r ? xt : xhalf - sigma * r;
 

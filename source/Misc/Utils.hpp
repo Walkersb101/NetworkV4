@@ -21,4 +21,10 @@ auto spanView(std::vector<vec2<T>>& _vec) -> std::span<T>
   return std::span<T>(reinterpret_cast<T*>(_vec.data()), _vec.size() * 2);
 }
 
+template<typename T>
+inline auto sign(const T& _val) -> T
+{
+  return _val < 0 ? -1 : 1;
+}
+
 }  // namespace Utils
