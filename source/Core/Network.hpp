@@ -17,8 +17,8 @@
 namespace networkV4
 {
 
-using bondQueue =
-    std::deque<std::tuple<size_t, bonded::bondTypes, bonded::breakTypes>>;
+using breakInfo = std::tuple<size_t, bonded::bondTypes, bonded::breakTypes>;
+using bondQueue = std::deque<breakInfo>;
 
 class network
 {
