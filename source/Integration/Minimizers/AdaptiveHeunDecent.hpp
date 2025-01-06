@@ -13,8 +13,6 @@ namespace networkV4
 namespace minimisation
 {
 
-static constexpr double EPS_ENERGY = 1e-8;
-
 class AdaptiveHeunDecent : public minimiserBase
 {
   AdaptiveHeunDecent() = default;

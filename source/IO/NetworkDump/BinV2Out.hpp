@@ -35,11 +35,9 @@ public:
   void save(const networkV4::network& _net,
             const std::size_t _step,
             const double _time,
-            const std::string& _type) const override
+            const std::string& _name) const override
   {
-    auto fileName =
-        _type + IO::Compression::compressionExts.lookup(m_type) + ".v2.bin";
-    const auto path = m_dirPath / fileName;
+    const auto path = m_dirPath / (_name + compressExt() + ".v2.bin");
 
     std::stringstream ss;
 

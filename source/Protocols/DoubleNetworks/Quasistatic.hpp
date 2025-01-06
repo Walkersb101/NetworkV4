@@ -9,6 +9,7 @@
 #include "Misc/Roots.hpp"
 #include "Protocols/Protocol.hpp"
 #include "Protocols/deform.hpp"
+#include "Protocols/protocolReader.hpp"
 
 namespace networkV4
 {
@@ -25,8 +26,9 @@ public:
       std::shared_ptr<IO::timeSeries::timeSeriesOut>& _bondsOut,
       std::shared_ptr<IO::networkDumps::networkDump>& _networkOut,
       const network& _network,
-      integration::AdaptiveParams _params = integration::AdaptiveParams(),
+      double _maxStrain,
       double _rootTol = config::rootMethods::targetTol,
+      integration::AdaptiveParams _params = integration::AdaptiveParams(),
       const minimisation::minimiserParams& _minParams =
           minimisation::minimiserParams(),
       bool _errorOnNotSingleBreak = false,
@@ -97,6 +99,22 @@ private:
 
   bool m_saveBreaks = false;
 };
+
+class quasiStaticStrainDoubleReader : public protocolReader
+{
+public:
+  quasiStaticStrainDoubleReader() = default;
+  ~quasiStaticStrainDoubleReader() = default;
+
+public:
+  auto read(const toml::value& _config,
+            const network& _network,
+            std::shared_ptr<IO::timeSeries::timeSeriesOut>& _dataOut,
+            std::shared_ptr<IO::timeSeries::timeSeriesOut>& _bondsOut,
+            std::shared_ptr<IO::networkDumps::networkDump>& _networkOut)
+      -> std::shared_ptr<protocolBase> override;
+};
+
 }  // namespace protocols
 
 }  // namespace networkV4

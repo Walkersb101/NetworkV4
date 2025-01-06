@@ -1,11 +1,6 @@
 
 #include "DataOut.hpp"
 
-#include <toml.hpp>
-
-#include "Core/Network.hpp"
-#include "Misc/Config.hpp"
-
 IO::timeSeries::timeSeriesOut::timeSeriesOut() {}
 
 IO::timeSeries::timeSeriesOut::~timeSeriesOut() {}

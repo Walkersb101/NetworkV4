@@ -8,15 +8,17 @@ networkV4::protocols::quasiStaticStrainDouble::quasiStaticStrainDouble(
     std::shared_ptr<IO::timeSeries::timeSeriesOut>& _bondsOut,
     std::shared_ptr<IO::networkDumps::networkDump>& _networkOut,
     const network& _network,
-    integration::AdaptiveParams _params,
+    double _maxStrain,
     double _rootTol,
+    integration::AdaptiveParams _params,
     const minimisation::minimiserParams& _minParams,
     bool _errorOnNotSingleBreak,
     double _maxStep,
     bool _saveBreaks)
     : protocolBase(_deform, _dataOut, _bondsOut, _networkOut, _network)
-    , m_params(_params)
+    , m_maxStrain(_maxStrain)
     , m_rootTol(_rootTol)
+    , m_params(_params)
     , m_minParams(_minParams)
     , m_errorOnNotSingleBreak(_errorOnNotSingleBreak)
     , m_maxStep(_maxStep)
@@ -283,12 +285,12 @@ auto networkV4::protocols::quasiStaticStrainDouble::relaxBreak(
     if (!brokenInStep
         && fabs(Ecurr - Eprev) < m_minParams.Etol * 0.5
                 * (fabs(Ecurr) + fabs(Eprev) + minimisation::EPS_ENERGY))
-      return;
+      return breakCount;
 
     double fdotf =
         xdoty(_network.getNodes().forces(), _network.getNodes().forces());
     if (!brokenInStep && fdotf < m_minParams.Ftol * m_minParams.Ftol) {
-      return;
+      return breakCount;
     }
     // std::cout << std::setprecision(10) << iter << " " << error << " "
     //           << _network.getEnergy() << " " << integrator.getDt() << " "
@@ -471,4 +473,51 @@ auto networkV4::protocols::quasiStaticStrainDouble::xdoty(
                             std::plus<double>(),
                             [](Utils::vec2d _a, Utils::vec2d _b)
                             { return _a.dot(_b); });
+}
+
+//-------------------------------------------------------------------------------------------------
+
+auto networkV4::protocols::quasiStaticStrainDoubleReader::read(
+    const toml::value& _config,
+    const network& _network,
+    std::shared_ptr<IO::timeSeries::timeSeriesOut>& _dataOut,
+    std::shared_ptr<IO::timeSeries::timeSeriesOut>& _bondsOut,
+    std::shared_ptr<IO::networkDumps::networkDump>& _networkOut)
+    -> std::shared_ptr<protocolBase>
+{
+  auto quasiConfig = toml::find(_config, "QuasiStaticStrain");
+
+  if (!quasiConfig.contains("MaxStrain")) {
+    throw std::runtime_error("MaxStrain not specified");
+  }
+  const double maxStrain = toml::find<double>(quasiConfig, "MaxStrain");
+
+  std::shared_ptr<deform::deformBase> deform = readDeform(quasiConfig);
+
+  integration::AdaptiveParams adaptiveParams = readAdaptive(_config);
+  minimisation::minimiserParams minimiserParams = readMinimiser(_config);
+
+  const double tol =
+      toml::find_or<double>(quasiConfig, "Tol", config::rootMethods::targetTol);
+
+  const bool errorOnNotSingleBreak = toml::find_or<bool>(
+      quasiConfig,
+      "ErrorOnNotSingleBreak",
+      config::protocols::quasiStaticStrain::errorOnNotSingleBreak);
+  const double maxStep =
+      toml::find_or<double>(quasiConfig, "MaxStep", maxStrain);
+  const bool saveBreaks = toml::find_or<bool>(quasiConfig, "SaveBreaks", false);
+
+  return std::make_shared<quasiStaticStrainDouble>(deform,
+                                                   _dataOut,
+                                                   _bondsOut,
+                                                   _networkOut,
+                                                   _network,
+                                                   maxStrain,
+                                                   tol,
+                                                   adaptiveParams,
+                                                   minimiserParams,
+                                                   errorOnNotSingleBreak,
+                                                   maxStep,
+                                                   saveBreaks);
 }

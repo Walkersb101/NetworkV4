@@ -12,8 +12,8 @@ namespace deform
 class deformBase
 {
 public:
-  deformBase();
-  virtual ~deformBase();
+  deformBase() = default;
+  virtual ~deformBase() = default;
 
 public:
   virtual auto getStrain(const network& _network) const -> double = 0;
@@ -23,8 +23,8 @@ public:
 class shear : public deformBase
 {
 public:
-  shear();
-  virtual ~shear();
+  shear() = default;
+  virtual ~shear() = default;
 
 public:
   auto getStrain(const network& _network) const -> double override
@@ -41,8 +41,8 @@ public:
 class elongationAreaY : public deformBase
 {
 public:
-  elongationAreaY();
-  virtual ~elongationAreaY();
+  elongationAreaY() = default;
+  virtual ~elongationAreaY() = default;
 
 public:
   auto getStrain(const network& _network) const -> double override

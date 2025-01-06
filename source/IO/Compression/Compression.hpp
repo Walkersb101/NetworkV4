@@ -1,9 +1,9 @@
 #pragma once
 
 #include <cstdint>
+#include <optional>
 #include <stdexcept>
 #include <string>
-#include <optional>
 
 #include "IO/Compression/zstd.hpp"
 #include "Misc/Enums/EnumStringMap.hpp"
@@ -19,14 +19,11 @@ enum class compressionTypes : uint8_t
   Zstd,
 };
 
-const Utils::EnumStringLookup<compressionTypes, 2> compressionExts = {
-    { { compressionTypes::None, "" },
-      { compressionTypes::Zstd, ".zst" } } };
-
 class compression
 {
 public:
-  compression(compressionTypes _compression, const std::optional<size_t> _level = std::nullopt)
+  compression(compressionTypes _compression,
+              const std::optional<size_t> _level = std::nullopt)
       : m_type(_compression)
   {
     if (_level.has_value()) {
@@ -46,6 +43,18 @@ public:
         return _data;
       case compressionTypes::Zstd:
         return zstd::compress(_data, m_level);
+      default:
+        throw std::runtime_error("Unknown compression type");
+    }
+  }
+
+  auto compressExt() const -> std::string
+  {
+    switch (m_type) {
+      case compressionTypes::None:
+        return "";
+      case compressionTypes::Zstd:
+        return ".zst";
       default:
         throw std::runtime_error("Unknown compression type");
     }
@@ -72,7 +81,12 @@ private:
         break;
       case compressionTypes::Zstd:
         if (m_level > 22) {
-          throw std::runtime_error("Zstd compression level must be between 0 and 22"); //todo: should this throw an exception?
+          throw std::runtime_error(
+              "Zstd compression level must be between 0 and 22");  // todo:
+                                                                   // should
+                                                                   // this throw
+                                                                   // an
+                                                                   // exception?
         }
         break;
       default:
@@ -95,28 +109,28 @@ public:
   ~decompression() {};
 
 public:
-    std::string decompress(const std::string& _data) const
-    {
-        switch (m_type) {
-        case compressionTypes::None:
-            return _data;
-        case compressionTypes::Zstd:
-            return zstd::decompress(_data);
-        default:
-            throw std::runtime_error("Unknown compression type");
-        }
+  std::string decompress(const std::string& _data) const
+  {
+    switch (m_type) {
+      case compressionTypes::None:
+        return _data;
+      case compressionTypes::Zstd:
+        return zstd::decompress(_data);
+      default:
+        throw std::runtime_error("Unknown compression type");
     }
+  }
 
 private:
-    compressionTypes m_type;
+  compressionTypes m_type;
 };
 
 inline auto detectCompression(const std::string& _data) -> compressionTypes
 {
-    if (zstd::isZstdCompressed(_data)) {
-        return compressionTypes::Zstd;
-    }
-    return compressionTypes::None;
+  if (zstd::isZstdCompressed(_data)) {
+    return compressionTypes::Zstd;
+  }
+  return compressionTypes::None;
 }
 
 }  // namespace Compression

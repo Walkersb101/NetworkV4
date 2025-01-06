@@ -27,7 +27,7 @@ public:
       , m_networkOut(_networkOut)
   {
   }
-  virtual ~protocolBase() = 0;
+  virtual ~protocolBase() = default;
 
 public:
   virtual void run(network& _network) = 0;

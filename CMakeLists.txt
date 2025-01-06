@@ -18,18 +18,17 @@ add_library(
 
     source/Core/OMP/NetworkOMP.cpp
 
-    #source/Integration/Integrator.cpp
-    #source/Integration/Minimization.cpp
-    #source/Integration/OverDamped.cpp
+
 
     source/IO/BaseIO.cpp
     source/IO/TimeSeries/DataOut.cpp
-    #source/IO/hdf5Out.cpp
+
     source/IO/NetworkDump/NetworkOut.cpp
     source/IO/Input/NetworkIn.cpp
     
+    source/Protocols/DoubleNetworks/Quasistatic.cpp
+
     #source/Protocols/StepStrain.cpp
-    #source/Protocols/Quasistatic.cpp
     #source/Protocols/Propogator.cpp
     
     #source/Misc/Roots.cpp

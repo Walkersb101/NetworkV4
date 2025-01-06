@@ -68,7 +68,7 @@ inline double fdec = 0.5;
 // Root methods configuration
 namespace rootMethods
 {
-inline double targetTol = 1e-5;
+inline double targetTol = 1e-6;
 inline double minTol = 1e-10;
 
 namespace ITPMethod
