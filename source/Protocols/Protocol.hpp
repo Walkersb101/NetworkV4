@@ -16,13 +16,14 @@ class protocolBase
 {
 public:
   protocolBase() = delete;
-  template<typename def>
-  protocolBase(def _deform,
+  protocolBase(std::shared_ptr<deform::deformBase>& _deform,
                std::shared_ptr<IO::timeSeries::timeSeriesOut>& _dataOut,
+               std::shared_ptr<IO::timeSeries::timeSeriesOut> _bondsOut,
                std::shared_ptr<IO::networkDumps::networkDump>& _networkOut,
                const network& _network)
-      : m_deform(std::make_unique<deform::deformBase>(_deform))
+      : m_deform(_deform)
       , m_dataOut(_dataOut)
+      , m_bondsOut(_bondsOut)
       , m_networkOut(_networkOut)
   {
   }
@@ -32,9 +33,10 @@ public:
   virtual void run(network& _network) = 0;
 
 protected:
-  std::unique_ptr<deform::deformBase> m_deform;
+  std::shared_ptr<deform::deformBase> m_deform;
 
   std::shared_ptr<IO::timeSeries::timeSeriesOut> m_dataOut;
+  std::shared_ptr<IO::timeSeries::timeSeriesOut> m_bondsOut;
   std::shared_ptr<IO::networkDumps::networkDump> m_networkOut;
 };
 
