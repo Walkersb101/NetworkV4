@@ -90,7 +90,6 @@ public:
     if (error)
       throw std::runtime_error("Adaptive Euler Heun failed to converge");
     m_nextDt = std::clamp(m_dt * q, m_params.dtMin, m_params.dtMax);
-    _network.computeForces();
   }
 
 private:
