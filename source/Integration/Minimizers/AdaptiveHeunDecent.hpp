@@ -21,11 +21,20 @@ class AdaptiveHeunDecent : public minimiserBase
   AdaptiveHeunDecent(double Ftol,
                      double Etol,
                      size_t maxIter,
-                     integration::AdaptiveParams _params,
-                     double _h)
+                     const integration::AdaptiveParams& _params,
+                     double _h = config::integrators::default_dt)
       : minimiserBase(Ftol, Etol, maxIter)
       , m_params(_params)
       , m_dt(_h)
+  {
+  }
+
+  AdaptiveHeunDecent(const minimiserParams& _minParams,
+                     const integration::AdaptiveParams& _params,
+                     double _dt = config::integrators::default_dt)
+      : minimiserBase(_minParams)
+      , m_params(_params)
+      , m_dt(_dt)
   {
   }
 
@@ -41,7 +50,6 @@ public:
 
     size_t iter = 0;
     while (iter++ < m_maxIter) {
-
       Eprev = Ecurr;
       stepper.step(_network);
       _network.computeForces();
@@ -56,7 +64,6 @@ public:
       if (fdotf < m_Ftol * m_Ftol) {
         return;
       }
-      
     }
   };
 

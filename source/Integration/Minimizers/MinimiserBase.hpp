@@ -8,6 +8,13 @@ namespace networkV4
 namespace minimisation
 {
 
+struct minimiserParams
+{
+  double Ftol = config::integrators::miminizer::Ftol;
+  double Etol = config::integrators::miminizer::Etol;
+  size_t maxIter = config::integrators::miminizer::maxIter;
+};
+
 class minimiserBase
 {
 public:
@@ -16,6 +23,12 @@ public:
       : m_Ftol(Ftol)
       , m_Etol(Etol)
       , m_maxIter(maxIter)
+  {
+  }
+  minimiserBase(const minimiserParams& _params)
+      : m_Ftol(_params.Ftol)
+      , m_Etol(_params.Etol)
+      , m_maxIter(_params.maxIter)
   {
   }
   virtual ~minimiserBase() = default;
@@ -29,5 +42,5 @@ public:
   size_t m_maxIter = config::integrators::miminizer::maxIter;
 };
 
-}  // namespace integration
+}  // namespace minimisation
 }  // namespace networkV4

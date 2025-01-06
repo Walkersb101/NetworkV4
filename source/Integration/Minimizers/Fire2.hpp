@@ -50,10 +50,22 @@ struct Fire2Params
 
 class fire2 : public minimiserBase
 {
+public:
   fire2() = default;
-  fire2(
-      double Ftol, double Etol, size_t maxIter, Fire2Params _params, double _dt)
+  fire2(double Ftol,
+        double Etol,
+        size_t maxIter,
+        const Fire2Params& _params,
+        double _dt = config::integrators::default_dt)
       : minimiserBase(Ftol, Etol, maxIter)
+      , m_params(_params)
+      , m_dt(_dt)
+  {
+  }
+  fire2(const minimiserParams& _minParams,
+        const Fire2Params& _params = Fire2Params(),
+        double _dt = config::integrators::default_dt)
+      : minimiserBase(_minParams)
       , m_params(_params)
       , m_dt(_dt)
   {
@@ -82,7 +94,7 @@ public:
     }
 
     nodes.zeroVelocity();
-    //updateVelocities(_network, m_dt);
+    // updateVelocities(_network, m_dt);
 
     size_t iter = 0;
     while (iter++ < m_maxIter) {
@@ -115,12 +127,13 @@ public:
         move(_network, -0.5 * m_dt);
         nodes.zeroVelocity();
       }
-      
+
       updateVelocities(_network, m_dt);
 
-      //double maxAbsVel = maxAbsComponent(vels);
-      //m_dt =
-      //    std::max(std::min(m_dt, m_params.dmax / maxAbsVel), m_params.dtMin);
+      // double maxAbsVel = maxAbsComponent(vels);
+      // m_dt =
+      //     std::max(std::min(m_dt, m_params.dmax / maxAbsVel),
+      //     m_params.dtMin);
 
       if (vdotf > 0.0) {
         for (auto [vel, force] : ranges::views::zip(vels, forces)) {
