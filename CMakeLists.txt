@@ -13,9 +13,10 @@ add_library(
     NetworkV4_lib OBJECT
     source/Core/Bonds.cpp
     source/Core/Network.cpp
-    source/Core/NetworkOMP.cpp
     source/Core/Nodes.cpp
     source/Core/Simulation.cpp
+
+    source/Core/OMP/NetworkOMP.cpp
 
     #source/Integration/Integrator.cpp
     #source/Integration/Minimization.cpp
@@ -27,7 +28,6 @@ add_library(
     source/IO/NetworkDump/NetworkOut.cpp
     source/IO/Input/NetworkIn.cpp
     
-    #source/Protocols/Protocol.cpp
     #source/Protocols/StepStrain.cpp
     #source/Protocols/Quasistatic.cpp
     #source/Protocols/Propogator.cpp
@@ -42,6 +42,7 @@ target_include_directories(
 )
 
 target_compile_features(NetworkV4_lib PUBLIC cxx_std_20)
+target_compile_options(NetworkV4_lib PRIVATE -std=c++20)
 
 # ---- FetchContent ----
 
