@@ -20,8 +20,8 @@
 
 #if defined(_OPENMP)
 
-networkV4::partition::Partitions threadPartitions;
-size_t passes;
+networkV4::partition::Partitions networkV4::OMP::threadPartitions;
+size_t networkV4::OMP::passes;
 
 void networkV4::network::computeForces(bool _evalBreak)
 {
@@ -29,7 +29,7 @@ void networkV4::network::computeForces(bool _evalBreak)
   m_stresses.zero();
   m_nodes.zeroForce();
 
-  for (size_t pass = 0; pass < passes; ++pass) {
+  for (size_t pass = 0; pass < OMP::passes; ++pass) {
     auto passParts =
         OMP::threadPartitions | ranges::views::drop(pass) | ranges::views::stride(OMP::passes);
     computePass(passParts, _evalBreak);
