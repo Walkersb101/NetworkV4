@@ -17,15 +17,12 @@ namespace timeSeries
 class CSVOut : public fileIO, public timeSeriesOut
 {
 public:
-  CSVOut(const std::filesystem::path& _filePath,
-        const std::vector<writeableTypes>& _header)
+  CSVOut(const std::filesystem::path& _filePath)
       : fileIO(_filePath), timeSeriesOut()
   {
     if (_filePath.extension() != ".csv") {
         throw std::invalid_argument("File extension must be .csv");
     }
-
-    writeRow(_header, std::ios::out | std::ios::trunc);
   }
   ~CSVOut() override = default;
 
