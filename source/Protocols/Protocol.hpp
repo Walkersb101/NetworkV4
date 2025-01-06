@@ -6,33 +6,39 @@
 #include "IO/NetworkDump/NetworkOut.hpp"
 #include "IO/TimeSeries/DataOut.hpp"
 #include "Misc/Enums.hpp"
+#include "deform.hpp"
 
 namespace networkV4
 {
-class protocol
+namespace protocols
+{
+class protocolBase
 {
 public:
-  protocol();
-  protocol(StrainType _strainType);
-  virtual ~protocol();
+  protocolBase() = delete;
+  template<typename def>
+  protocolBase(def _deform,
+               std::shared_ptr<IO::timeSeries::timeSeriesOut>& _dataOut,
+               std::shared_ptr<IO::networkDumps::networkDump>& _networkOut,
+               const network& _network)
+      : m_deform(std::make_unique<deform::deformBase>(_deform))
+      , m_dataOut(_dataOut)
+      , m_networkOut(_networkOut)
+  {
+  }
+  virtual ~protocolBase() = 0;
 
 public:
-  double getStrain(const network& _network) const;
-  void strain(network& _network, double _step);
-
-public:
-  virtual void run(network& _network);
-
-  virtual void initIO(const network& _network,
-                      std::unique_ptr<IO::timeSeries::timeSeriesOut>& _dataOut,
-                      std::unique_ptr<IO::networkDumps::networkDump>& _networkOut);
+  virtual void run(network& _network) = 0;
 
 protected:
-  StrainType m_strainType;
-  IO::timeSeries::timeSeriesOut* m_dataOut;
-  IO::networkDumps::networkDump* m_networkOut;
+  std::unique_ptr<deform::deformBase> m_deform;
+
+  std::shared_ptr<IO::timeSeries::timeSeriesOut> m_dataOut;
+  std::shared_ptr<IO::networkDumps::networkDump> m_networkOut;
 };
 
 std::vector<double> forceMags(const network& _network);
 
+}  // namespace protocols
 }  // namespace networkV4
