@@ -6,7 +6,7 @@
 #include <numeric>
 #include <vector>
 
-#include "Network.hpp"
+#include "Core/Network.hpp"
 
 #include <range/v3/algorithm.hpp>
 #include <range/v3/view/slice.hpp>
@@ -16,20 +16,22 @@
 #include "Core/Nodes.hpp"
 #include "Misc/Tensor2.hpp"
 #include "Misc/Vec2.hpp"
+#include "OMP.hpp"
 
 #if defined(_OPENMP)
-void networkV4::network::computeForces(const partition::Partitions& _parts,
-                                       size_t _passes,
-                                       bool _evalBreak)
 
+networkV4::partition::Partitions threadPartitions;
+size_t passes;
+
+void networkV4::network::computeForces(bool _evalBreak)
 {
   m_energy = 0.0;
   m_stresses.zero();
   m_nodes.zeroForce();
 
-  for (size_t pass = 0; pass < _passes; ++pass) {
+  for (size_t pass = 0; pass < passes; ++pass) {
     auto passParts =
-        _parts | ranges::views::drop(pass) | ranges::views::stride(_passes);
+        OMP::threadPartitions | ranges::views::drop(pass) | ranges::views::stride(OMP::passes);
     computePass(passParts, _evalBreak);
   }
 }
@@ -51,10 +53,7 @@ void networkV4::network::computePass(auto _parts, bool _evalBreak)
       if (_evalBreak) {
         const bool broken = bonded::visitBreak(brk, dist);
         if (broken) {
-          m_breakQueue.emplace_back(
-              bond.index,
-              type,
-              brk);
+          m_breakQueue.emplace_back(bond.index, type, brk);
 
           type = Forces::VirtualBond {};
           brk = BreakTypes::None {};
@@ -70,8 +69,7 @@ void networkV4::network::computePass(auto _parts, bool _evalBreak)
 
         const auto& tags = m_bondTags.getTagIds(bond.index);
         const auto stress = Utils::outer(force.value(), dist) / m_box.area();
-        m_stresses.distribute(stress,
-                              tags); 
+        m_stresses.distribute(stress, tags);
       }
 
       const auto energy = bonded::visitEnergy(type, dist);

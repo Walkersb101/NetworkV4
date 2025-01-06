@@ -6,7 +6,6 @@
 
 #include "Core/Bonds.hpp"
 #include "Core/Nodes.hpp"
-#include "Core/Partition.hpp"
 #include "Core/Stresses.hpp"
 #include "Core/box.hpp"
 #include "Misc/Enums.hpp"
@@ -66,6 +65,8 @@ public:
   void shear(double _step);
   void setBox(const box& _box);
 
+  void wrapNodes();
+
 public:
   void computeForces(bool _evalBreak = false);
 
@@ -83,11 +84,6 @@ private:
                   const Utils::vec2d& _force);
 
 #if defined(_OPENMP)
-public:
-  void computeForces(const partition::Partitions& _parts,
-                     size_t _passes,
-                     bool _evalBreak = false);
-
 private:
   void computePass(auto _parts, bool _evalBreak = false);
 #endif

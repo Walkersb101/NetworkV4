@@ -148,6 +148,14 @@ void networkV4::network::setBox(const box& _box)
   m_box = _box;
 }
 
+void networkV4::network::wrapNodes()
+{
+  for (auto& pos : m_nodes.positions()) {
+    pos = m_box.wrapPosition(pos);
+  }
+}
+
+#if not defined(_OPENMP)
 void networkV4::network::computeForces(bool _evalBreak)
 {
   m_energy = 0.0;
@@ -176,6 +184,7 @@ void networkV4::network::computeForces(bool _evalBreak)
     }
   }
 }
+#endif
 
 auto networkV4::network::computeEnergy() -> double
 {
@@ -215,9 +224,7 @@ void networkV4::network::evalBreak(const Utils::vec2d& _dist,
 {
   const bool broken = bonded::visitBreak(_break, _dist);
   if (broken) {
-    m_breakQueue.emplace_back(_binfo.index,
-                              _type,
-                              _break);
+    m_breakQueue.emplace_back(_binfo.index, _type, _break);
 
     _type = Forces::VirtualBond {};
     _break = BreakTypes::None {};
