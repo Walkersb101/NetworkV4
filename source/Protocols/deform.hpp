@@ -27,7 +27,7 @@ public:
   virtual ~shear();
 
 public:
-  void getStrain(const network& _network) const -> double override
+  auto getStrain(const network& _network) const -> double override
   {
     return _network.getShearStrain();
   }
@@ -45,7 +45,7 @@ public:
   virtual ~elongationAreaY();
 
 public:
-  void getStrain(const network& _network) const -> double override
+  auto getStrain(const network& _network) const -> double override
   {
     return _network.getElongationStrain().y;
   }
@@ -62,5 +62,5 @@ public:
 };
 
 }  // namespace deform
-}  // namespace protocol
+}  // namespace protocols
 }  // namespace networkV4
