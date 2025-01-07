@@ -47,6 +47,8 @@ public:
 
 public:
   auto gatherPositions() const -> std::vector<Utils::vec2d>;
+  auto gatherVelocities() const -> std::vector<Utils::vec2d>;
+  auto gatherForces() const -> std::vector<Utils::vec2d>;
   auto getNodeMap() const -> const NodeMap;
 
 public:

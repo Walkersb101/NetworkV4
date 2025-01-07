@@ -127,6 +127,26 @@ auto networkV4::nodes::gatherPositions() const -> std::vector<Utils::vec2d>
   return positions;
 }
 
+auto networkV4::nodes::gatherVelocities() const -> std::vector<Utils::vec2d>
+{
+  std::vector<Utils::vec2d> velocities;
+  velocities.resize(size());
+  for (auto [i, vel] : ranges::views::zip(m_globalIndices, m_velocities)) {
+    velocities[i] = vel;
+  }
+  return velocities;
+}
+
+auto networkV4::nodes::gatherForces() const -> std::vector<Utils::vec2d>
+{
+  std::vector<Utils::vec2d> forces;
+  forces.resize(size());
+  for (auto [i, force] : ranges::views::zip(m_globalIndices, m_forces)) {
+    forces[i] = force;
+  }
+  return forces;
+}
+
 auto networkV4::nodes::getNodeMap() const -> const NodeMap
 {
   NodeMap nodeMap;
