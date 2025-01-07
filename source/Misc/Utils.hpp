@@ -27,4 +27,22 @@ inline auto sign(const T& _val) -> T
   return _val < 0 ? -1 : 1;
 }
 
+inline auto rms(const std::vector<vec2d>& _vec) -> double
+{
+  double sum = 0.0;
+  for (const auto& val : _vec) {
+    sum += val.dot(val);
+  }
+  return std::sqrt(sum / _vec.size());
+}
+
+inline auto maxComp(const std::vector<vec2d>& _vec) -> double
+{
+  double max = 0.0;
+  for (const auto& val : _vec) {
+    max = std::max(max, val.abs().max());
+  }
+  return max;
+}
+
 }  // namespace Utils

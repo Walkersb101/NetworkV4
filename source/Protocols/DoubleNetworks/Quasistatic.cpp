@@ -214,6 +214,10 @@ auto networkV4::protocols::quasiStaticStrainDouble::findSingleBreak(
   testNetwork = _network;
   std::tie(maxDistAboveB, breakCountB) = evalStrain(testNetwork, b);
 
+  testNetwork.computeForces();
+  double maxComp = Utils::maxComp(testNetwork.getNodes().forces());
+  auto forces = testNetwork.getNodes().gatherForces();
+
   if (maxDistAboveB < 0.0) {
     _network = testNetwork;
     if (b == m_maxStrain) {
@@ -232,7 +236,7 @@ auto networkV4::protocols::quasiStaticStrainDouble::findSingleBreak(
                          m_rootTol,
                          true);
   } catch (const std::invalid_argument& e) {
-    std::tie(maxDistAboveA, breakCountA) = evalStrain(_network, b);
+    std::tie(maxDistAboveB, breakCountB) = evalStrain(_network, b);
     return {SingleBreakReason::NoBreaksInStep, 0};
   }
   if (!converged) {

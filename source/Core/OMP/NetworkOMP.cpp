@@ -39,7 +39,7 @@ void networkV4::network::computeForces(bool _evalBreak)
 void networkV4::network::computePass(auto _parts, bool _evalBreak)
 {
 #  pragma omp parallel for reduction(+ : m_energy) reduction(+ : m_stresses) \
-      reduction(+ : m_breakQueue)
+      reduction(+ : m_breakQueue) num_threads(OMP::threadPartitions.size()) schedule(static)
   for (const auto part : _parts) {
     for (auto&& [bond, type, brk] :
          ranges::views::zip(
