@@ -287,7 +287,9 @@ auto networkV4::protocols::quasiStaticStrainDouble::relaxBreak(
     if (!brokenInStep
         && fabs(Ecurr - Eprev) < m_minParams.Etol * 0.5
                 * (fabs(Ecurr) + fabs(Eprev) + minimisation::EPS_ENERGY))
+    {
       return breakCount;
+    }
 
     double fdotf =
         xdoty(_network.getNodes().forces(), _network.getNodes().forces());

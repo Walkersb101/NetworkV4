@@ -77,10 +77,10 @@ public:
       q = std::clamp(estimatedQ, m_params.qMin, m_params.qMax);
 
       error = (std::isnan(q) || (m_dt == m_params.dtMin && q < 1.0));
-      q = (q > 1.0);
-      energyGood = !decent || (_network.getEnergy() < startEnergy);
+      qGood = (q > 1.0);
+      energyGood = !decent || (_network.computeEnergy() < startEnergy);
 
-      if ((q && energyGood) || error)
+      if ((qGood && energyGood) || error)
         break;
 
       nodes.positions() = m_rn;
@@ -98,16 +98,19 @@ private:
     // based on https://arxiv.org/pdf/2108.03399
     const double errorScale = m_dt * m_invGamma * 0.5;
 
-    double sum = 0;
+    // double sum = 0;
+    double max = -1e10;
     for (auto [frn, frnbar, rn, rnp1] :
          ranges::views::zip(m_frn, m_frnbar, m_rn, _nodes.positions()))
     {
       const double E = (frnbar - frn).norm() * errorScale;
       const double tau = m_params.espAbs + m_params.espRel * (rnp1 - rn).norm();
-      const double test = pow(E / tau, 2);
-      sum += std::pow(E / tau, 2);
+      // const double test = pow(E / tau, 2);
+      // sum += std::pow(E / tau, 2);
+      max = std::max(max, E / tau);
     }
-    return std::sqrt(sum);
+    // return std::sqrt(sum);
+    return max;
   }
 
 private:
