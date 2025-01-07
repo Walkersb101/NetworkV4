@@ -32,7 +32,7 @@ public:
       , m_tol(_tol)
   {
     if (_min < _max) {
-      throw std::invalid_argument("Invalid range");
+      std::swap(_min, _max);
     }
     if (_tol <= 0.0) {
       throw std::invalid_argument("Invalid tolerance");

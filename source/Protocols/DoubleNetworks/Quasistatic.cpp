@@ -238,7 +238,7 @@ auto networkV4::protocols::quasiStaticStrainDouble::findSingleBreak(
   if (!converged) {
     return {SingleBreakReason::DidNotConverge, 0};
   }
-  std::tie(maxDistAboveA, breakCountA) = evalStrain(_network, b);
+  std::tie(maxDistAboveB, breakCountB) = evalStrain(_network, b);
   return {SingleBreakReason::Complete, breakCountB};
 }
 
@@ -258,7 +258,7 @@ auto networkV4::protocols::quasiStaticStrainDouble::relaxBreak(
   breakCount += _network.getBreakQueue().size();
   while (!_network.getBreakQueue().empty()) {
     const auto& broken = _network.getBreakQueue().front();
-    m_dataOut->write(genBondData(_network, broken));
+    m_bondsOut->write(genBondData(_network, broken));
     _network.getBreakQueue().pop_front();
   }
 
@@ -280,7 +280,7 @@ auto networkV4::protocols::quasiStaticStrainDouble::relaxBreak(
 
     while (!_network.getBreakQueue().empty()) {
       const auto& broken = _network.getBreakQueue().front();
-      m_dataOut->write(genBondData(_network, broken));
+      m_bondsOut->write(genBondData(_network, broken));
       _network.getBreakQueue().pop_front();
     }
 
