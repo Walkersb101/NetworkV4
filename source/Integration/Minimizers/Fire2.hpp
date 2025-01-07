@@ -6,6 +6,8 @@
 
 #include "MinimiserBase.hpp"
 
+#include "Misc/Utils.hpp"
+
 namespace networkV4
 {
 namespace minimisation
@@ -86,6 +88,9 @@ public:
     double Eprev = _network.getEnergy();
     double Ecurr = _network.getEnergy();
 
+    double maxComp = Utils::maxComp(_network.getNodes().forces());
+    auto testForces = _network.getNodes().gatherForces();
+
     fdotf = xdoty(forces, forces);
     if (fdotf < m_Ftol * m_Ftol) {
       return;
@@ -150,7 +155,7 @@ public:
       {
         return;
       }
-      
+
       fdotf = xdoty(forces, forces);
       if (Npos > m_params.Ndelay && fdotf < m_Ftol * m_Ftol) {
         return;

@@ -70,15 +70,13 @@ public:
       Order _order,
       auto fn = [](const auto& _a, const auto& _b) { return _a < _b; })
   {
-    {
-      if (_order.size() != size()) {
-        throw("bonds::reorder: order size does not match bond size");
-      }
-
-      ranges::sort(ranges::view::zip(_order, m_bonds, m_types, m_breakTypes),
-                   [fn](const auto& _a, const auto& _b)
-                   { return fn(std::get<0>(_a), std::get<0>(_b)); });
+    if (_order.size() != size()) {
+      throw("bonds::reorder: order size does not match bond size");
     }
+
+    ranges::sort(ranges::view::zip(_order, m_bonds, m_types, m_breakTypes),
+                 [fn](const auto& _a, const auto& _b)
+                 { return fn(std::get<0>(_a), std::get<0>(_b)); });
   }
 
 private:

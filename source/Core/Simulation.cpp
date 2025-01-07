@@ -180,6 +180,9 @@ void networkV4::Simulation::initNetwork()
   partGen.assignNodes(nodes.positions(), box);
   partGen.sortNodes(nodes);
   partGen.sortBonds(bonds, nodes);
+  partGen.checkPasses(bonds);
+
+auto test = bonds.gatherBonds();
 
 #if defined(_OPENMP)
   OMP::threadPartitions = partGen.generatePartitions(nodes, bonds);

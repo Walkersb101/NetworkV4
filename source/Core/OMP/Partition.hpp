@@ -67,11 +67,12 @@ public:
   PartitionGenerator()
   {
 #if defined(_OPENMP)
-    const int maxThreads = omp_get_max_threads();
-    if (maxThreads > 1) {
-      m_partitionsCount = 2 * maxThreads;
-      m_passes = 2;
-    }
+    int maxThreads = omp_get_max_threads();
+    // if (maxThreads > 1) {
+    //maxThreads = 2;
+    m_partitionsCount = 2 * maxThreads;
+    m_passes = 2;
+    //}
 #endif
   }
 
@@ -123,22 +124,7 @@ public:
     _bonds.remap(nodeMap);
     _bonds.flipSrcDst();
 
-    for (auto [i, bond] : ranges::view::enumerate(_bonds.getBonds())) {
-      const size_t srcPar = m_partition[bond.src];
-      const size_t dstPar = m_partition[bond.dst];
-
-      const size_t srcPass = srcPar % m_passes;
-      const size_t dstPass = dstPar % m_passes;
-
-      // bonds need to be in the same partition or in seperate passes
-      if ((srcPar == srcPar) || (srcPass != dstPass))
-      {  // In the same partition
-        continue;
-      }
-      throw std::runtime_error(
-          "PartitionGenerator::sortBonds: bonds need to be "
-          "in the same partition or in seperate passes");
-    }
+    checkPasses(_bonds);
 
     _bonds.reorder(_bonds.getBonds(),
                    [](const auto& _a, const auto& _b)
@@ -187,6 +173,26 @@ public:
     }
 
     return partitions;
+  }
+
+  void checkPasses(const bonded::bonds& _bonds)
+  {
+    for (const auto& bond : _bonds.getBonds()) {
+      const size_t srcPar = m_partition[bond.src];
+      const size_t dstPar = m_partition[bond.dst];
+
+      const size_t srcPass = srcPar % m_passes;
+      const size_t dstPass = dstPar % m_passes;
+
+      // bonds need to be in the same partition or in seperate passes
+      if ((srcPar == srcPar) || (srcPass != dstPass))
+      {  // In the same partition
+        continue;
+      }
+      throw std::runtime_error(
+          "PartitionGenerator::sortBonds: bonds need to be "
+          "in the same partition or in seperate passes");
+    }
   }
 
 private:

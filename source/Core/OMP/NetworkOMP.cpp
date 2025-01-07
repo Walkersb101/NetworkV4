@@ -30,16 +30,16 @@ void networkV4::network::computeForces(bool _evalBreak)
   m_nodes.zeroForce();
 
   for (size_t pass = 0; pass < OMP::passes; ++pass) {
-    auto passParts =
-        OMP::threadPartitions | ranges::views::drop(pass) | ranges::views::stride(OMP::passes);
+    auto passParts = OMP::threadPartitions | ranges::views::drop(pass)
+        | ranges::views::stride(OMP::passes);
     computePass(passParts, _evalBreak);
   }
 }
 
 void networkV4::network::computePass(auto _parts, bool _evalBreak)
 {
-#  pragma omp parallel for reduction(+ : m_energy) reduction(+ : m_stresses) \
-      reduction(+ : m_breakQueue) num_threads(OMP::threadPartitions.size()) schedule(static)
+  # pragma omp parallel for reduction(+ : m_energy) reduction(+ : m_stresses) \
+      reduction(+ : m_breakQueue) num_threads(OMP::threadPartitions.size() / 2) schedule(static)
   for (const auto part : _parts) {
     for (auto&& [bond, type, brk] :
          ranges::views::zip(
