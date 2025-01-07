@@ -35,7 +35,7 @@ public:
   auto get(const std::string& _name) const -> size_t const
   {
     if (m_tagName2Id.find(_name) == m_tagName2Id.end()) {
-      throw("tagMap::get: name does not exist");
+      throw "tagMap::get: name does not exist";
     }
 
     return m_tagName2Id.at(_name);

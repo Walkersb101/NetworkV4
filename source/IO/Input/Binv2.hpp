@@ -50,8 +50,8 @@ public:
     }
 
     auto& tags = network.getTags();
-    size_t matrixTag = tags.add("Matrix");
-    size_t sacrificationTag = tags.add("Sacrificial");
+    size_t matrixTag = tags.add("matrix");
+    size_t sacrificationTag = tags.add("sacrificial");
 
     networkV4::bonded::bonds& bonds = network.getBonds();
     for (size_t i = 0; i < B; ++i) {
