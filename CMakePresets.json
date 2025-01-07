@@ -7,53 +7,6 @@
     },
     "configurePresets": [
         {
-            "name": "cmake-pedantic",
-            "hidden": true,
-            "warnings": {
-                "dev": true,
-                "deprecated": true,
-                "uninitialized": true,
-                "unusedCli": true,
-                "systemVars": false
-            },
-            "errors": {
-                "dev": true,
-                "deprecated": true
-            }
-        },
-        {
-            "name": "dev-mode",
-            "hidden": true,
-            "inherits": "cmake-pedantic",
-            "cacheVariables": {
-                "NetworkV4_DEVELOPER_MODE": "ON"
-            }
-        },
-        {
-            "name": "cppcheck",
-            "hidden": true,
-            "cacheVariables": {
-                "CMAKE_CXX_CPPCHECK": "cppcheck;--inline-suppr"
-            }
-        },
-        {
-            "name": "clang-tidy",
-            "hidden": true,
-            "cacheVariables": {
-                "CMAKE_CXX_CLANG_TIDY": "clang-tidy;--header-filter=^${sourceDir}/"
-            }
-        },
-        {
-            "name": "flags-gcc-clang",
-            "description": "These flags are supported by both GCC and Clang",
-            "hidden": true,
-            "cacheVariables": {
-                "CMAKE_CXX_FLAGS": "-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=3 -D_GLIBCXX_ASSERTIONS=1 -fstack-protector-strong -fcf-protection=full -fstack-clash-protection -Wall -Wextra -Wpedantic -Wconversion -Wsign-conversion -Wcast-qual -Wformat=2 -Wundef -Werror=float-equal -Wshadow -Wcast-align -Wunused -Wnull-dereference -Wdouble-promotion -Wimplicit-fallthrough -Wextra-semi -Woverloaded-virtual -Wnon-virtual-dtor -Wold-style-cast",
-                "CMAKE_EXE_LINKER_FLAGS": "-Wl,--allow-shlib-undefined,--as-needed,-z,noexecstack,-z,relro,-z,now,-z,nodlopen",
-                "CMAKE_SHARED_LINKER_FLAGS": "-Wl,--allow-shlib-undefined,--as-needed,-z,noexecstack,-z,relro,-z,now,-z,nodlopen"
-            }
-        },
-        {
             "name": "ci-std",
             "description": "This preset makes sure the project actually builds with at least the specified standard",
             "hidden": true,
@@ -61,82 +14,6 @@
                 "CMAKE_CXX_EXTENSIONS": "OFF",
                 "CMAKE_CXX_STANDARD": "20",
                 "CMAKE_CXX_STANDARD_REQUIRED": "ON"
-            }
-        },
-        {
-            "name": "ci-linux",
-            "inherits": [
-                "flags-gcc-clang",
-                "ci-std"
-            ],
-            "generator": "Unix Makefiles",
-            "hidden": true,
-            "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Release"
-            }
-        },
-        {
-            "name": "coverage-linux",
-            "binaryDir": "${sourceDir}/build/coverage",
-            "inherits": "ci-linux",
-            "hidden": true,
-            "cacheVariables": {
-                "ENABLE_COVERAGE": "ON",
-                "CMAKE_BUILD_TYPE": "Coverage",
-                "CMAKE_CXX_FLAGS_COVERAGE": "-Og -g --coverage -fkeep-inline-functions -fkeep-static-functions",
-                "CMAKE_EXE_LINKER_FLAGS_COVERAGE": "--coverage",
-                "CMAKE_SHARED_LINKER_FLAGS_COVERAGE": "--coverage"
-            }
-        },
-        {
-            "name": "ci-coverage",
-            "inherits": [
-                "coverage-linux",
-                "dev-mode"
-            ],
-            "cacheVariables": {
-                "COVERAGE_HTML_COMMAND": ""
-            }
-        },
-        {
-            "name": "ci-sanitize",
-            "binaryDir": "${sourceDir}/build/sanitize",
-            "inherits": [
-                "ci-linux",
-                "dev-mode"
-            ],
-            "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Sanitize",
-                "CMAKE_CXX_FLAGS_SANITIZE": "-U_FORTIFY_SOURCE -O2 -g -fsanitize=address,undefined -fno-omit-frame-pointer -fno-common"
-            }
-        },
-        {
-            "name": "ci-build",
-            "binaryDir": "${sourceDir}/build",
-            "hidden": true
-        },
-        {
-            "name": "dev-common",
-            "hidden": true,
-            "inherits": [
-                "dev-mode",
-                "clang-tidy",
-                "cppcheck"
-            ],
-            "cacheVariables": {
-                "BUILD_MCSS_DOCS": "ON"
-            }
-        },
-        {
-            "name": "dev-linux",
-            "binaryDir": "${sourceDir}/build/dev-linux",
-            "inherits": [
-                "dev-common",
-                "ci-linux"
-            ],
-            "cacheVariables": {
-                "CMAKE_BUILD_TYPE": "Debug",
-                "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
             }
         },
         {
@@ -162,9 +39,7 @@
             "description": "Enable OpenMP support",
             "hidden": true,
             "cacheVariables": {
-                "CMAKE_CXX_FLAGS": "-fopenmp -g",
-                "CMAKE_EXE_LINKER_FLAGS": "-fopenmp",
-                "CMAKE_SHARED_LINKER_FLAGS": "-fopenmp"
+                "CMAKE_CXX_FLAGS": "-fopenmp -g"
             }
         },
         {
@@ -173,8 +48,18 @@
             "hidden": true,
             "cacheVariables": {
                 "CMAKE_CXX_FLAGS": "-fopenmp -O3 -fstack-clash-protection",
-                "CMAKE_EXE_LINKER_FLAGS": "-fopenmp,-Wl,--allow-shlib-undefined,--as-needed,-z,noexecstack,-z,relro,-z,now,-z,nodlopen",
-                "CMAKE_SHARED_LINKER_FLAGS": "-fopenmp,-Wl,--allow-shlib-undefined,--as-needed,-z,noexecstack,-z,relro,-z,now,-z,nodlopen"
+                "CMAKE_EXE_LINKER_FLAGS": "-Wl,--allow-shlib-undefined,--as-needed,-z,noexecstack,-z,relro,-z,now,-z,nodlopen",
+                "CMAKE_SHARED_LINKER_FLAGS": "-Wl,--allow-shlib-undefined,--as-needed,-z,noexecstack,-z,relro,-z,now,-z,nodlopen"
+            }
+        },
+        {
+            "name": "openmp-Benchmark",
+            "description": "Enable OpenMP support",
+            "hidden": true,
+            "cacheVariables": {
+                "CMAKE_CXX_FLAGS": "-g -fopenmp -O3 -fstack-clash-protection",
+                "CMAKE_EXE_LINKER_FLAGS": "-Wl,--allow-shlib-undefined,--as-needed,-z,noexecstack,-z,relro,-z,now,-z,nodlopen",
+                "CMAKE_SHARED_LINKER_FLAGS": "-Wl,--allow-shlib-undefined,--as-needed,-z,noexecstack,-z,relro,-z,now,-z,nodlopen"
             }
         }
     ]
