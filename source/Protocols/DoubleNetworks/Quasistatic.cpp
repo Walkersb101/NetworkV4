@@ -358,14 +358,13 @@ auto networkV4::protocols::quasiStaticStrainDouble::genBondData(
   const auto& nodes = _network.getNodes();
   const auto bonds = _network.getBonds();
 
-  const auto& index = std::get<0>(_bond);
+  const auto& binfo = std::get<0>(_bond);
   const auto& type = std::get<1>(_bond);
   const auto& brk = std::get<2>(_bond);
-  const auto& binfo = bonds.getBonds()[index];
 
   bool harmonic = std::holds_alternative<Forces::HarmonicBond>(type);
   bool strainBreak = std::holds_alternative<BreakTypes::StrainBreak>(brk);
-  bool sacrificial = _network.getBondTags().hasTag(index, sacTag);
+  bool sacrificial = _network.getBondTags().hasTag(binfo.index, sacTag);
 
   const auto& pos1 = nodes.positions()[binfo.src];
   const auto& pos2 = nodes.positions()[binfo.dst];

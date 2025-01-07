@@ -53,7 +53,7 @@ void networkV4::network::computePass(auto _parts, bool _evalBreak)
       if (_evalBreak) {
         const bool broken = bonded::visitBreak(brk, dist);
         if (broken) {
-          m_breakQueue.emplace_back(bond.index, type, brk);
+          m_breakQueue.emplace_back(bond, type, brk);
 
           type = Forces::VirtualBond {};
           brk = BreakTypes::None {};

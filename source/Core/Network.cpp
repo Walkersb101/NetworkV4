@@ -224,7 +224,7 @@ void networkV4::network::evalBreak(const Utils::vec2d& _dist,
 {
   const bool broken = bonded::visitBreak(_break, _dist);
   if (broken) {
-    m_breakQueue.emplace_back(_binfo.index, _type, _break);
+    m_breakQueue.emplace_back(_binfo, _type, _break);
 
     _type = Forces::VirtualBond {};
     _break = BreakTypes::None {};
