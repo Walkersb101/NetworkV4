@@ -214,10 +214,6 @@ auto networkV4::protocols::quasiStaticStrainDouble::findSingleBreak(
   testNetwork = _network;
   std::tie(maxDistAboveB, breakCountB) = evalStrain(testNetwork, b);
 
-  testNetwork.computeForces();
-  double maxComp = Utils::maxComp(testNetwork.getNodes().forces());
-  auto forces = testNetwork.getNodes().gatherForces();
-
   if (maxDistAboveB < 0.0) {
     _network = testNetwork;
     if (b == m_maxStrain) {
