@@ -70,6 +70,7 @@ public:
     const int maxThreads = omp_get_max_threads();
     if (maxThreads > 1) {
       m_partitionsCount = 2 * maxThreads;
+      m_passes = 2;
     }
 #endif
   }
@@ -152,35 +153,37 @@ public:
 
   auto getPasses() const -> size_t { return m_passes; }
 
-  auto generatePartitions(const nodes& _nodes, const bonded::bonds& _bonds)
-      -> Partitions
+  auto generatePartitions(const nodes& _nodes,
+                          const bonded::bonds& _bonds) -> Partitions
   {
     Partitions partitions;
     partitions.reserve(m_partitionsCount);
 
     const auto partitionSize = _nodes.size() / m_partitionsCount;
     for (size_t i = 0; i < m_partitionsCount; ++i) {
-        auto nodefirst = std::find(m_partition.begin(), m_partition.end(), i);
-        auto nodelast = std::find(m_partition.rbegin(), m_partition.rend(), i).base();
+      auto nodefirst = std::find(m_partition.begin(), m_partition.end(), i);
+      auto nodelast =
+          std::find(m_partition.rbegin(), m_partition.rend(), i).base();
 
-        const size_t nodesStart = std::distance(m_partition.begin(), nodefirst);
-        const size_t nodesEnd = std::distance(m_partition.begin(), nodelast);
+      const size_t nodesStart = std::distance(m_partition.begin(), nodefirst);
+      const size_t nodesEnd = std::distance(m_partition.begin(), nodelast);
 
-        auto bondfirst = std::find_if(_bonds.getBonds().begin(), _bonds.getBonds().end(),
-                                      [&](const auto& _bond)
-                                      {
-                                        return m_partition[_bond.src] == i;
-                                      });
-        auto bondlast = std::find_if(_bonds.getBonds().rbegin(), _bonds.getBonds().rend(),
-                                        [&](const auto& _bond)
-                                        {
-                                        return m_partition[_bond.src] == i;
-                                        }).base();
-        
-        const size_t bondsStart = std::distance(_bonds.getBonds().begin(), bondfirst);
-        const size_t bondsEnd = std::distance(_bonds.getBonds().begin(), bondlast);
+      auto bondfirst = std::find_if(_bonds.getBonds().begin(),
+                                    _bonds.getBonds().end(),
+                                    [&](const auto& _bond)
+                                    { return m_partition[_bond.src] == i; });
+      auto bondlast = std::find_if(_bonds.getBonds().rbegin(),
+                                   _bonds.getBonds().rend(),
+                                   [&](const auto& _bond)
+                                   { return m_partition[_bond.src] == i; })
+                          .base();
 
-        partitions.emplace_back(i, nodesStart, nodesEnd, bondsStart, bondsEnd);
+      const size_t bondsStart =
+          std::distance(_bonds.getBonds().begin(), bondfirst);
+      const size_t bondsEnd =
+          std::distance(_bonds.getBonds().begin(), bondlast);
+
+      partitions.emplace_back(i, nodesStart, nodesEnd, bondsStart, bondsEnd);
     }
 
     return partitions;
@@ -193,7 +196,7 @@ private:
   std::vector<std::uint_fast64_t> m_mortonHash;
 
   const size_t m_mortonRes = config::partition::mortonRes;
-  const size_t m_passes = config::partition::passes;
+  size_t m_passes = 1;  //= config::partition::passes;
 };
 
 }  // namespace partition
