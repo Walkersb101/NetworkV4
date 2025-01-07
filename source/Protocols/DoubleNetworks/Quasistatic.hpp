@@ -94,7 +94,7 @@ private:
 
   double m_maxStep;
 
-  double m_t;
+  double m_t = 0.0;
   std::size_t m_strainCount = 0;
 
   bool m_saveBreaks = false;

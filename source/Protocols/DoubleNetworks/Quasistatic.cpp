@@ -212,7 +212,7 @@ auto networkV4::protocols::quasiStaticStrainDouble::findSingleBreak(
   }
 
   testNetwork = _network;
-  std::tie(maxDistAboveA, breakCountA) = evalStrain(testNetwork, b);
+  std::tie(maxDistAboveB, breakCountB) = evalStrain(testNetwork, b);
 
   if (maxDistAboveB < 0.0) {
     _network = testNetwork;
@@ -248,6 +248,7 @@ auto networkV4::protocols::quasiStaticStrainDouble::relaxBreak(
   double Ecurr = _network.getEnergy();
   double Eprev = Ecurr;
   size_t breakCount = 0;
+  m_t = 0.0;
 
   // TODO: allow changing Gamma
   integration::AdaptiveOverdampedEulerHeun stepper(1.0, m_params);
@@ -267,6 +268,7 @@ auto networkV4::protocols::quasiStaticStrainDouble::relaxBreak(
     stepper.step(_network);
     _network.computeForces(true);
     Ecurr = _network.getEnergy();
+    m_t += stepper.getDt();
 
     bool brokenInStep = !_network.getBreakQueue().empty();
     breakCount += _network.getBreakQueue().size();

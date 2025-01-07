@@ -144,12 +144,15 @@ public:
       _network.computeForces();
       Ecurr = _network.getEnergy();
 
-      if (fabs(Ecurr - Eprev)
-          < m_Etol * 0.5 * (fabs(Ecurr) + fabs(Eprev) + EPS_ENERGY))
+      if (Npos > m_params.Ndelay
+          && fabs(Ecurr - Eprev)
+              < m_Etol * 0.5 * (fabs(Ecurr) + fabs(Eprev) + EPS_ENERGY))
+      {
         return;
-
+      }
+      
       fdotf = xdoty(forces, forces);
-      if (fdotf < m_Ftol * m_Ftol) {
+      if (Npos > m_params.Ndelay && fdotf < m_Ftol * m_Ftol) {
         return;
       }
     }
