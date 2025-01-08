@@ -179,14 +179,6 @@ private:
     auto map = _net.getTags().getVecs();
 
     auto tagGroup = createOrGetGroup(params, "tags");
-    auto keys =
-        createDataSet<size_t>(tagGroup,
-                              "keys",
-                              std::vector<std::size_t> {0},
-                              std::vector<std::size_t> {_net.getTags().size()},
-                              std::vector<hsize_t> {1},
-                              true);
-    keys.write(map.first);
 
     auto variable_stringtype = HighFive::VariableLengthStringType();
     tagGroup
@@ -194,15 +186,8 @@ private:
                        HighFive::DataSpace({_net.getTags().size()},
                                            {_net.getTags().size()}),
                        variable_stringtype)
-        .write(map.second);
+        .write(map);
 
-    auto tags = std::vector<std::vector<bool>>(_net.getBonds().size());
-    for (size_t i = 0; i < _net.getBonds().size(); ++i) {
-      tags[i].reserve(_net.getTags().size());
-      for (auto key : map.first) {
-        tags[i].push_back(_net.getBondTags().hasTag(i, key));
-      }
-    }
     auto bondTags = createDataSet<bool>(
         tagGroup,
         "bondTags",
@@ -212,7 +197,7 @@ private:
                                   _net.getTags().size()},
         std::vector<hsize_t> {_net.getBonds().size(), _net.getTags().size()},
         true);
-    bondTags.write(tags);
+    bondTags.write(_net.getBonds().gatherTags());
   }
   void initObservations(HighFive::File _file,
                         const networkV4::network& _net) const

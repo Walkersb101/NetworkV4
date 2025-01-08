@@ -164,21 +164,24 @@ public:
   }
 
 private:
-  // auto norm(const std::vector<Utils::vec2d>& _vec) -> double
-  //{
-  //   return std::sqrt(xdoty(_vec, _vec));
-  // }
-
   auto xdoty(const std::vector<Utils::vec2d>& _x,
              const std::vector<Utils::vec2d>& _y) -> double
   {
-    return std::inner_product(_x.begin(),
-                              _x.end(),
-                              _y.begin(),
-                              0.0,
-                              std::plus<double>(),
-                              [](Utils::vec2d _a, Utils::vec2d _b)
-                              { return _a.dot(_b); });
+    //return std::inner_product(_x.begin(),
+    //                          _x.end(),
+    //                          _y.begin(),
+    //                          0.0,
+    //                          std::plus<double>(),
+    //                          [](Utils::vec2d _a, Utils::vec2d _b)
+    //                          { return _a.dot(_b); });
+
+    double sum = 0.0;
+    #pragma omp parallel for reduction(+ : sum) schedule(static) 
+    for (const auto& [x, y] : ranges::views::zip(_x, _y))
+    {
+      sum += x.dot(y);
+    }
+    return sum;
   }
 
   auto maxAbsComponent(const std::vector<Utils::vec2d>& _vec) -> double

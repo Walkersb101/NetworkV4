@@ -312,8 +312,9 @@ auto networkV4::protocols::quasiStaticStrainDouble::genTimeData(
 {
   const auto& stresses = _network.getStresses();
   const auto& globalStress = stresses.total();
-  const auto& sacStress = stresses.get(_network.getTags().get("sacrificial"));
-  const auto& matStress = stresses.get(_network.getTags().get("matrix"));
+  const auto& sacStress =
+      stresses.getFirst(_network.getTags().get("sacrificial"));
+  const auto& matStress = stresses.getFirst(_network.getTags().get("matrix"));
 
   const auto& box = _network.getBox();
   auto counts = getCounts(_network);
@@ -353,8 +354,8 @@ auto networkV4::protocols::quasiStaticStrainDouble::genBondData(
 
   const auto& stresses = _network.getStresses();
   const auto& globalStress = stresses.total();
-  const auto& sacStress = stresses.get(sacTag);
-  const auto& matStress = stresses.get(matTag);
+  const auto& sacStress = stresses.getFirst(sacTag);
+  const auto& matStress = stresses.getFirst(matTag);
 
   const auto& box = _network.getBox();
   auto counts = getCounts(_network);
@@ -365,10 +366,11 @@ auto networkV4::protocols::quasiStaticStrainDouble::genBondData(
   const auto& binfo = std::get<0>(_bond);
   const auto& type = std::get<1>(_bond);
   const auto& brk = std::get<2>(_bond);
+  const auto tags = std::get<3>(_bond);
 
   bool harmonic = std::holds_alternative<Forces::HarmonicBond>(type);
   bool strainBreak = std::holds_alternative<BreakTypes::StrainBreak>(brk);
-  bool sacrificial = _network.getBondTags().hasTag(binfo.index, sacTag);
+  bool sacrificial = Utils::Tags::hasTag(tags, sacTag);
 
   const auto& pos1 = nodes.positions()[binfo.src];
   const auto& pos2 = nodes.positions()[binfo.dst];
@@ -422,15 +424,16 @@ auto networkV4::protocols::quasiStaticStrainDouble::getCounts(
   std::size_t matrixCount = 0;
 
   auto sacTag = _network.getTags().get("sacrificial");
+  const auto& bonds = _network.getBonds();
 
-  for (const auto& [bond, type] : ranges::views::zip(
-           _network.getBonds().getBonds(), _network.getBonds().getTypes()))
+  for (const auto& [bond, type, tags] :
+       ranges::views::zip(bonds.getBonds(), bonds.getTypes(), bonds.getTags()))
   {
     if (std::holds_alternative<Forces::VirtualBond>(type)) {
       continue;
     }
     bondCount++;
-    if (_network.getBondTags().hasTag(bond.index, sacTag)) {
+    if (Utils::Tags::hasTag(tags, sacTag)) {
       sacrificialCount++;
     } else {
       matrixCount++;

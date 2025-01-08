@@ -21,6 +21,7 @@ void networkV4::bonded::bonds::clear()
   m_bonds.clear();
   m_types.clear();
   m_breakTypes.clear();
+    m_tags.clear();
 }
 
 void networkV4::bonded::bonds::reserve(std::size_t _size)
@@ -28,11 +29,12 @@ void networkV4::bonded::bonds::reserve(std::size_t _size)
   m_bonds.reserve(_size);
   m_types.reserve(_size);
   m_breakTypes.reserve(_size);
+    m_tags.reserve(_size);
 }
 
 auto networkV4::bonded::bonds::size() const -> std::size_t
 {
-  if (m_bonds.size() != m_types.size() || m_bonds.size() != m_breakTypes.size())
+  if (m_bonds.size() != m_types.size() || m_bonds.size() != m_breakTypes.size() || m_bonds.size() != m_tags.size())
   {
     throw("bonds::size: inconsistent sizes");
   }
@@ -42,7 +44,8 @@ auto networkV4::bonded::bonds::size() const -> std::size_t
 auto networkV4::bonded::bonds::addBond(size_t _src,
                                        size_t _dst,
                                        const bondTypes& _bond,
-                                       const breakTypes& _break) -> size_t
+                                       const breakTypes& _break,
+                                       const Utils::Tags::tagFlags& _tags) -> size_t
 {
   if (_src == _dst) {
     throw("bonds::addBond: src and dst are the same");
@@ -52,6 +55,7 @@ auto networkV4::bonded::bonds::addBond(size_t _src,
   m_bonds.emplace_back(_src, _dst, index);
   m_types.emplace_back(_bond);
   m_breakTypes.emplace_back(_break);
+  m_tags.emplace_back(_tags);
 
   return index;
 }
@@ -72,6 +76,11 @@ auto networkV4::bonded::bonds::getBreaks() const
   return m_breakTypes;
 }
 
+auto networkV4::bonded::bonds::getTags() const -> const Utils::Tags::tagStorage&
+{
+  return m_tags;
+}
+
 auto networkV4::bonded::bonds::getBonds() -> std::vector<BondInfo>&
 {
   return m_bonds;
@@ -85,6 +94,11 @@ auto networkV4::bonded::bonds::getTypes() -> std::vector<bondTypes>&
 auto networkV4::bonded::bonds::getBreaks() -> std::vector<breakTypes>&
 {
   return m_breakTypes;
+}
+
+auto networkV4::bonded::bonds::getTags() -> Utils::Tags::tagStorage&
+{
+  return m_tags;
 }
 
 auto networkV4::bonded::bonds::gatherBonds() const
@@ -118,6 +132,17 @@ auto networkV4::bonded::bonds::gatherBreaks() const
     breaks[bond.index] = brk;
   }
   return breaks;
+}
+
+auto networkV4::bonded::bonds::gatherTags() const
+    -> Utils::Tags::tagStorage const
+{
+  Utils::Tags::tagStorage tags;
+  tags.resize(size());
+  for (const auto& [tag, bond] : ranges::views::zip(m_tags, m_bonds)) {
+    tags.at(bond.index) = tag;
+  }
+  return tags;
 }
 
 void networkV4::bonded::bonds::remap(const NodeMap& _nodeMap)

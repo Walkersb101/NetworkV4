@@ -41,9 +41,9 @@ void networkV4::network::computePass(auto _parts, bool _evalBreak)
   # pragma omp parallel for reduction(+ : m_energy) reduction(+ : m_stresses) \
       reduction(+ : m_breakQueue) num_threads(OMP::threadPartitions.size() / 2) schedule(static)
   for (const auto part : _parts) {
-    for (auto&& [bond, type, brk] :
+    for (auto&& [bond, type, brk, tags] :
          ranges::views::zip(
-             m_bonds.getBonds(), m_bonds.getTypes(), m_bonds.getBreaks())
+             m_bonds.getBonds(), m_bonds.getTypes(), m_bonds.getBreaks(), m_bonds.getTags())
              | ranges::views::slice(part.bondStart(), part.bondEnd()))
     {
       const auto& pos1 = m_nodes.positions()[bond.src];
@@ -53,12 +53,12 @@ void networkV4::network::computePass(auto _parts, bool _evalBreak)
       if (_evalBreak) {
         const bool broken = bonded::visitBreak(brk, dist);
         if (broken) {
-          m_breakQueue.emplace_back(bond, type, brk);
+          m_breakQueue.emplace_back(bond, type, brk, tags);
 
           type = Forces::VirtualBond {};
           brk = BreakTypes::None {};
 
-          m_bondTags.addTag(bond.index, m_tags.get("broken"));
+          tags.set(BROKEN_TAG_INDEX);
         }
       }
 
@@ -67,8 +67,7 @@ void networkV4::network::computePass(auto _parts, bool _evalBreak)
         m_nodes.forces()[bond.src] -= force.value();
         m_nodes.forces()[bond.dst] += force.value();
 
-        const auto& tags = m_bondTags.getTagIds(bond.index);
-        const auto stress = Utils::outer(force.value(), dist) / m_box.area();
+        const auto stress = Utils::outer(force.value(), dist) * m_box.invArea();
         m_stresses.distribute(stress, tags);
       }
 

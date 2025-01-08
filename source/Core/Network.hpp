@@ -17,7 +17,7 @@
 namespace networkV4
 {
 
-using breakInfo = std::tuple<bonded::BondInfo, bonded::bondTypes, bonded::breakTypes>;
+using breakInfo = std::tuple<bonded::BondInfo, bonded::bondTypes, bonded::breakTypes, Utils::Tags::tagFlags>;
 using bondQueue = std::deque<breakInfo>;
 
 class network
@@ -77,11 +77,13 @@ private:
   void evalBreak(const Utils::vec2d& _dist,
                  const bonded::BondInfo& _binfo,
                  bonded::bondTypes& _type,
-                 bonded::breakTypes& _break);
+                 bonded::breakTypes& _break,
+                 Utils::Tags::tagFlags& _tags);
 
   void applyforce(const bonded::BondInfo& _binfo,
                   const Utils::vec2d& _dist,
-                  const Utils::vec2d& _force);
+                  const Utils::vec2d& _force,
+                    const Utils::Tags::tagFlags& _tags);
 
 #if defined(_OPENMP)
 private:

@@ -24,11 +24,11 @@ public:
   void reserve(size_t _size);
   auto size() const -> size_t;
 
-  void addNode(size_t _globalIndex,
-               const Utils::vec2d& _position,
-               const Utils::vec2d& _velocity = Utils::vec2d(0.0, 0.0),
-               double _mass = 1.0,
-               const Utils::vec2d& _force = Utils::vec2d(0.0, 0.0));
+  //void addNode(size_t _globalIndex,
+  //             const Utils::vec2d& _position,
+  //             const Utils::vec2d& _velocity = Utils::vec2d(0.0, 0.0),
+  //             double _mass = 1.0,
+  //             const Utils::vec2d& _force = Utils::vec2d(0.0, 0.0));
   auto addNode(const Utils::vec2d& _position,
                const Utils::vec2d& _velocity = Utils::vec2d(0.0, 0.0),
                double _mass = 1.0) -> size_t;
@@ -73,7 +73,7 @@ public:
   }
 
 public:
-  auto nextIndex() -> size_t;
+  //auto nextIndex() -> size_t;
   auto hasIndex(size_t _index) const -> bool;
 
 public:
@@ -98,6 +98,6 @@ private:
 
   std::vector<double> m_masses;
 
-  size_t m_nextIndex = 0;
+  //size_t m_nextIndex = 0;
 };
 }  // namespace networkV4

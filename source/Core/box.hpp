@@ -42,11 +42,7 @@ public:
     }
 
     m_Lx = _Lx;
-    m_invLx = 1.0 / _Lx;
-    m_invxy = -m_xy / (_Lx * m_Ly);
-    m_halfLx = 0.5 * _Lx;
-
-    m_area = _Lx * m_Ly;
+    updateDependent();
   }
   void setLy(const double _Ly)
   {
@@ -55,21 +51,19 @@ public:
     }
 
     m_Ly = _Ly;
-    m_invLy = 1.0 / _Ly;
-    m_invxy = -m_xy / (m_Lx * _Ly);
-    m_halfLy = 0.5 * _Ly;
-    m_area = m_Lx * _Ly;
+    updateDependent();
   }
 
   void setxy(const double _xy)
   {
     m_xy = _xy;
-    m_invxy = -_xy / (m_Lx * m_Ly);
+    updateDependent();
   }
 
 public:
   auto shearStrain() const -> const double { return m_xy / m_Ly; }
   auto area() const -> const double { return m_area; }
+  auto invArea() const -> const double { return m_invArea; }
   auto getDomain() const -> const Utils::vec2d
   {
     return Utils::vec2d(m_Lx, m_Ly);
@@ -128,6 +122,15 @@ public:
   }
 
 private:
+    void updateDependent(){
+        m_invLy = 1.0 / m_Ly;
+        m_invxy = -m_xy / (m_Lx * m_Ly);
+        m_halfLy = 0.5 * m_Ly;
+        m_area = m_Lx * m_Ly;
+        m_invArea = 1.0 / m_area;
+    }
+
+private:
   double m_Lx;
   double m_Ly;
   double m_xy;
@@ -140,6 +143,7 @@ private:
   double m_halfLy;
 
   double m_area;
+  double m_invArea;
 };
 
 }  // namespace networkV4

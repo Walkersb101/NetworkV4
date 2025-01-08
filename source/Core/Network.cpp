@@ -162,20 +162,20 @@ void networkV4::network::computeForces(bool _evalBreak)
   m_stresses.zero();
   m_nodes.zeroForce();
 
-  for (auto&& [bond, type, brk] : ranges::views::zip(
-           m_bonds.getBonds(), m_bonds.getTypes(), m_bonds.getBreaks()))
+  for (auto&& [bond, type, brk, tags] : ranges::views::zip(
+           m_bonds.getBonds(), m_bonds.getTypes(), m_bonds.getBreaks(), m_bonds.getTags()))
   {
     const auto& pos1 = m_nodes.positions()[bond.src];
     const auto& pos2 = m_nodes.positions()[bond.dst];
     const auto dist = m_box.minDist(pos1, pos2);
 
     if (_evalBreak) {
-      evalBreak(dist, bond, type, brk);
+      evalBreak(dist, bond, type, brk, tags);
     }
 
     const auto force = bonded::visitForce(type, dist);
     if (force) {
-      applyforce(bond, dist, force.value());
+      applyforce(bond, dist, force.value(), tags);
     }
 
     const auto energy = bonded::visitEnergy(type, dist);
@@ -206,41 +206,42 @@ auto networkV4::network::computeEnergy() -> double
 
 void networkV4::network::computeBreaks()
 {
-  for (const auto& [bond, type, brk] : ranges::views::zip(
-           m_bonds.getBonds(), m_bonds.getTypes(), m_bonds.getBreaks()))
+  for (const auto& [bond, type, brk, tags] : ranges::views::zip(
+           m_bonds.getBonds(), m_bonds.getTypes(), m_bonds.getBreaks(), m_bonds.getTags()))
   {
     const auto& pos1 = m_nodes.positions()[bond.src];
     const auto& pos2 = m_nodes.positions()[bond.dst];
     const auto dist = m_box.minDist(pos1, pos2);
 
-    evalBreak(dist, bond, type, brk);
+    evalBreak(dist, bond, type, brk, tags);
   }
 }
 
 void networkV4::network::evalBreak(const Utils::vec2d& _dist,
                                    const bonded::BondInfo& _binfo,
                                    bonded::bondTypes& _type,
-                                   bonded::breakTypes& _break)
+                                   bonded::breakTypes& _break,
+                                   Utils::Tags::tagFlags& _tags) 
 {
   const bool broken = bonded::visitBreak(_break, _dist);
   if (broken) {
-    m_breakQueue.emplace_back(_binfo, _type, _break);
+    m_breakQueue.emplace_back(_binfo, _type, _break, _tags);
 
     _type = Forces::VirtualBond {};
     _break = BreakTypes::None {};
 
-    m_bondTags.addTag(_binfo.index, m_tags.get("broken"));
+    _tags.set(BROKEN_TAG_INDEX);
   }
 }
 
 void networkV4::network::applyforce(const bonded::BondInfo& _binfo,
                                     const Utils::vec2d& _dist,
-                                    const Utils::vec2d& _force)
+                                    const Utils::vec2d& _force,
+                                    const Utils::Tags::tagFlags& _tags)
 {
   m_nodes.forces()[_binfo.src] -= _force;
   m_nodes.forces()[_binfo.dst] += _force;
 
-  const auto& tags = m_bondTags.getTagIds(_binfo.index);
-  const auto stress = Utils::outer(_force, _dist) / m_box.area();
-  m_stresses.distribute(stress, tags);
+  const auto stress = Utils::outer(_force, _dist) * m_box.invArea();
+  m_stresses.distribute(stress, _tags);
 }

@@ -19,78 +19,104 @@ public:
   stresses() {}
 
 public:
-  void clear() { m_taggedStresses.clear(); }
-
-  void init(size_t _tag)
+  void clear()
   {
-    if (!has(_tag)) {
-      m_taggedStresses[_tag] = Utils::tensor2d(0.0, 0.0, 0.0, 0.0);
-    }  // TODO: else throw? Or Log?
-  }
-  auto get(size_t _tag) -> Utils::tensor2d&
-  {
-    return m_taggedStresses.at(_tag);
-  }
-  auto get(size_t _tag) const -> const Utils::tensor2d&
-  {
-    return m_taggedStresses.at(_tag);
+    m_values.clear();
+    m_totalStress.set(0.0, 0.0, 0.0, 0.0);
   }
 
-  auto getTags() const -> std::vector<size_t>
+  void init(const std::bitset<NUM_TAGS>& _tags,
+            const Utils::tensor2d& _value = Utils::tensor2d())
   {
-    std::vector<size_t> tags;
-    tags.reserve(m_taggedStresses.size());
-    for (const auto& [tag, stress] : m_taggedStresses) {
-      tags.push_back(tag);
+    for (size_t i = 0; i < NUM_TAGS; ++i) {
+      // TODO : ADD LOG if already set
+      if (!m_stored.test(i) && _tags.test(i)) {
+        init(i, _value);
+      }
     }
-    return tags;
   }
+
+  auto getFirst(const std::bitset<NUM_TAGS>& _tags) -> Utils::tensor2d&
+  {
+    for (size_t i = 0; i < NUM_TAGS; ++i) {
+      if (_tags.test(i)) {
+        return m_values.at(m_indices.at(i));
+      }
+    }
+    throw std::invalid_argument("Tag not found");
+  }
+
+  auto getFirst(const std::bitset<NUM_TAGS>& _tags) const -> const Utils::tensor2d&
+  {
+    return const_cast<stresses*>(this)->getFirst(_tags);
+  }
+
+  auto getall(const std::bitset<NUM_TAGS>& _tags)
+      -> std::vector<Utils::tensor2d>
+  {
+    std::vector<Utils::tensor2d> values;
+    values.reserve(_tags.count());
+    for (size_t i = 0; i < NUM_TAGS; ++i) {
+      if (_tags.test(i)) {
+        values.push_back(m_values.at(m_indices.at(i)));
+      }
+    }
+    return values;
+  }
+
+  auto getInitilised() -> const std::bitset<NUM_TAGS>& { return m_stored; }
 
   auto total() -> Utils::tensor2d& { return m_totalStress; }
   auto total() const -> const Utils::tensor2d& { return m_totalStress; }
 
   void zero()
   {
-    for (auto& [tag, stress] : m_taggedStresses) {
-      stress.set(0.0, 0.0, 0.0, 0.0);
-    }
+    std::fill(m_values.begin(), m_values.end(), Utils::tensor2d());
     m_totalStress.set(0.0, 0.0, 0.0, 0.0);
   }
 
   void distribute(const Utils::tensor2d& _stress,
-                  const std::vector<std::size_t>& _tags)
+                  const std::bitset<NUM_TAGS>& _tags)
   {
     m_totalStress += _stress;
-    for (const auto& tag : _tags) {
-      if (has(tag)) {
-        m_taggedStresses[tag] += _stress;
+    for (size_t i = 0; i < NUM_TAGS; ++i) {
+      if (_tags.test(i) && m_stored.test(i)) {
+        m_values.at(m_indices.at(i)) += _stress;
       }
     }
   }
 
-public:
-  auto has(size_t _tag) const -> bool const
+private:
+  void init(size_t _index, const Utils::tensor2d& _value)
   {
-    return m_taggedStresses.find(_tag) != m_taggedStresses.end();
+    m_stored.set(_index);
+    m_indices.at(_index) = m_values.size();
+    m_values.push_back(_value);
   }
 
 private:
-  std::unordered_map<size_t, Utils::tensor2d> m_taggedStresses;
+  std::bitset<NUM_TAGS> m_stored;
+  std::array<size_t, NUM_TAGS> m_indices;
+  std::vector<Utils::tensor2d> m_values;
   Utils::tensor2d m_totalStress;
+
+private:
+  friend void merge(stresses& _s1, const stresses& _s2);
 };
 
 inline void merge(stresses& _s1, const stresses& _s2)
 {
-  _s1.total() += _s2.total();
-  auto s1Tags = _s1.getTags();
-  auto s2Tags = _s2.getTags();
-  for (auto tag : ranges::views::concat(s1Tags, s2Tags) | ranges::view::unique)
-  {
-    if (_s1.has(tag) && _s2.has(tag)) {
-      _s1.get(tag) += _s2.get(tag);
-    } else if (_s2.has(tag)) {
-      _s1.init(tag);
-      _s1.get(tag) = _s2.get(tag);
+  _s1.m_totalStress += _s2.m_totalStress;
+
+  auto s1init = _s1.m_stored;
+  auto s2init = _s2.m_stored;
+
+  for (size_t i = 0; i < NUM_TAGS; ++i) {
+    if (s1init.test(i) && s2init.test(i)) {
+      _s1.m_values.at(_s1.m_indices.at(i)) +=
+          _s2.m_values.at(_s2.m_indices.at(i));
+    } else if (s2init.test(i)) {
+      _s1.init(i, _s2.m_values.at(_s2.m_indices.at(i)));
     }
   }
 }

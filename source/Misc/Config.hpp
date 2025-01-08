@@ -15,6 +15,8 @@
 
 #define ROUND_ERROR_PRECISION 1.0e-14
 
+#define NUM_TAGS 8
+
 namespace config
 {
 

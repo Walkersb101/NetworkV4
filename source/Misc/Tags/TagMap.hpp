@@ -1,92 +1,107 @@
 #pragma once
 
 #include <string>
-#include <unordered_map>
+#include <vector>
 
 namespace Utils
 {
 namespace Tags
 {
 
+#define BROKEN_TAG_INDEX 0
+
 class tagMap
 {
 public:
-  tagMap() {}
+  tagMap() 
+  {
+    add("broken"); // add default tags
+  }
 
 public:
-  auto size() const -> size_t const { return m_tagId2Name.size(); }
+  auto size() const -> size_t const { return NUM_TAGS; }
 
-  void add(std::size_t _id, const std::string& _name)
+  auto add(const std::string& _name) -> std::bitset<NUM_TAGS>
   {
-    if (m_tagId2Name.find(_id) != m_tagId2Name.end()) {
-      throw("tagMap::add: id already exists");
-    }
-
-    m_tagId2Name[_id] = _name;
-    m_tagName2Id[_name] = _id;
+    size_t index = firstEmpty();
+    m_tagNames[index] = _name;
+    m_setTags.set(index);
+    return index2Bitset(index);
   }
 
-  auto add(const std::string& _name) -> size_t const
+  auto get(const std::string& _name) const -> std::bitset<NUM_TAGS>
   {
-    add(updateNextIndex(), _name);
-    return m_nextId;
-  }
-
-  auto get(const std::string& _name) const -> size_t const
-  {
-    if (m_tagName2Id.find(_name) == m_tagName2Id.end()) {
+    auto it = std::find(m_tagNames.begin(), m_tagNames.end(), _name);
+    if (it == m_tagNames.end()) {
       throw "tagMap::get: name does not exist";
     }
-
-    return m_tagName2Id.at(_name);
+    auto index = std::distance(m_tagNames.begin(), it);
+    return std::bitset<NUM_TAGS>(1 << index);
   }
 
   auto get(std::size_t _id) const -> const std::string&
   {
-    if (m_tagId2Name.find(_id) == m_tagId2Name.end()) {
-      throw("tagMap::get: id does not exist");
-    }
+    checkTag(_id);
+    return m_tagNames[_id];
+  }
 
-    return m_tagId2Name.at(_id);
+  auto get(const std::bitset<NUM_TAGS>& _tags) const -> std::vector<std::string>
+  {
+    std::vector<std::string> names;
+    names.reserve(_tags.count());
+    for (size_t i = 0; i < NUM_TAGS; ++i) {
+      if (_tags.test(i)) {
+        names.emplace_back(m_tagNames[i]);
+      }
+    }
+    return names;
   }
 
   auto has(const std::string& _name) const -> bool const
   {
-    return m_tagName2Id.find(_name) != m_tagName2Id.end();
+    return std::find(m_tagNames.begin(), m_tagNames.end(), _name)
+        != m_tagNames.end();
   }
 
   auto has(std::size_t _id) const -> bool const
   {
-    return m_tagId2Name.find(_id) != m_tagId2Name.end();
+    checkTag(_id);
+    return m_setTags.test(_id);
   }
 
-  auto getVecs() const
-      -> const std::pair<std::vector<std::size_t>, std::vector<std::string>>
+  auto getVecs() const -> const std::array<std::string, NUM_TAGS>&
   {
-    std::vector<std::size_t> ids;
-    std::vector<std::string> names;
-
-    for (const auto& [id, name] : m_tagId2Name) {
-      ids.push_back(id);
-      names.push_back(name);
-    }
-
-    return {ids, names};
+    return m_tagNames;
   }
 
 private:
-  auto updateNextIndex() -> size_t const
+  void checkTag(std::size_t _tag) const
   {
-    while (m_tagId2Name.find(m_nextId) != m_tagId2Name.end()) {
-      m_nextId++;
+    if (_tag >= NUM_TAGS) {
+      throw "tagMap::checkTag: tag out of bounds";
     }
-    return m_nextId;
+  }
+
+  auto firstEmpty() const -> size_t const
+  {
+    for (size_t i = 0; i < NUM_TAGS; ++i) {
+      if (!m_setTags.test(i)) {
+        return i;
+      }
+    }
+
+    throw "tagMap::firstEmpty: TagMap is full";
+  }
+
+  auto index2Bitset(std::size_t _index) const -> std::bitset<NUM_TAGS>
+  {
+    checkTag(_index);
+    return std::bitset<NUM_TAGS>(1 << _index);
   }
 
 private:
-  std::unordered_map<std::size_t, std::string> m_tagId2Name;
-  std::unordered_map<std::string, std::size_t> m_tagName2Id;
-  size_t m_nextId;
+  std::array<std::string, NUM_TAGS> m_tagNames;
+  std::bitset<NUM_TAGS> m_setTags;
 };
 
 }  // namespace Tags

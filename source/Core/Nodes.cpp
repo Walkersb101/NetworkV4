@@ -47,28 +47,28 @@ auto networkV4::nodes::size() const -> size_t
   return m_globalIndices.size();
 }
 
-void networkV4::nodes::addNode(size_t _globalIndex,
-                               const Utils::vec2d& _position,
-                               const Utils::vec2d& _velocity,
-                               double _mass,
-                               const Utils::vec2d& _force)
-{
-  if (hasIndex(_globalIndex)) {
-    throw std::runtime_error("Node with index " + std::to_string(_globalIndex)
-                             + " already exists");
-  }
-  // TODO: check if tags have been set
-  pushNode(_globalIndex, _position, _velocity, _mass, _force);
-}
+//void networkV4::nodes::addNode(size_t _globalIndex,
+//                               const Utils::vec2d& _position,
+//                               const Utils::vec2d& _velocity,
+//                               double _mass,
+//                               const Utils::vec2d& _force)
+//{
+//  if (hasIndex(_globalIndex)) {
+//    throw std::runtime_error("Node with index " + std::to_string(_globalIndex)
+//                             + " already exists");
+//  }
+//  // TODO: check if tags have been set
+//  pushNode(_globalIndex, _position, _velocity, _mass, _force);
+//}
 
 auto networkV4::nodes::addNode(const Utils::vec2d& _position,
                                const Utils::vec2d& _velocity,
                                double _mass) -> size_t
 {
+  size_t index = size();
   // TODO: check if tags have been set
-  size_t index = nextIndex();
   pushNode(index, _position, _velocity, _mass, Utils::vec2d(0.0, 0.0));
-  m_nextIndex++;
+  //m_nextIndex++;
   return index;
 }
 
@@ -156,13 +156,13 @@ auto networkV4::nodes::getNodeMap() const -> const NodeMap
   return nodeMap;
 }
 
-auto networkV4::nodes::nextIndex() -> size_t
-{
-  while (hasIndex(m_nextIndex)) {
-    m_nextIndex++;
-  }
-  return m_nextIndex;
-}
+//auto networkV4::nodes::nextIndex() -> size_t
+//{
+//  while (hasIndex(m_nextIndex)) {
+//    m_nextIndex++;
+//  }
+//  return m_nextIndex;
+//}
 
 auto networkV4::nodes::hasIndex(size_t _index) const -> bool
 {

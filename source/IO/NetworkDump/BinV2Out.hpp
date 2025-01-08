@@ -46,7 +46,6 @@ public:
     const auto& nodes = _net.getNodes();
 
     const auto& bonds = _net.getBonds();
-    const auto& bondTags = _net.getBondTags();
 
     append(ss, nodes.size());  // Append the size of the nodes
     append(ss, bonds.size());  // Append the size of the bonds
@@ -63,12 +62,10 @@ public:
     const auto globalBondInfo = bonds.gatherBonds();
     const auto globalBondType = bonds.gatherTypes();
     const auto globalBondBreak = bonds.gatherBreaks();
+    const auto globalBondTags = bonds.gatherTags();
 
-    for (const auto [i, info, type, breakType] :
-         ranges::views::zip(ranges::views::iota(0ul, bonds.size()),
-                            globalBondInfo,
-                            globalBondType,
-                            globalBondBreak))
+    for (const auto [info, type, breakType, tags] : ranges::views::zip(
+             globalBondInfo, globalBondType, globalBondBreak, globalBondTags))
     {
       if (!(std::holds_alternative<networkV4::Forces::VirtualBond>(type)
             || std::holds_alternative<networkV4::Forces::HarmonicBond>(
@@ -88,7 +85,7 @@ public:
       bool connected =
           std::holds_alternative<networkV4::Forces::HarmonicBond>(type);
       append(ss, connected);
-      append(ss, bondTags.hasTag(i, matrixTag));
+      append(ss, Utils::Tags::hasTag(tags, matrixTag));
       if (connected) {
         append(ss, std::get<networkV4::Forces::HarmonicBond>(type).r0());
         append(ss, std::get<networkV4::Forces::HarmonicBond>(type).k());
