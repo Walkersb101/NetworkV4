@@ -7,6 +7,8 @@
 #include <range/v3/view/enumerate.hpp>
 #include <range/v3/view/zip.hpp>
 
+#include "Misc/Utils.hpp"
+
 networkV4::nodes::nodes(const size_t _size)
 {
   reserve(_size);
@@ -47,19 +49,20 @@ auto networkV4::nodes::size() const -> size_t
   return m_globalIndices.size();
 }
 
-//void networkV4::nodes::addNode(size_t _globalIndex,
-//                               const Utils::vec2d& _position,
-//                               const Utils::vec2d& _velocity,
-//                               double _mass,
-//                               const Utils::vec2d& _force)
+// void networkV4::nodes::addNode(size_t _globalIndex,
+//                                const Utils::vec2d& _position,
+//                                const Utils::vec2d& _velocity,
+//                                double _mass,
+//                                const Utils::vec2d& _force)
 //{
-//  if (hasIndex(_globalIndex)) {
-//    throw std::runtime_error("Node with index " + std::to_string(_globalIndex)
-//                             + " already exists");
-//  }
-//  // TODO: check if tags have been set
-//  pushNode(_globalIndex, _position, _velocity, _mass, _force);
-//}
+//   if (hasIndex(_globalIndex)) {
+//     throw std::runtime_error("Node with index " +
+//     std::to_string(_globalIndex)
+//                              + " already exists");
+//   }
+//   // TODO: check if tags have been set
+//   pushNode(_globalIndex, _position, _velocity, _mass, _force);
+// }
 
 auto networkV4::nodes::addNode(const Utils::vec2d& _position,
                                const Utils::vec2d& _velocity,
@@ -68,7 +71,7 @@ auto networkV4::nodes::addNode(const Utils::vec2d& _position,
   size_t index = size();
   // TODO: check if tags have been set
   pushNode(index, _position, _velocity, _mass, Utils::vec2d(0.0, 0.0));
-  //m_nextIndex++;
+  // m_nextIndex++;
   return index;
 }
 
@@ -156,13 +159,13 @@ auto networkV4::nodes::getNodeMap() const -> const NodeMap
   return nodeMap;
 }
 
-//auto networkV4::nodes::nextIndex() -> size_t
+// auto networkV4::nodes::nextIndex() -> size_t
 //{
-//  while (hasIndex(m_nextIndex)) {
-//    m_nextIndex++;
-//  }
-//  return m_nextIndex;
-//}
+//   while (hasIndex(m_nextIndex)) {
+//     m_nextIndex++;
+//   }
+//   return m_nextIndex;
+// }
 
 auto networkV4::nodes::hasIndex(size_t _index) const -> bool
 {
@@ -177,7 +180,9 @@ void networkV4::nodes::zeroVelocity()
 
 void networkV4::nodes::zeroForce()
 {
-  std::fill(m_forces.begin(), m_forces.end(), Utils::vec2d(0.0, 0.0));
+  // std::fill(m_forces.begin(), m_forces.end(), Utils::vec2d(0.0, 0.0));
+  auto view = Utils::spanView(m_forces);
+  std::fill(view.begin(), view.end(), 0.0);
 }
 
 void networkV4::nodes::pushNode(size_t _globalIndex,

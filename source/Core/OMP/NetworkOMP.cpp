@@ -38,37 +38,48 @@ void networkV4::network::computeForces(bool _evalBreak)
 
 void networkV4::network::computePass(auto _parts, bool _evalBreak)
 {
-  # pragma omp parallel for reduction(+ : m_energy) reduction(+ : m_stresses) \
-      reduction(+ : m_breakQueue) num_threads(OMP::threadPartitions.size() / 2) schedule(static)
+  const auto& bonds = m_bonds.getBonds();
+  auto& types = m_bonds.getTypes();
+  auto& breaks = m_bonds.getBreaks();
+  auto& tags = m_bonds.getTags();
+
+  const auto& positions = m_nodes.positions();
+  auto& forces = m_nodes.forces();
+
+#  pragma omp parallel for reduction(+ : m_energy) reduction(+ : m_stresses) \
+      reduction(+ : m_breakQueue) \
+      num_threads(OMP::threadPartitions.size() / 2) schedule(static, 1)
   for (const auto part : _parts) {
-    for (auto&& [bond, type, brk, tags] :
-         ranges::views::zip(
-             m_bonds.getBonds(), m_bonds.getTypes(), m_bonds.getBreaks(), m_bonds.getTags())
-             | ranges::views::slice(part.bondStart(), part.bondEnd()))
-    {
-      const auto& pos1 = m_nodes.positions()[bond.src];
-      const auto& pos2 = m_nodes.positions()[bond.dst];
+    for (size_t i = part.bondStart(); i < part.bondEnd(); i++) {
+      const auto& bond = bonds[i];
+      auto& type = types[i];
+      auto& brk = breaks[i];
+      auto& bTags = tags[i];
+
+      const auto& pos1 = positions[bond.src];
+      const auto& pos2 = positions[bond.dst];
       const auto dist = m_box.minDist(pos1, pos2);
 
       if (_evalBreak) {
         const bool broken = bonded::visitBreak(brk, dist);
         if (broken) {
-          m_breakQueue.emplace_back(bond, type, brk, tags);
+          m_breakQueue.emplace_back(bond, type, brk, bTags);
 
           type = Forces::VirtualBond {};
           brk = BreakTypes::None {};
 
-          tags.set(BROKEN_TAG_INDEX);
+          bTags.set(BROKEN_TAG_INDEX);
         }
       }
 
       const auto force = bonded::visitForce(type, dist);
       if (force) {
-        m_nodes.forces()[bond.src] -= force.value();
-        m_nodes.forces()[bond.dst] += force.value();
+        const auto& f = force.value();
+        forces[bond.src] -= f;
+        forces[bond.dst] += f;
 
-        const auto stress = Utils::outer(force.value(), dist) * m_box.invArea();
-        m_stresses.distribute(stress, tags);
+        const auto stress = Utils::outer(f, dist) * m_box.invArea();
+        m_stresses.distribute(stress, bTags);
       }
 
       const auto energy = bonded::visitEnergy(type, dist);

@@ -5,7 +5,6 @@
 #include <range/v3/view/zip.hpp>
 
 #include "MinimiserBase.hpp"
-
 #include "Misc/Utils.hpp"
 
 namespace networkV4
@@ -139,8 +138,10 @@ public:
       //     m_params.dtMin);
 
       if (vdotf > 0.0) {
-        for (auto [vel, force] : ranges::views::zip(vels, forces)) {
-          vel = (vel * scale1) + (force * scale2);
+#pragma omp parallel for schedule(static)
+        for (size_t i = 0; i < vels.size(); i++) {
+          vels[i] *= scale1;
+          vels[i] += forces[i] * scale2;
         }
       }
       move(_network, m_dt);
@@ -167,20 +168,32 @@ private:
   auto xdoty(const std::vector<Utils::vec2d>& _x,
              const std::vector<Utils::vec2d>& _y) -> double
   {
-    //return std::inner_product(_x.begin(),
-    //                          _x.end(),
-    //                          _y.begin(),
-    //                          0.0,
-    //                          std::plus<double>(),
-    //                          [](Utils::vec2d _a, Utils::vec2d _b)
-    //                          { return _a.dot(_b); });
+    // return std::inner_product(_x.begin(),
+    //                           _x.end(),
+    //                           _y.begin(),
+    //                           0.0,
+    //                           std::plus<double>(),
+    //                           [](Utils::vec2d _a, Utils::vec2d _b)
+    //                           { return _a.dot(_b); });
 
+    ///    double sum = 0.0;
+    /// #pragma omp parallel for reduction(+ : sum) schedule(static)
+    ///    for (const auto& [x, y] : ranges::views::zip(_x, _y)) {
+    ///      sum += x.dot(y);
+    ///    }
+    ///    return sum;
+
+    auto xView = Utils::spanView(_x);
+    auto yView = Utils::spanView(_y);
     double sum = 0.0;
-    #pragma omp parallel for reduction(+ : sum) schedule(static) 
-    for (const auto& [x, y] : ranges::views::zip(_x, _y))
-    {
-      sum += x.dot(y);
+// for (auto [x, y] : ranges::views::zip(xView, yView)) {
+//   sum += x * y;
+// }
+#pragma omp parallel for schedule(static) reduction(+ : sum)
+    for (size_t i = 0; i < xView.size(); i++) {
+      sum += xView[i] * yView[i];
     }
+
     return sum;
   }
 
@@ -195,21 +208,23 @@ private:
 
   void updateVelocities(network& _network, double _alpha)
   {
-    for (auto [vel, force, mass] :
-         ranges::views::zip(_network.getNodes().velocities(),
-                            _network.getNodes().forces(),
-                            _network.getNodes().masses()))
-    {
-      vel += force * _alpha / mass;
+    const auto& masses = _network.getNodes().masses();
+    auto& vels = _network.getNodes().velocities();
+    const auto& forces = _network.getNodes().forces();
+
+#pragma omp parallel for schedule(static)
+    for (size_t i = 0; i < vels.size(); i++) {
+      vels[i] += forces[i] * (_alpha / masses[i]);
     }
   }
 
   void move(network& _network, double _alpha)
   {
-    for (auto [pos, vel] : ranges::views::zip(_network.getNodes().positions(),
-                                              _network.getNodes().velocities()))
-    {
-      pos += vel * _alpha;
+    auto posView = Utils::spanView(_network.getNodes().positions());
+    auto velView = Utils::spanView(_network.getNodes().velocities());
+#pragma omp parallel for schedule(static)
+    for (size_t i = 0; i < posView.size(); i++) {
+      posView[i] += velView[i] * _alpha;
     }
   }
 
