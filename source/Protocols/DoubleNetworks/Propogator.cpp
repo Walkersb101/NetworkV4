@@ -1,4 +1,5 @@
 #include "Propogator.hpp"
+#include <iostream>
 
 networkV4::protocols::propogatorDouble::propogatorDouble(
     std::shared_ptr<deform::deformBase>& _deform,
@@ -79,6 +80,7 @@ void networkV4::protocols::propogatorDouble::runLambda(network& _network)
   bool foundBreak = false;
   while (!foundBreak) {
     foundBreak = findSingleBreak(_network);
+    std::cout << m_deform->getStrain(_network) << std::endl;
   }
   m_strainCount = 1;
 
@@ -106,6 +108,7 @@ void networkV4::protocols::propogatorDouble::runStrain(network& _network)
       const double subStepStrain =
           std::min(targetStrain, m_deform->getStrain(_network) + m_maxStep);
       evalStrain(_network, subStepStrain);
+      std::cout << m_deform->getStrain(_network) << std::endl;
     }
     m_strainCount++;
     SavedNetwork = _network;

@@ -118,6 +118,7 @@ public:
     yy += _v.yy;
     return *this;
   }
+  
   auto operator-=(const tensor2& _v) -> tensor2&
   {
     xx -= _v.xx;
