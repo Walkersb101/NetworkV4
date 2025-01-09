@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stdexcept>
+#include <vector>
 
 #include "Misc/Vec2.hpp"
 
