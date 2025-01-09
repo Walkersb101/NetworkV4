@@ -84,6 +84,9 @@ inline double k2 = 2.0;
 // Protocols configuration
 namespace protocols
 {
+
+inline double maxStep = 1e-2;
+
 namespace quasiStaticStrain
 {
 inline bool errorOnNotSingleBreak = false;

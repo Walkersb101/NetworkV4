@@ -18,6 +18,7 @@
 #include "Protocols/Protocol.hpp"
 #include "Protocols/protocolReader.hpp"
 #include "Protocols/DoubleNetworks/Quasistatic.hpp"
+#include "Protocols/DoubleNetworks/Propogator.hpp"
 
 namespace networkV4
 {

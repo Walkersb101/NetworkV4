@@ -40,6 +40,10 @@ void networkV4::tomlLoad::readProtocol()
   if (m_config.contains("QuasiStaticStrain")) {
     m_protocolReader =
         std::make_unique<protocols::quasiStaticStrainDoubleReader>();
+  } 
+  if (m_config.contains("Propogator")) {
+    m_protocolReader =
+        std::make_unique<protocols::propogatorDoubleReader>();
   } else {
     throw std::runtime_error("No protocol found in config file");
   }
@@ -86,7 +90,7 @@ auto networkV4::tomlLoad::loadNetworkOut(const std::string& _name,
 {
   auto outConfig = toml::find(m_config, "Output");
   const std::string outString =
-      toml::find_or<std::string>(outConfig, "OutputType", "None");
+      toml::find_or<std::string>(outConfig, "NetworkType", "None");
 
   if (outString == "HDF5") {
     const std::string author =

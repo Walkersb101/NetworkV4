@@ -28,5 +28,13 @@ inline auto visitThreshold(const networkV4::bonded::breakTypes& _break,
                     _break);
 }
 
+inline auto visitData(const networkV4::bonded::breakTypes& _break,
+                           const Utils::vec2d& _dist) -> std::optional<double>
+{
+  return std::visit([_dist](const auto& _break) -> std::optional<double>
+                    { return _break.data(_dist); },
+                    _break);
+}
+
 }  // namespace bonded
 }  // namespace networkV4

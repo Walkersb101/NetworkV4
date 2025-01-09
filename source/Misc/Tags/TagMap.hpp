@@ -15,7 +15,6 @@ class tagMap
 public:
   tagMap() 
   {
-    add("broken"); // add default tags
   }
 
 public:

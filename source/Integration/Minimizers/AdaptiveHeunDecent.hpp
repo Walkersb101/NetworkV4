@@ -15,6 +15,7 @@ namespace minimisation
 
 class AdaptiveHeunDecent : public minimiserBase
 {
+public:
   AdaptiveHeunDecent() = default;
   AdaptiveHeunDecent(double Ftol,
                      double Etol,

@@ -34,6 +34,10 @@ public:
   {
     return (_r.norm() * m_invR0) - 1.0 - m_lambda;
   }
+  std::optional<double> data(const Utils::vec2d& _r) const
+  {
+    return (_r.norm() * m_invR0) - 1.0;
+  }
 
 private:
   double m_r0;  // equilibrium bond length

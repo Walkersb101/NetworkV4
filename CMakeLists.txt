@@ -18,15 +18,13 @@ add_library(
 
     source/Core/OMP/NetworkOMP.cpp
 
-
-
     source/IO/BaseIO.cpp
     source/IO/TimeSeries/DataOut.cpp
-
     source/IO/NetworkDump/NetworkOut.cpp
     source/IO/Input/NetworkIn.cpp
     
     source/Protocols/DoubleNetworks/Quasistatic.cpp
+    source/Protocols/DoubleNetworks/Propogator.cpp
 
     #source/Protocols/StepStrain.cpp
     #source/Protocols/Propogator.cpp

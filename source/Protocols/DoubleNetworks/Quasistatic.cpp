@@ -28,7 +28,6 @@ networkV4::protocols::quasiStaticStrainDouble::quasiStaticStrainDouble(
       "Reason",
       "StrainCount",
       "BreakCount",
-      "Time",
       "Domainx",
       "Domainy",
       "ShearStrain",
@@ -52,7 +51,6 @@ networkV4::protocols::quasiStaticStrainDouble::quasiStaticStrainDouble(
 
   std::vector<IO::timeSeries::writeableTypes> bondHeader = {
       "StrainCount",
-      "Time",
       "Type",
       "mu",
       "lambda",
@@ -66,6 +64,7 @@ networkV4::protocols::quasiStaticStrainDouble::quasiStaticStrainDouble(
       "y2",
       "Domainx",
       "Domainy",
+      "ShearStrain",
       "ElongationStrainX",
       "ElongationStrainY",
       //"RMSForce",
@@ -396,6 +395,7 @@ auto networkV4::protocols::quasiStaticStrainDouble::genBondData(
       pos2.y,
       box.getLx(),
       box.getLy(),
+      box.shearStrain(),
       _network.getElongationStrain().x,
       _network.getElongationStrain().y,
       std::get<0>(counts),

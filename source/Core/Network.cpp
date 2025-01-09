@@ -162,11 +162,13 @@ void networkV4::network::computeForces(bool _evalBreak)
   m_stresses.zero();
   m_nodes.zeroForce();
 
+  const auto& positions = m_nodes.positions();
+
   for (auto&& [bond, type, brk, tags] : ranges::views::zip(
            m_bonds.getBonds(), m_bonds.getTypes(), m_bonds.getBreaks(), m_bonds.getTags()))
   {
-    const auto& pos1 = m_nodes.positions()[bond.src];
-    const auto& pos2 = m_nodes.positions()[bond.dst];
+    const auto& pos1 = positions[bond.src];
+    const auto& pos2 = positions[bond.dst];
     const auto dist = m_box.minDist(pos1, pos2);
 
     if (_evalBreak) {

@@ -20,6 +20,11 @@ inline auto hasTag(const tagFlags& _tags, const tagFlags& _tag) -> bool
   return (_tags & _tag) == _tag;
 }
 
+inline auto hasTagAny(const tagFlags& _tags, const tagFlags& _tag) -> bool
+{
+  return (_tags & _tag).any();
+}
+
 /*
 class tagStorage
 {

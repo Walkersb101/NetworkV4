@@ -188,6 +188,18 @@ private:
                        variable_stringtype)
         .write(map);
 
+    auto tags = _net.getBonds().gatherTags();
+
+    std::vector<std::array<bool, NUM_TAGS>> tagData;
+    tagData.resize(_net.getBonds().size());
+
+    for (size_t i = 0; i < tags.size(); ++i) {
+      const auto& btags = tags[i];
+      for (size_t j = 0; j < NUM_TAGS; ++j) {
+        tagData[i][j] = btags[j];
+      }
+    }
+
     auto bondTags = createDataSet<bool>(
         tagGroup,
         "bondTags",
@@ -197,8 +209,9 @@ private:
                                   _net.getTags().size()},
         std::vector<hsize_t> {_net.getBonds().size(), _net.getTags().size()},
         true);
-    bondTags.write(_net.getBonds().gatherTags());
+    bondTags.write(tagData);
   }
+
   void initObservations(HighFive::File _file,
                         const networkV4::network& _net) const
   {
@@ -250,7 +263,9 @@ private:
   {
     const auto dataSetDims = _dataset.getSpace().getDimensions();
     _dataset.resize({dataSetDims[0] + 1, dataSetDims[1]});
-    _dataset.select({dataSetDims[0], 0}, {1, dataSetDims[1]}).squeezeMemSpace({0}).write(_data);
+    _dataset.select({dataSetDims[0], 0}, {1, dataSetDims[1]})
+        .squeezeMemSpace({0})
+        .write(_data);
   }
 
   template<typename T>

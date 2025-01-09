@@ -19,6 +19,7 @@ public:
   {
     return {};
   }
+  std::optional<double> data(const Utils::vec2d& _r) const { return {}; }
 };
 }  // namespace BreakTypes
 }  // namespace networkV4

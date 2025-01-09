@@ -32,7 +32,7 @@ public:
       const minimisation::minimiserParams& _minParams =
           minimisation::minimiserParams(),
       bool _errorOnNotSingleBreak = false,
-      double _maxStep = 1e-2,
+      double _maxStep = config::protocols::maxStep,
       bool _saveBreaks = false);
   ~quasiStaticStrainDouble();
 

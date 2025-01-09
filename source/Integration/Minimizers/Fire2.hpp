@@ -87,8 +87,7 @@ public:
     double Eprev = _network.getEnergy();
     double Ecurr = _network.getEnergy();
 
-    double maxComp = Utils::maxComp(_network.getNodes().forces());
-    auto testForces = _network.getNodes().gatherForces();
+    //double maxComp = Utils::maxComp(_network.getNodes().forces());
 
     fdotf = xdoty(forces, forces);
     if (fdotf < m_Ftol * m_Ftol) {
