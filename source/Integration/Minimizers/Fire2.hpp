@@ -87,7 +87,7 @@ public:
     double Eprev = _network.getEnergy();
     double Ecurr = _network.getEnergy();
 
-    //double maxComp = Utils::maxComp(_network.getNodes().forces());
+    // double maxComp = Utils::maxComp(_network.getNodes().forces());
 
     fdotf = xdoty(forces, forces);
     if (fdotf < m_Ftol * m_Ftol) {
@@ -97,68 +97,72 @@ public:
     nodes.zeroVelocity();
     // updateVelocities(_network, m_dt);
 
-    size_t iter = 0;
-    while (iter++ < m_maxIter) {
-      vdotf = xdoty(vels, forces);
-      if (vdotf > 0.0) {
-        Npos++;
-        Nneg = 0;
+#pragma omp parallel
+#pragma omp single
+    {
+      size_t iter = 0;
+      while (iter++ < m_maxIter) {
+        vdotf = xdoty(vels, forces);
+        if (vdotf > 0.0) {
+          Npos++;
+          Nneg = 0;
 
-        vdotv = xdoty(vels, vels);
-        fdotf = xdoty(forces, forces);
+          vdotv = xdoty(vels, vels);
+          fdotf = xdoty(forces, forces);
 
-        scale1 = 1.0 - alpha;
-        scale2 = fdotf <= 1e-20 ? 0.0 : (alpha * std::sqrt(vdotv / fdotf));
+          scale1 = 1.0 - alpha;
+          scale2 = fdotf <= 1e-20 ? 0.0 : (alpha * std::sqrt(vdotv / fdotf));
 
-        if (Npos > m_params.Ndelay) {
-          m_dt = std::min(m_dt * m_params.finc, m_params.dtMax);
-          alpha *= m_params.falpha;
+          if (Npos > m_params.Ndelay) {
+            m_dt = std::min(m_dt * m_params.finc, m_params.dtMax);
+            alpha *= m_params.falpha;
+          }
+        } else {
+          Nneg++;
+          Npos = 0;
+
+          if (Nneg > m_params.Nnegmax) {
+            break;
+          }
+          if (iter > m_params.Ndelay) {
+            m_dt = std::max(m_dt * m_params.fdec, m_params.dtMin);
+            alpha = m_params.alpha0;
+          }
+          move(_network, -0.5 * m_dt);
+          nodes.zeroVelocity();
         }
-      } else {
-        Nneg++;
-        Npos = 0;
 
-        if (Nneg > m_params.Nnegmax) {
+        updateVelocities(_network, m_dt);
+
+        // double maxAbsVel = maxAbsComponent(vels);
+        // m_dt =
+        //     std::max(std::min(m_dt, m_params.dmax / maxAbsVel),
+        //     m_params.dtMin);
+
+        if (vdotf > 0.0) {
+#pragma omp parallel for schedule(static)
+          for (size_t i = 0; i < vels.size(); i++) {
+            vels[i] *= scale1;
+            vels[i] += forces[i] * scale2;
+          }
+        }
+        move(_network, m_dt);
+
+        Eprev = Ecurr;
+        _network.computeForces();
+        Ecurr = _network.getEnergy();
+
+        if (Npos > m_params.Ndelay
+            && fabs(Ecurr - Eprev)
+                < m_Etol * 0.5 * (fabs(Ecurr) + fabs(Eprev) + EPS_ENERGY))
+        {
           break;
         }
-        if (iter > m_params.Ndelay) {
-          m_dt = std::max(m_dt * m_params.fdec, m_params.dtMin);
-          alpha = m_params.alpha0;
+
+        fdotf = xdoty(forces, forces);
+        if (Npos > m_params.Ndelay && fdotf < m_Ftol * m_Ftol) {
+          break;
         }
-        move(_network, -0.5 * m_dt);
-        nodes.zeroVelocity();
-      }
-
-      updateVelocities(_network, m_dt);
-
-      // double maxAbsVel = maxAbsComponent(vels);
-      // m_dt =
-      //     std::max(std::min(m_dt, m_params.dmax / maxAbsVel),
-      //     m_params.dtMin);
-
-      if (vdotf > 0.0) {
-#pragma omp parallel for schedule(static)
-        for (size_t i = 0; i < vels.size(); i++) {
-          vels[i] *= scale1;
-          vels[i] += forces[i] * scale2;
-        }
-      }
-      move(_network, m_dt);
-
-      Eprev = Ecurr;
-      _network.computeForces();
-      Ecurr = _network.getEnergy();
-
-      if (Npos > m_params.Ndelay
-          && fabs(Ecurr - Eprev)
-              < m_Etol * 0.5 * (fabs(Ecurr) + fabs(Eprev) + EPS_ENERGY))
-      {
-        return;
-      }
-
-      fdotf = xdoty(forces, forces);
-      if (Npos > m_params.Ndelay && fdotf < m_Ftol * m_Ftol) {
-        return;
       }
     }
   }
@@ -172,8 +176,8 @@ private:
     //                           _y.begin(),
     //                           0.0,
     //                           std::plus<double>(),
-    //                           [](Utils::Math::vec2d _a, Utils::Math::vec2d _b)
-    //                           { return _a.dot(_b); });
+    //                           [](Utils::Math::vec2d _a, Utils::Math::vec2d
+    //                           _b) { return _a.dot(_b); });
 
     ///    double sum = 0.0;
     /// #pragma omp parallel for reduction(+ : sum) schedule(static)

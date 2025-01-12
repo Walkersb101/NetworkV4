@@ -78,7 +78,7 @@ void networkV4::network::computePass(auto _parts, bool _evalBreak)
         forces[bond.src] -= f;
         forces[bond.dst] += f;
 
-        const auto stress = Utils::outer(f, dist) * m_box.invArea();
+        const auto stress = Utils::Math::tensorProduct(f, dist) * m_box.invArea();
         m_stresses.distribute(stress, bTags);
       }
 

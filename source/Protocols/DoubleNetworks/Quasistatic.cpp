@@ -329,19 +329,20 @@ auto networkV4::protocols::quasiStaticStrainDouble::genTimeData(
           _network.getElongationStrain().at(1),
           std::get<0>(counts),
           std::get<1>(counts),
-          std::get<2>(counts),
-          globalStress.xx,
-          globalStress.xy,
-          globalStress.yx,
-          globalStress.yy,
-          matStress.xx,
-          matStress.xy,
-          matStress.yx,
-          matStress.yy,
-          sacStress.xx,
-          sacStress.xy,
-          sacStress.yx,
-          sacStress.yy};
+          std::get<2>(counts)//,
+          //globalStress(0, 0),
+          //globalStress(0, 1),
+          //globalStress(1, 0),
+          //globalStress(1, 1),
+          //matStress(0, 0),
+          //matStress(0, 1),
+          //matStress(1, 0),
+          //matStress(1, 1),
+          //sacStress(0, 0),
+          //sacStress(0, 1),
+          //sacStress(1, 0),
+          //sacStress(1, 1)
+          };
 }
 
 auto networkV4::protocols::quasiStaticStrainDouble::genBondData(
@@ -400,19 +401,20 @@ auto networkV4::protocols::quasiStaticStrainDouble::genBondData(
       _network.getElongationStrain().at(1),
       std::get<0>(counts),
       std::get<1>(counts),
-      std::get<2>(counts),
-      globalStress.xx,
-      globalStress.xy,
-      globalStress.yx,
-      globalStress.yy,
-      matStress.xx,
-      matStress.xy,
-      matStress.yx,
-      matStress.yy,
-      sacStress.xx,
-      sacStress.xy,
-      sacStress.yx,
-      sacStress.yy};
+      std::get<2>(counts)//,
+      //globalStress(0, 0),
+      //globalStress(0, 1),
+      //globalStress(1, 0),
+      //globalStress(1, 1),
+      //matStress(0, 0),
+      //matStress(0, 1),
+      //matStress(1, 0),
+      //matStress(1, 1),
+      //sacStress(0, 0),
+      //sacStress(0, 1),
+      //sacStress(1, 0),
+      //sacStress(1, 1)
+      };
 }
 
 auto networkV4::protocols::quasiStaticStrainDouble::getCounts(

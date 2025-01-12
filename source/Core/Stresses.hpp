@@ -1,12 +1,7 @@
 #pragma once
 
 #include <cstdint>
-#include <string>
-#include <unordered_map>
 #include <vector>
-
-#include <range/v3/view/concat.hpp>
-#include <range/v3/view/unique.hpp>
 
 #include "Misc/Tensor2.hpp"
 
@@ -21,16 +16,17 @@ public:
 public:
   void clear()
   {
-    m_values.clear();
-    m_totalStress.set(0.0, 0.0, 0.0, 0.0);
+    m_stored.reset();
+    zero();
   }
 
   void init(const std::bitset<NUM_TAGS>& _tags,
             const Utils::tensor2d& _value = Utils::tensor2d())
   {
+    std::bitset<NUM_TAGS> diff = _tags & ~m_stored;
     for (size_t i = 0; i < NUM_TAGS; ++i) {
       // TODO : ADD LOG if already set
-      if (!m_stored.test(i) && _tags.test(i)) {
+      if (diff.test(i)) {
         init(i, _value);
       }
     }
@@ -40,13 +36,14 @@ public:
   {
     for (size_t i = 0; i < NUM_TAGS; ++i) {
       if (_tags.test(i)) {
-        return m_values.at(m_indices.at(i));
+        return m_values.at(i);
       }
     }
     throw std::invalid_argument("Tag not found");
   }
 
-  auto getFirst(const std::bitset<NUM_TAGS>& _tags) const -> const Utils::tensor2d&
+  auto getFirst(const std::bitset<NUM_TAGS>& _tags) const
+      -> const Utils::tensor2d&
   {
     return const_cast<stresses*>(this)->getFirst(_tags);
   }
@@ -58,7 +55,7 @@ public:
     values.reserve(_tags.count());
     for (size_t i = 0; i < NUM_TAGS; ++i) {
       if (_tags.test(i)) {
-        values.push_back(m_values.at(m_indices.at(i)));
+        values.emplace_back(m_values.at(i));
       }
     }
     return values;
@@ -72,16 +69,17 @@ public:
   void zero()
   {
     std::fill(m_values.begin(), m_values.end(), Utils::tensor2d());
-    m_totalStress.set(0.0, 0.0, 0.0, 0.0);
+    m_totalStress = Utils::tensor2d();
   }
 
   void distribute(const Utils::tensor2d& _stress,
                   const std::bitset<NUM_TAGS>& _tags)
   {
+    std::bitset<NUM_TAGS> overlap = m_stored & _tags;
     m_totalStress += _stress;
     for (size_t i = 0; i < NUM_TAGS; ++i) {
-      if (_tags.test(i) && m_stored.test(i)) {
-        m_values.at(m_indices.at(i)) += _stress;
+      if (overlap.test(i)) {
+        m_values.at(i) += _stress;
       }
     }
   }
@@ -90,14 +88,12 @@ private:
   void init(size_t _index, const Utils::tensor2d& _value)
   {
     m_stored.set(_index);
-    m_indices.at(_index) = m_values.size();
-    m_values.push_back(_value);
+    m_values.at(_index) = _value;
   }
 
 private:
   std::bitset<NUM_TAGS> m_stored;
-  std::array<size_t, NUM_TAGS> m_indices;
-  std::vector<Utils::tensor2d> m_values;
+  std::array<Utils::tensor2d, NUM_TAGS> m_values;
   Utils::tensor2d m_totalStress;
 
 private:
@@ -112,11 +108,13 @@ inline void merge(stresses& _s1, const stresses& _s2)
   auto s2init = _s2.m_stored;
 
   for (size_t i = 0; i < NUM_TAGS; ++i) {
-    if (s1init.test(i) && s2init.test(i)) {
-      _s1.m_values.at(_s1.m_indices.at(i)) +=
-          _s2.m_values.at(_s2.m_indices.at(i));
-    } else if (s2init.test(i)) {
-      _s1.init(i, _s2.m_values.at(_s2.m_indices.at(i)));
+    if (s2init.test(i)) {
+      if (s1init.test(i)) {
+        _s1.m_values.at(i) += _s2.m_values.at(i);
+      } else {
+        _s1.m_stored.set(i);
+        _s1.m_values.at(i) = _s2.m_values.at(i);
+      }
     }
   }
 }

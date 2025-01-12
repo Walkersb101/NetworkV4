@@ -298,19 +298,20 @@ auto networkV4::protocols::propogatorDouble::genTimeData(
           box.getLy(),
           box.shearStrain(),
           _network.getElongationStrain().at(0),
-          _network.getElongationStrain().at(1),
-          globalStress.xx,
-          globalStress.xy,
-          globalStress.yx,
-          globalStress.yy,
-          matStress.xx,
-          matStress.xy,
-          matStress.yx,
-          matStress.yy,
-          sacStress.xx,
-          sacStress.xy,
-          sacStress.yx,
-          sacStress.yy};
+          _network.getElongationStrain().at(1)//,
+          //globalStress(0,0),
+          //globalStress(0,1),
+          //globalStress(1,0),
+          //globalStress(1,1),
+          //matStress(0,0),
+          //matStress(0,1),
+          //matStress(1,0),
+          //matStress(1,1),
+          //sacStress(0,0),
+          //sacStress(0,1),
+          //sacStress(1,0),
+          //sacStress(1,1)
+          };
 }
 
 auto networkV4::protocols::propogatorDouble::genBondData(

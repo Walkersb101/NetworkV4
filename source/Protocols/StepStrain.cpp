@@ -136,10 +136,10 @@ auto networkV4::stepStrain::genTimeData(const network& _network,
 
   data.insert(
       data.end(),
-      {globalStress.xx, globalStress.xy, globalStress.yx, globalStress.yy});
+      Utils::Math::flatten(globalStress));
   for (const auto& type : types) {
     tensor2 stress = stresses[type];
-    data.insert(data.end(), {stress.xx, stress.xy, stress.yx, stress.yy});
+    data.insert(data.end(), Utils::Math::flatten(globalStress));
   }
   return data;
 }

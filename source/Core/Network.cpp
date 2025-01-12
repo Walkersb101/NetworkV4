@@ -12,8 +12,8 @@
 
 #include "Core/Bonds.hpp"
 #include "Core/Nodes.hpp"
-#include "Misc/Tensor2.hpp"
 #include "Misc/Math/Vector.hpp"
+#include "Misc/Tensor2.hpp"
 
 networkV4::network::network(const box& _box, const size_t _N, const size_t _B)
     : m_box(_box)
@@ -121,7 +121,9 @@ double networkV4::network::getShearStrain() const
 
 auto networkV4::network::getElongationStrain() const -> Utils::Math::vec2d
 {
-  return broadcast(m_box.getDomain() - m_restbox.getDomain(), m_restbox.getDomain(), std::divides<>());
+  return broadcast(m_box.getDomain() - m_restbox.getDomain(),
+                   m_restbox.getDomain(),
+                   std::divides<>());
 }
 
 void networkV4::network::shear(double _step)
@@ -131,8 +133,9 @@ void networkV4::network::shear(double _step)
   std::transform(m_nodes.positions().begin(),
                  m_nodes.positions().end(),
                  m_nodes.positions().begin(),
-                 [&](const Utils::Math::vec2d& _pos)
-                 { return _pos + Utils::Math::vec2d({_step * _pos.at(1), 0.0}); });
+                 [&](const Utils::Math::vec2d& _pos) {
+                   return _pos + Utils::Math::vec2d({_step * _pos.at(1), 0.0});
+                 });
 }
 
 void networkV4::network::setBox(const box& _box)
@@ -164,8 +167,10 @@ void networkV4::network::computeForces(bool _evalBreak)
 
   const auto& positions = m_nodes.positions();
 
-  for (auto&& [bond, type, brk, tags] : ranges::views::zip(
-           m_bonds.getBonds(), m_bonds.getTypes(), m_bonds.getBreaks(), m_bonds.getTags()))
+  for (auto&& [bond, type, brk, tags] : ranges::views::zip(m_bonds.getBonds(),
+                                                           m_bonds.getTypes(),
+                                                           m_bonds.getBreaks(),
+                                                           m_bonds.getTags()))
   {
     const auto& pos1 = positions[bond.src];
     const auto& pos2 = positions[bond.dst];
@@ -208,8 +213,11 @@ auto networkV4::network::computeEnergy() -> double
 
 void networkV4::network::computeBreaks()
 {
-  for (const auto& [bond, type, brk, tags] : ranges::views::zip(
-           m_bonds.getBonds(), m_bonds.getTypes(), m_bonds.getBreaks(), m_bonds.getTags()))
+  for (const auto& [bond, type, brk, tags] :
+       ranges::views::zip(m_bonds.getBonds(),
+                          m_bonds.getTypes(),
+                          m_bonds.getBreaks(),
+                          m_bonds.getTags()))
   {
     const auto& pos1 = m_nodes.positions()[bond.src];
     const auto& pos2 = m_nodes.positions()[bond.dst];
@@ -223,7 +231,7 @@ void networkV4::network::evalBreak(const Utils::Math::vec2d& _dist,
                                    const bonded::BondInfo& _binfo,
                                    bonded::bondTypes& _type,
                                    bonded::breakTypes& _break,
-                                   Utils::Tags::tagFlags& _tags) 
+                                   Utils::Tags::tagFlags& _tags)
 {
   const bool broken = bonded::visitBreak(_break, _dist);
   if (broken) {
@@ -241,9 +249,11 @@ void networkV4::network::applyforce(const bonded::BondInfo& _binfo,
                                     const Utils::Math::vec2d& _force,
                                     const Utils::Tags::tagFlags& _tags)
 {
-  m_nodes.forces()[_binfo.src] -= _force;
-  m_nodes.forces()[_binfo.dst] += _force;
+  auto& forces = m_nodes.forces();
+  forces[_binfo.src] -= _force;
+  forces[_binfo.dst] += _force;
 
-  const auto stress = Utils::outer(_force, _dist) * m_box.invArea();
+  const auto stress =
+      Utils::Math::tensorProduct(_force, _dist) * m_box.invArea();
   m_stresses.distribute(stress, _tags);
 }
