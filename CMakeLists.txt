@@ -64,6 +64,9 @@ FetchContent_MakeAvailable(trng4)
 
 target_link_libraries(NetworkV4_lib PUBLIC trng4)
 
+set(ZSTD_BUILD_STATIC ON)
+set(ZSTD_BUILD_SHARED OFF)
+
 FetchContent_Declare(
     zstd
     URL "https://github.com/facebook/zstd/releases/download/v1.5.5/zstd-1.5.5.tar.gz"
@@ -72,7 +75,6 @@ FetchContent_Declare(
 )
 
 FetchContent_MakeAvailable(zstd)
-
 target_link_libraries(NetworkV4_lib PRIVATE libzstd_static)
 
 FetchContent_Declare(
