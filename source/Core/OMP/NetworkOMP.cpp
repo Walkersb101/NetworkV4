@@ -14,8 +14,8 @@
 
 #include "Core/Bonds.hpp"
 #include "Core/Nodes.hpp"
-#include "Misc/Tensor2.hpp"
 #include "Misc/Math/Vector.hpp"
+#include "Misc/Tensor2.hpp"
 #include "OMP.hpp"
 
 #if defined(_OPENMP)
@@ -47,8 +47,8 @@ void networkV4::network::computePass(auto _parts, bool _evalBreak)
   auto& forces = m_nodes.forces();
 
 #  pragma omp parallel for reduction(+ : m_energy) reduction(+ : m_stresses) \
-      reduction(+ : m_breakQueue) \
-      num_threads(OMP::threadPartitions.size() / 2) schedule(static, 1)
+      reduction(+ : m_breakQueue) num_threads(_parts.size()) \
+      schedule(static, 1)
   for (const auto part : _parts) {
     for (size_t i = part.bondStart(); i < part.bondEnd(); i++) {
       const auto& bond = bonds[i];
@@ -78,7 +78,8 @@ void networkV4::network::computePass(auto _parts, bool _evalBreak)
         forces[bond.src] -= f;
         forces[bond.dst] += f;
 
-        const auto stress = Utils::Math::tensorProduct(f, dist) * m_box.invArea();
+        const auto stress =
+            Utils::Math::tensorProduct(f, dist) * m_box.invArea();
         m_stresses.distribute(stress, bTags);
       }
 
