@@ -298,19 +298,19 @@ auto networkV4::protocols::propogatorDouble::genTimeData(
           box.getLy(),
           box.shearStrain(),
           _network.getElongationStrain().at(0),
-          _network.getElongationStrain().at(1)//,
-          //globalStress(0,0),
-          //globalStress(0,1),
-          //globalStress(1,0),
-          //globalStress(1,1),
-          //matStress(0,0),
-          //matStress(0,1),
-          //matStress(1,0),
-          //matStress(1,1),
-          //sacStress(0,0),
-          //sacStress(0,1),
-          //sacStress(1,0),
-          //sacStress(1,1)
+          _network.getElongationStrain().at(1),
+          globalStress(0,0),
+          globalStress(0,1),
+          globalStress(1,0),
+          globalStress(1,1),
+          matStress(0,0),
+          matStress(0,1),
+          matStress(1,0),
+          matStress(1,1),
+          sacStress(0,0),
+          sacStress(0,1),
+          sacStress(1,0),
+          sacStress(1,1)
           };
 }
 
