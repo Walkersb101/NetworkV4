@@ -2,9 +2,9 @@
 
 #include <algorithm>
 #include <array>
-#include <utility>
 #include <cmath>
 #include <numeric>
+#include <utility>
 
 namespace Utils
 {
@@ -25,18 +25,47 @@ public:
 public:
   using Base::at;
   using Base::operator[];
-  using Base::front;
   using Base::back;
-  using Base::data;
   using Base::begin;
   using Base::cbegin;
-  using Base::end;
   using Base::cend;
+  using Base::data;
   using Base::empty;
-  using Base::size;
-  using Base::max_size;
+  using Base::end;
   using Base::fill;
+  using Base::front;
+  using Base::max_size;
+  using Base::size;
   using array_type = std::array<T, N>;
+
+private:
+  constexpr void copy_init(T const* first, T const* last)
+  {
+    std::copy(first, last, this->begin());
+  }
+
+public:
+  template<class Range>
+  explicit constexpr Vector(Range const& rng)
+      : Vector(std::begin(rng), std::end(rng))
+  {
+  }
+  explicit constexpr Vector(T const (&v)[N])
+      : Base()
+  {
+    copy_init(std::begin(v), std::end(v));
+  }
+
+  constexpr Vector(std::initializer_list<T> v)
+      : Base()
+  {
+    if (N != v.size()) {
+      throw std::length_error(
+          "Construction of Vector from Container of wrong length.");
+    }
+
+    copy_init(v.begin(), v.end());
+  }
 
 public:
   void swap(Vector& rhs) { std::swap_ranges(begin(), end(), rhs.begin()); }
@@ -59,42 +88,42 @@ public:
 
   Vector normalized() const { return (*this) / (*this).norm(); }
 
-  Vector abs()
-  {
+Vector abs() const
+{
     Vector<T, N> ret;
-    std::transform(this->begin(), this->end(), ret.begin(), [](T const& val) {
-      return std::abs(val);
-    });
+    std::transform(this->begin(),
+                                 this->end(),
+                                 ret.begin(),
+                                 [](T const& val) { return std::abs(val); });
     return ret;
-  }
+}
 
-  T max() { return *std::max_element(this->begin(), this->end()); }
-  T min() { return *std::min_element(this->begin(), this->end()); }
+T max() const { return *std::max_element(this->begin(), this->end()); }
+T min() const { return *std::min_element(this->begin(), this->end()); }
 };
 
-template<class T>
-using Vector3 = Vector<T, 3>;
+template<typename T>
+using vec2 = Vector<T, 2>;
 
 template<std::size_t N>
-using VectorXd = Vector<double, N>;
-using Vector2d = VectorXd<2>;
-using Vector3d = VectorXd<3>;
-using Vector4d = VectorXd<4>;
-using Vector6d = VectorXd<6>;
-using Vector9d = VectorXd<9>;
+using vecXd = Vector<double, N>;
+using vec2d = vecXd<2>;
+using vec3d = vecXd<3>;
 
 template<std::size_t N>
-using VectorXf = Vector<float, N>;
-using Vector3f = VectorXf<3>;
+using vecXf = Vector<float, N>;
+using vec2f = vecXf<2>;
+using vec3f = vecXf<3>;
 
 template<std::size_t N>
-using VectorXi = Vector<int, N>;
-using Vector3i = VectorXi<3>;
+using vecXi = Vector<int, N>;
+using vec2i = vecXi<2>;
+using vec3i = vecXi<3>;
 
 // ---- Helper functions ----
 
 template<std::size_t N, typename T, typename U, typename Op>
-auto binary_op(Vector<T, N> const& a, Vector<U, N> const& b, Op op)
+auto broadcast(Vector<T, N> const& a, Vector<U, N> const& b, Op op)
 {
   using R = decltype(op(std::declval<T>(), std::declval<U>()));
   Vector<R, N> ret;
@@ -105,8 +134,9 @@ auto binary_op(Vector<T, N> const& a, Vector<U, N> const& b, Op op)
   return ret;
 }
 
-template <std::size_t N, typename T, typename Op>
-Vector<T, N> &binary_op_assign(Vector<T, N> &a, Vector<T, N> const &b, Op op) {
+template<std::size_t N, typename T, typename Op>
+Vector<T, N>& broadcast_assign(Vector<T, N>& a, Vector<T, N> const& b, Op op)
+{
   std::transform(std::begin(a), std::end(a), std::begin(b), std::begin(a), op);
   return a;
 }
@@ -114,8 +144,11 @@ Vector<T, N> &binary_op_assign(Vector<T, N> &a, Vector<T, N> const &b, Op op) {
 template<std::size_t N, typename T, typename Op>
 constexpr bool all_of(Vector<T, N> const& a, Vector<T, N> const& b, Op op)
 {
-    return std::all_of(std::begin(a), std::end(a), std::begin(b), [&op](const T& ai, const T& bi) {
-    return static_cast<bool>(op(ai, bi)); });
+  return std::all_of(std::begin(a),
+                     std::end(a),
+                     std::begin(b),
+                     [&op](const T& ai, const T& bi)
+                     { return static_cast<bool>(op(ai, bi)); });
 }
 
 template<class T>
@@ -170,19 +203,19 @@ constexpr bool operator!=(Vector<T, N> const& a, Vector<T, N> const& b)
 template<std::size_t N, typename T, typename U>
 auto operator+(Vector<T, N> const& a, Vector<U, N> const& b)
 {
-  return binary_op(a, b, std::plus<>());
+  return broadcast(a, b, std::plus<>());
 }
 
 template<std::size_t N, typename T>
 Vector<T, N>& operator+=(Vector<T, N>& a, Vector<T, N> const& b)
 {
-  return binary_op_assign(a, b, std::plus<T>());
+  return broadcast_assign(a, b, std::plus<T>());
 }
 
 template<std::size_t N, typename T, typename U>
 auto operator-(Vector<T, N> const& a, Vector<U, N> const& b)
 {
-  return binary_op(a, b, std::minus<>());
+  return broadcast(a, b, std::minus<>());
 }
 
 template<std::size_t N, typename T>
@@ -198,7 +231,7 @@ Vector<T, N> operator-(Vector<T, N> const& a)
 template<std::size_t N, typename T>
 Vector<T, N>& operator-=(Vector<T, N>& a, Vector<T, N> const& b)
 {
-  return binary_op_assign(a, b, std::minus<T>());
+  return broadcast_assign(a, b, std::minus<T>());
 }
 
 // ---- scalar multiplication and division ----
@@ -296,5 +329,5 @@ auto operator*(Vector<T, N> const& a, Vector<U, N> const& b)
   return std::inner_product(std::begin(a), std::end(a), std::begin(b), R {});
 }
 
-}  // namespace math
+}  // namespace Math
 }  // namespace Utils

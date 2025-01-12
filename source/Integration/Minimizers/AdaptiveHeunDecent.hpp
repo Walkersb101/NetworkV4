@@ -67,16 +67,16 @@ public:
   };
 
 private:
-  auto xdoty(const std::vector<Utils::vec2d>& _x,
-             const std::vector<Utils::vec2d>& _y) -> double
+  auto xdoty(const std::vector<Utils::Math::vec2d>& _x,
+             const std::vector<Utils::Math::vec2d>& _y) -> double
   {
     return std::inner_product(_x.begin(),
                               _x.end(),
                               _y.begin(),
                               0.0,
                               std::plus<double>(),
-                              [](Utils::vec2d _a, Utils::vec2d _b)
-                              { return _a.dot(_b); });
+                              [](Utils::Math::vec2d _a, Utils::Math::vec2d _b)
+                              { return _a * _b; });
   }
 
 private:

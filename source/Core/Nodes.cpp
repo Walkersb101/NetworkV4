@@ -50,10 +50,10 @@ auto networkV4::nodes::size() const -> size_t
 }
 
 // void networkV4::nodes::addNode(size_t _globalIndex,
-//                                const Utils::vec2d& _position,
-//                                const Utils::vec2d& _velocity,
+//                                const Utils::Math::vec2d& _position,
+//                                const Utils::Math::vec2d& _velocity,
 //                                double _mass,
-//                                const Utils::vec2d& _force)
+//                                const Utils::Math::vec2d& _force)
 //{
 //   if (hasIndex(_globalIndex)) {
 //     throw std::runtime_error("Node with index " +
@@ -64,13 +64,13 @@ auto networkV4::nodes::size() const -> size_t
 //   pushNode(_globalIndex, _position, _velocity, _mass, _force);
 // }
 
-auto networkV4::nodes::addNode(const Utils::vec2d& _position,
-                               const Utils::vec2d& _velocity,
+auto networkV4::nodes::addNode(const Utils::Math::vec2d& _position,
+                               const Utils::Math::vec2d& _velocity,
                                double _mass) -> size_t
 {
   size_t index = size();
   // TODO: check if tags have been set
-  pushNode(index, _position, _velocity, _mass, Utils::vec2d(0.0, 0.0));
+  pushNode(index, _position, _velocity, _mass, Utils::Math::vec2d({0.0, 0.0}));
   // m_nextIndex++;
   return index;
 }
@@ -80,17 +80,17 @@ auto networkV4::nodes::indices() const -> const std::vector<size_t>&
   return m_globalIndices;
 }
 
-auto networkV4::nodes::positions() const -> const std::vector<Utils::vec2d>&
+auto networkV4::nodes::positions() const -> const std::vector<Utils::Math::vec2d>&
 {
   return m_positions;
 }
 
-auto networkV4::nodes::velocities() const -> const std::vector<Utils::vec2d>&
+auto networkV4::nodes::velocities() const -> const std::vector<Utils::Math::vec2d>&
 {
   return m_velocities;
 }
 
-auto networkV4::nodes::forces() const -> const std::vector<Utils::vec2d>&
+auto networkV4::nodes::forces() const -> const std::vector<Utils::Math::vec2d>&
 {
   return m_forces;
 }
@@ -100,17 +100,17 @@ auto networkV4::nodes::masses() const -> const std::vector<double>&
   return m_masses;
 }
 
-auto networkV4::nodes::positions() -> std::vector<Utils::vec2d>&
+auto networkV4::nodes::positions() -> std::vector<Utils::Math::vec2d>&
 {
   return m_positions;
 }
 
-auto networkV4::nodes::velocities() -> std::vector<Utils::vec2d>&
+auto networkV4::nodes::velocities() -> std::vector<Utils::Math::vec2d>&
 {
   return m_velocities;
 }
 
-auto networkV4::nodes::forces() -> std::vector<Utils::vec2d>&
+auto networkV4::nodes::forces() -> std::vector<Utils::Math::vec2d>&
 {
   return m_forces;
 }
@@ -120,9 +120,9 @@ auto networkV4::nodes::masses() -> std::vector<double>&
   return m_masses;
 }
 
-auto networkV4::nodes::gatherPositions() const -> std::vector<Utils::vec2d>
+auto networkV4::nodes::gatherPositions() const -> std::vector<Utils::Math::vec2d>
 {
-  std::vector<Utils::vec2d> positions;
+  std::vector<Utils::Math::vec2d> positions;
   positions.resize(size());
   for (auto [i, pos] : ranges::views::zip(m_globalIndices, m_positions)) {
     positions[i] = pos;
@@ -130,9 +130,9 @@ auto networkV4::nodes::gatherPositions() const -> std::vector<Utils::vec2d>
   return positions;
 }
 
-auto networkV4::nodes::gatherVelocities() const -> std::vector<Utils::vec2d>
+auto networkV4::nodes::gatherVelocities() const -> std::vector<Utils::Math::vec2d>
 {
-  std::vector<Utils::vec2d> velocities;
+  std::vector<Utils::Math::vec2d> velocities;
   velocities.resize(size());
   for (auto [i, vel] : ranges::views::zip(m_globalIndices, m_velocities)) {
     velocities[i] = vel;
@@ -140,9 +140,9 @@ auto networkV4::nodes::gatherVelocities() const -> std::vector<Utils::vec2d>
   return velocities;
 }
 
-auto networkV4::nodes::gatherForces() const -> std::vector<Utils::vec2d>
+auto networkV4::nodes::gatherForces() const -> std::vector<Utils::Math::vec2d>
 {
-  std::vector<Utils::vec2d> forces;
+  std::vector<Utils::Math::vec2d> forces;
   forces.resize(size());
   for (auto [i, force] : ranges::views::zip(m_globalIndices, m_forces)) {
     forces[i] = force;
@@ -175,21 +175,21 @@ auto networkV4::nodes::hasIndex(size_t _index) const -> bool
 
 void networkV4::nodes::zeroVelocity()
 {
-  std::fill(m_velocities.begin(), m_velocities.end(), Utils::vec2d(0.0, 0.0));
+  std::fill(m_velocities.begin(), m_velocities.end(), Utils::Math::vec2d({0.0, 0.0}));
 }
 
 void networkV4::nodes::zeroForce()
 {
-  // std::fill(m_forces.begin(), m_forces.end(), Utils::vec2d(0.0, 0.0));
+  // std::fill(m_forces.begin(), m_forces.end(), Utils::Math::vec2d(0.0, 0.0));
   auto view = Utils::spanView(m_forces);
   std::fill(view.begin(), view.end(), 0.0);
 }
 
 void networkV4::nodes::pushNode(size_t _globalIndex,
-                                const Utils::vec2d& _position,
-                                const Utils::vec2d& _velocity,
+                                const Utils::Math::vec2d& _position,
+                                const Utils::Math::vec2d& _velocity,
                                 double _mass,
-                                const Utils::vec2d& _force)
+                                const Utils::Math::vec2d& _force)
 {
   m_globalIndices.push_back(_globalIndex);
   m_positions.push_back(_position);

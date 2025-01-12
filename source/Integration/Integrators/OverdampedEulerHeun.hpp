@@ -53,7 +53,7 @@ public:
   }
 
 private:
-  std::vector<Utils::vec2d> m_fn;
+  std::vector<Utils::Math::vec2d> m_fn;
 };
 
 }  // namespace integration

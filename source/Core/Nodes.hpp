@@ -7,7 +7,7 @@
 #include <range/v3/all.hpp>
 
 #include "Misc/Config.hpp"
-#include "Misc/Vec2.hpp"
+#include "Misc/Math/Vector.hpp"
 
 namespace networkV4
 {
@@ -25,30 +25,30 @@ public:
   auto size() const -> size_t;
 
   //void addNode(size_t _globalIndex,
-  //             const Utils::vec2d& _position,
-  //             const Utils::vec2d& _velocity = Utils::vec2d(0.0, 0.0),
+  //             const Utils::Math::vec2d& _position,
+  //             const Utils::Math::vec2d& _velocity = Utils::Math::vec2d(0.0, 0.0),
   //             double _mass = 1.0,
-  //             const Utils::vec2d& _force = Utils::vec2d(0.0, 0.0));
-  auto addNode(const Utils::vec2d& _position,
-               const Utils::vec2d& _velocity = Utils::vec2d(0.0, 0.0),
+  //             const Utils::Math::vec2d& _force = Utils::Math::vec2d(0.0, 0.0));
+  auto addNode(const Utils::Math::vec2d& _position,
+               const Utils::Math::vec2d& _velocity = Utils::Math::vec2d({0.0, 0.0}),
                double _mass = 1.0) -> size_t;
 
 public:
   auto indices() const -> const std::vector<size_t>&;
-  auto positions() const -> const std::vector<Utils::vec2d>&;
-  auto velocities() const -> const std::vector<Utils::vec2d>&;
-  auto forces() const -> const std::vector<Utils::vec2d>&;
+  auto positions() const -> const std::vector<Utils::Math::vec2d>&;
+  auto velocities() const -> const std::vector<Utils::Math::vec2d>&;
+  auto forces() const -> const std::vector<Utils::Math::vec2d>&;
   auto masses() const -> const std::vector<double>&;
 
-  auto positions() -> std::vector<Utils::vec2d>&;
-  auto velocities() -> std::vector<Utils::vec2d>&;
-  auto forces() -> std::vector<Utils::vec2d>&;
+  auto positions() -> std::vector<Utils::Math::vec2d>&;
+  auto velocities() -> std::vector<Utils::Math::vec2d>&;
+  auto forces() -> std::vector<Utils::Math::vec2d>&;
   auto masses() -> std::vector<double>&;
 
 public:
-  auto gatherPositions() const -> std::vector<Utils::vec2d>;
-  auto gatherVelocities() const -> std::vector<Utils::vec2d>;
-  auto gatherForces() const -> std::vector<Utils::vec2d>;
+  auto gatherPositions() const -> std::vector<Utils::Math::vec2d>;
+  auto gatherVelocities() const -> std::vector<Utils::Math::vec2d>;
+  auto gatherForces() const -> std::vector<Utils::Math::vec2d>;
   auto getNodeMap() const -> const NodeMap;
 
 public:
@@ -82,19 +82,19 @@ public:
 
 private:
   void pushNode(size_t _globalIndex,
-                const Utils::vec2d& _position,
-                const Utils::vec2d& _velocity,
+                const Utils::Math::vec2d& _position,
+                const Utils::Math::vec2d& _velocity,
                 double _mass,
-                const Utils::vec2d& _force);
+                const Utils::Math::vec2d& _force);
 
   void checkIndex(std::size_t _index) const;
 
 private:
   std::vector<size_t> m_globalIndices;
 
-  std::vector<Utils::vec2d> m_positions;
-  std::vector<Utils::vec2d> m_velocities;
-  std::vector<Utils::vec2d> m_forces;
+  std::vector<Utils::Math::vec2d> m_positions;
+  std::vector<Utils::Math::vec2d> m_velocities;
+  std::vector<Utils::Math::vec2d> m_forces;
 
   std::vector<double> m_masses;
 

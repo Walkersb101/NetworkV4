@@ -37,15 +37,15 @@ public:
     const size_t N = read<size_t>(file);
     const size_t B = read<size_t>(file);
 
-    const Utils::vec2d domain = read<Utils::vec2d>(file);
+    const Utils::Math::vec2d domain = read<Utils::Math::vec2d>(file);
     const double shearStrain = read<double>(file);
-    const networkV4::box domainBox(domain, shearStrain * domain.y);
+    const networkV4::box domainBox(domain, shearStrain * domain.at(1));
 
     networkV4::network network(domainBox, N, B);
 
     networkV4::nodes& nodes = network.getNodes();
     for (size_t i = 0; i < N; ++i) {
-      const Utils::vec2d pos = read<Utils::vec2d>(file);
+      const Utils::Math::vec2d pos = read<Utils::Math::vec2d>(file);
       nodes.addNode(pos);
     }
 

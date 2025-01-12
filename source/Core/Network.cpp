@@ -13,7 +13,7 @@
 #include "Core/Bonds.hpp"
 #include "Core/Nodes.hpp"
 #include "Misc/Tensor2.hpp"
-#include "Misc/Vec2.hpp"
+#include "Misc/Math/Vector.hpp"
 
 networkV4::network::network(const box& _box, const size_t _N, const size_t _B)
     : m_box(_box)
@@ -119,9 +119,9 @@ double networkV4::network::getShearStrain() const
   return m_box.shearStrain();
 }
 
-auto networkV4::network::getElongationStrain() const -> Utils::vec2d
+auto networkV4::network::getElongationStrain() const -> Utils::Math::vec2d
 {
-  return (m_box.getDomain() - m_restbox.getDomain()) / m_restbox.getDomain();
+  return broadcast(m_box.getDomain() - m_restbox.getDomain(), m_restbox.getDomain(), std::divides<>());
 }
 
 void networkV4::network::shear(double _step)
@@ -131,8 +131,8 @@ void networkV4::network::shear(double _step)
   std::transform(m_nodes.positions().begin(),
                  m_nodes.positions().end(),
                  m_nodes.positions().begin(),
-                 [&](const Utils::vec2d& _pos)
-                 { return _pos + Utils::vec2d(_step * _pos.y, 0.0); });
+                 [&](const Utils::Math::vec2d& _pos)
+                 { return _pos + Utils::Math::vec2d({_step * _pos.at(1), 0.0}); });
 }
 
 void networkV4::network::setBox(const box& _box)
@@ -140,7 +140,7 @@ void networkV4::network::setBox(const box& _box)
   std::transform(m_nodes.positions().begin(),
                  m_nodes.positions().end(),
                  m_nodes.positions().begin(),
-                 [&](Utils::vec2d& _pos)
+                 [&](Utils::Math::vec2d& _pos)
                  {
                    const auto plambda = m_box.x2Lambda(_pos);
                    return _box.lambda2x(plambda);
@@ -219,7 +219,7 @@ void networkV4::network::computeBreaks()
   }
 }
 
-void networkV4::network::evalBreak(const Utils::vec2d& _dist,
+void networkV4::network::evalBreak(const Utils::Math::vec2d& _dist,
                                    const bonded::BondInfo& _binfo,
                                    bonded::bondTypes& _type,
                                    bonded::breakTypes& _break,
@@ -237,8 +237,8 @@ void networkV4::network::evalBreak(const Utils::vec2d& _dist,
 }
 
 void networkV4::network::applyforce(const bonded::BondInfo& _binfo,
-                                    const Utils::vec2d& _dist,
-                                    const Utils::vec2d& _force,
+                                    const Utils::Math::vec2d& _dist,
+                                    const Utils::Math::vec2d& _force,
                                     const Utils::Tags::tagFlags& _tags)
 {
   m_nodes.forces()[_binfo.src] -= _force;

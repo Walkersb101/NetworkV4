@@ -164,15 +164,15 @@ public:
   }
 
 private:
-  auto xdoty(const std::vector<Utils::vec2d>& _x,
-             const std::vector<Utils::vec2d>& _y) -> double
+  auto xdoty(const std::vector<Utils::Math::vec2d>& _x,
+             const std::vector<Utils::Math::vec2d>& _y) -> double
   {
     // return std::inner_product(_x.begin(),
     //                           _x.end(),
     //                           _y.begin(),
     //                           0.0,
     //                           std::plus<double>(),
-    //                           [](Utils::vec2d _a, Utils::vec2d _b)
+    //                           [](Utils::Math::vec2d _a, Utils::Math::vec2d _b)
     //                           { return _a.dot(_b); });
 
     ///    double sum = 0.0;
@@ -196,12 +196,12 @@ private:
     return sum;
   }
 
-  auto maxAbsComponent(const std::vector<Utils::vec2d>& _vec) -> double
+  auto maxAbsComponent(const std::vector<Utils::Math::vec2d>& _vec) -> double
   {
     return std::accumulate(_vec.begin(),
                            _vec.end(),
                            0.0,
-                           [](double _max, const Utils::vec2d& _v)
+                           [](double _max, const Utils::Math::vec2d& _v)
                            { return std::max(_max, _v.abs().max()); });
   }
 

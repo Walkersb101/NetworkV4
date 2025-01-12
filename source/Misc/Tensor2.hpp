@@ -2,7 +2,7 @@
 
 #include <cmath>
 
-#include "Vec2.hpp"
+#include "Misc/Math/Vector.hpp"
 
 namespace Utils
 {
@@ -168,8 +168,8 @@ public:
 };
 
 template<typename T>
-auto outer(const vec2<T>& _v1, const vec2<T>& _v2) -> tensor2<T> {
-  return tensor2<T>(_v1.x * _v2.x, _v1.x * _v2.y, _v1.y * _v2.x, _v1.y * _v2.y);
+auto outer(const Math::vec2<T>& _v1, const Math::vec2<T>& _v2) -> tensor2<T> {
+  return tensor2<T>(_v1.at(0) * _v2.at(0), _v1.at(0) * _v2.at(1), _v1.at(1) * _v2.at(0), _v1.at(1) * _v2.at(1));
 }
 
 using tensor2f = tensor2<float>;

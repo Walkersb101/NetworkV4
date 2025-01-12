@@ -114,9 +114,9 @@ private:
   }
 
 private:
-  std::vector<Utils::vec2d> m_rn;
-  std::vector<Utils::vec2d> m_frn;
-  std::vector<Utils::vec2d> m_frnbar;
+  std::vector<Utils::Math::vec2d> m_rn;
+  std::vector<Utils::Math::vec2d> m_frn;
+  std::vector<Utils::Math::vec2d> m_frnbar;
 
   bool decent = false;
 };

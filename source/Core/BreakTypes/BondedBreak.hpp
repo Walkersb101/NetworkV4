@@ -13,7 +13,7 @@ namespace bonded
 using breakTypes = std::variant<BreakTypes::None, BreakTypes::StrainBreak>;
 
 inline auto visitBreak(const networkV4::bonded::breakTypes& _break,
-                       const Utils::vec2d& _dist) -> bool
+                       const Utils::Math::vec2d& _dist) -> bool
 {
   return std::visit([_dist](const auto& _break) -> bool
                     { return _break.checkBreak(_dist); },
@@ -21,7 +21,7 @@ inline auto visitBreak(const networkV4::bonded::breakTypes& _break,
 }
 
 inline auto visitThreshold(const networkV4::bonded::breakTypes& _break,
-                           const Utils::vec2d& _dist) -> std::optional<double>
+                           const Utils::Math::vec2d& _dist) -> std::optional<double>
 {
   return std::visit([_dist](const auto& _break) -> std::optional<double>
                     { return _break.thresholdData(_dist); },
@@ -29,7 +29,7 @@ inline auto visitThreshold(const networkV4::bonded::breakTypes& _break,
 }
 
 inline auto visitData(const networkV4::bonded::breakTypes& _break,
-                           const Utils::vec2d& _dist) -> std::optional<double>
+                           const Utils::Math::vec2d& _dist) -> std::optional<double>
 {
   return std::visit([_dist](const auto& _break) -> std::optional<double>
                     { return _break.data(_dist); },

@@ -325,8 +325,8 @@ auto networkV4::protocols::quasiStaticStrainDouble::genTimeData(
           box.getLx(),
           box.getLy(),
           box.shearStrain(),
-          _network.getElongationStrain().x,
-          _network.getElongationStrain().y,
+          _network.getElongationStrain().at(0),
+          _network.getElongationStrain().at(1),
           std::get<0>(counts),
           std::get<1>(counts),
           std::get<2>(counts),
@@ -389,15 +389,15 @@ auto networkV4::protocols::quasiStaticStrainDouble::genBondData(
       harmonic ? (r - r0) / r0 : 0.0,
       bondSrc,
       bondDst,
-      pos1.x,
-      pos1.y,
-      pos2.x,
-      pos2.y,
+      pos1.at(0),
+      pos1.at(1),
+      pos2.at(0),
+      pos2.at(1),
       box.getLx(),
       box.getLy(),
       box.shearStrain(),
-      _network.getElongationStrain().x,
-      _network.getElongationStrain().y,
+      _network.getElongationStrain().at(0),
+      _network.getElongationStrain().at(1),
       std::get<0>(counts),
       std::get<1>(counts),
       std::get<2>(counts),
@@ -469,16 +469,16 @@ auto networkV4::protocols::quasiStaticStrainDouble::breakData(
 }
 
 auto networkV4::protocols::quasiStaticStrainDouble::xdoty(
-    const std::vector<Utils::vec2d>& _x,
-    const std::vector<Utils::vec2d>& _y) -> double
+    const std::vector<Utils::Math::vec2d>& _x,
+    const std::vector<Utils::Math::vec2d>& _y) -> double
 {
   return std::inner_product(_x.begin(),
                             _x.end(),
                             _y.begin(),
                             0.0,
                             std::plus<double>(),
-                            [](Utils::vec2d _a, Utils::vec2d _b)
-                            { return _a.dot(_b); });
+                            [](Utils::Math::vec2d _a, Utils::Math::vec2d _b)
+                            { return _a * _b; });
 }
 
 //-------------------------------------------------------------------------------------------------

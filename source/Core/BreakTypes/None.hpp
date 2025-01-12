@@ -2,7 +2,7 @@
 
 #include <optional>
 
-#include "Misc/Vec2.hpp"
+#include "Misc/Math/Vector.hpp"
 
 namespace networkV4
 {
@@ -14,12 +14,12 @@ public:
   None() {};
 
 public:
-  bool checkBreak(const Utils::vec2d& _r) const { return false; }
-  std::optional<double> thresholdData(const Utils::vec2d& _r) const
+  bool checkBreak(const Utils::Math::vec2d& _r) const { return false; }
+  std::optional<double> thresholdData(const Utils::Math::vec2d& _r) const
   {
     return {};
   }
-  std::optional<double> data(const Utils::vec2d& _r) const { return {}; }
+  std::optional<double> data(const Utils::Math::vec2d& _r) const { return {}; }
 };
 }  // namespace BreakTypes
 }  // namespace networkV4

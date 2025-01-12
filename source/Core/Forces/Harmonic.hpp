@@ -3,7 +3,7 @@
 #include <optional>
 
 #include "Misc/Config.hpp"
-#include "Misc/Vec2.hpp"
+#include "Misc/Math/Vector.hpp"
 
 namespace networkV4
 {
@@ -31,7 +31,7 @@ public:
   const bool normalized() const { return m_normalized; }
 
 public:
-  std::optional<Utils::vec2d> force(const Utils::vec2d& _dx) const
+  std::optional<Utils::Math::vec2d> force(const Utils::Math::vec2d& _dx) const
   {
     const auto r = _dx.norm();
     const auto dr = r - m_r0;
@@ -43,7 +43,7 @@ public:
     }
     return _dx * fac;
   }
-  std::optional<double> energy(const Utils::vec2d& _dx) const
+  std::optional<double> energy(const Utils::Math::vec2d& _dx) const
   {
     const auto r = _dx.norm();
     const auto dr = r - m_r0;

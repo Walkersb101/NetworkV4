@@ -12,7 +12,7 @@
 #include "Misc/Tags/TagMap.hpp"
 #include "Misc/Tags/TagStorage.hpp"
 #include "Misc/Tensor2.hpp"
-#include "Misc/Vec2.hpp"
+#include "Misc/Math/Vector.hpp"
 
 namespace networkV4
 {
@@ -60,7 +60,7 @@ public:
 
 public:
   double getShearStrain() const;
-  auto getElongationStrain() const -> Utils::vec2d;
+  auto getElongationStrain() const -> Utils::Math::vec2d;
 
   void shear(double _step);
   void setBox(const box& _box);
@@ -74,15 +74,15 @@ public:
   void computeBreaks();
 
 private:
-  void evalBreak(const Utils::vec2d& _dist,
+  void evalBreak(const Utils::Math::vec2d& _dist,
                  const bonded::BondInfo& _binfo,
                  bonded::bondTypes& _type,
                  bonded::breakTypes& _break,
                  Utils::Tags::tagFlags& _tags);
 
   void applyforce(const bonded::BondInfo& _binfo,
-                  const Utils::vec2d& _dist,
-                  const Utils::vec2d& _force,
+                  const Utils::Math::vec2d& _dist,
+                  const Utils::Math::vec2d& _force,
                     const Utils::Tags::tagFlags& _tags);
 
 #if defined(_OPENMP)

@@ -3,7 +3,7 @@
 #include <stdexcept>
 #include <vector>
 
-#include "Misc/Vec2.hpp"
+#include "Misc/Math/Vector.hpp"
 
 namespace networkV4
 {
@@ -26,8 +26,8 @@ public:
     m_invLy = 1.0 / _Ly;
     m_invxy = -_xy / (_Lx * _Ly);
   }
-  box(const Utils::vec2d& _domain, const double _xy = 0.0)
-      : box(_domain.x, _domain.y, _xy)
+  box(const Utils::Math::vec2d& _domain, const double _xy = 0.0)
+      : box(_domain.at(0), _domain.at(1), _xy)
   {
   }
 
@@ -65,9 +65,9 @@ public:
   auto shearStrain() const -> const double { return m_xy / m_Ly; }
   auto area() const -> const double { return m_area; }
   auto invArea() const -> const double { return m_invArea; }
-  auto getDomain() const -> const Utils::vec2d
+  auto getDomain() const -> const Utils::Math::vec2d
   {
-    return Utils::vec2d(m_Lx, m_Ly);
+    return {m_Lx, m_Ly};
   }
   auto getBox() const -> std::vector<std::vector<double>> const
   {
@@ -75,49 +75,49 @@ public:
   }
 
 public:
-  inline auto lambda2x(const Utils::vec2d& _pos) const -> Utils::vec2d
+  inline auto lambda2x(const Utils::Math::vec2d& _pos) const -> Utils::Math::vec2d
   {
-    return Utils::vec2d(m_Lx * _pos.x + m_xy * _pos.y, m_Ly * _pos.y);
+    return {m_Lx * _pos.at(0) + m_xy * _pos.at(1), m_Ly * _pos.at(1)};
   };
 
-  inline auto x2Lambda(const Utils::vec2d& _pos) const -> Utils::vec2d
+  inline auto x2Lambda(const Utils::Math::vec2d& _pos) const -> Utils::Math::vec2d
   {
-    return Utils::vec2d(m_invLx * _pos.x + m_invxy * _pos.y, m_invLy * _pos.y);
+    return {m_invLx * _pos.at(0) + m_invxy * _pos.at(1), m_invLy * _pos.at(1)};
   };
 
 public:
-  inline auto wrapPosition(const Utils::vec2d& _pos) const -> Utils::vec2d
+  inline auto wrapPosition(const Utils::Math::vec2d& _pos) const -> Utils::Math::vec2d
   {
-    Utils::vec2d lambda = x2Lambda(_pos);
-    while (lambda.x > 1.0)
-      lambda.x -= 1.0;
-    while (lambda.x < 0.0)
-      lambda.x += 1.0;
-    while (lambda.y > 1.0)
-      lambda.y -= 1.0;
-    while (lambda.y < 0.0)
-      lambda.y += 1.0;
+    Utils::Math::vec2d lambda = x2Lambda(_pos);
+    while (lambda.at(0) > 1.0)
+      lambda.at(0) -= 1.0;
+    while (lambda.at(0) < 0.0)
+      lambda.at(0) += 1.0;
+    while (lambda.at(1) > 1.0)
+      lambda.at(1) -= 1.0;
+    while (lambda.at(1) < 0.0)
+      lambda.at(1) += 1.0;
     return lambda2x(lambda);
   }
 
-  inline auto minDist(const Utils::vec2d& _pos1,
-                      const Utils::vec2d& _pos2) const -> Utils::vec2d
+  inline auto minDist(const Utils::Math::vec2d& _pos1,
+                      const Utils::Math::vec2d& _pos2) const -> Utils::Math::vec2d
   {
-    Utils::vec2d dist = _pos2 - _pos1;
-    while (std::abs(dist.y) > m_halfLy) {
-      if (dist.y > 0.0) {
-        dist.y -= m_Ly;
-        dist.x -= m_xy;
+    Utils::Math::vec2d dist = _pos2 - _pos1;
+    while (std::abs(dist.at(1)) > m_halfLy) {
+      if (dist.at(1) > 0.0) {
+        dist.at(1) -= m_Ly;
+        dist.at(0) -= m_xy;
       } else {
-        dist.y += m_Ly;
-        dist.x += m_xy;
+        dist.at(1) += m_Ly;
+        dist.at(0) += m_xy;
       }
     }
-    while (std::abs(dist.x) > m_halfLx) {
-      if (dist.x > 0.0)
-        dist.x -= m_Lx;
+    while (std::abs(dist.at(0)) > m_halfLx) {
+      if (dist.at(0) > 0.0)
+        dist.at(0) -= m_Lx;
       else
-        dist.x += m_Lx;
+        dist.at(0) += m_Lx;
     }
     return dist;
   }

@@ -47,15 +47,17 @@ public:
 public:
   auto getStrain(const network& _network) const -> double override
   {
-    return _network.getElongationStrain().y;
+    return _network.getElongationStrain().at(1);
   }
 
   void strain(network& _network, double _step) override
   {
-    double newstrain = _network.getElongationStrain().y + _step;
+    double newstrain = _network.getElongationStrain().at(1) + _step;
 
-    Utils::vec2d newDomain = _network.getRestBox().getDomain()
-        * Utils::vec2d(1.0 / (1.0 + newstrain), 1.0 + newstrain);
+    Utils::Math::vec2d newDomain = Utils::Math::broadcast(
+        _network.getRestBox().getDomain(),
+        Utils::Math::vec2d({1.0 / (1.0 + newstrain), 1.0 + newstrain}),
+                           std::multiplies<>());
     box newBox(newDomain, _network.getBox().getxy());
     _network.setBox(newBox);
   }

@@ -53,7 +53,7 @@ public:
     append(ss, box.getDomain());
     append(ss, box.shearStrain());
 
-    for (const Utils::vec2d& pos : nodes.gatherPositions()) {
+    for (const Utils::Math::vec2d& pos : nodes.gatherPositions()) {
       append(ss, pos);
     }
 
