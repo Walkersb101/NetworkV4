@@ -159,7 +159,8 @@ void networkV4::network::wrapNodes()
 }
 
 #if not defined(_OPENMP)
-void networkV4::network::computeForces(bool _evalBreak)
+template <bool _evalBreak = false, bool _evalStress = false>
+void networkV4::network::computeForces()
 {
   m_energy = 0.0;
   m_stresses.zero();
@@ -176,13 +177,13 @@ void networkV4::network::computeForces(bool _evalBreak)
     const auto& pos2 = positions[bond.dst];
     const auto dist = m_box.minDist(pos1, pos2);
 
-    if (_evalBreak) {
+    if constexpr (_evalBreak) {
       evalBreak(dist, bond, type, brk, tags);
     }
 
     const auto force = bonded::visitForce(type, dist);
     if (force) {
-      applyforce(bond, dist, force.value(), tags);
+      applyforce(bond, dist, force.value(), tags, _evalStress);
     }
 
     const auto energy = bonded::visitEnergy(type, dist);
@@ -191,6 +192,12 @@ void networkV4::network::computeForces(bool _evalBreak)
     }
   }
 }
+
+// Explicit template instantiation
+template void networkV4::network::computeForces<false, false>();
+template void networkV4::network::computeForces<true, false>();
+template void networkV4::network::computeForces<false, true>();
+template void networkV4::network::computeForces<true, true>();
 #endif
 
 auto networkV4::network::computeEnergy() -> double
@@ -247,13 +254,16 @@ void networkV4::network::evalBreak(const Utils::Math::vec2d& _dist,
 void networkV4::network::applyforce(const bonded::BondInfo& _binfo,
                                     const Utils::Math::vec2d& _dist,
                                     const Utils::Math::vec2d& _force,
-                                    const Utils::Tags::tagFlags& _tags)
+                                    const Utils::Tags::tagFlags& _tags,
+                                    bool _evalStress)
 {
   auto& forces = m_nodes.forces();
   forces[_binfo.src] -= _force;
   forces[_binfo.dst] += _force;
 
-  const auto stress =
-      Utils::Math::tensorProduct(_force, _dist) * m_box.invArea();
-  m_stresses.distribute(stress, _tags);
+  if (_evalStress) {
+    const auto stress =
+        Utils::Math::tensorProduct(_force, _dist) * m_box.invArea();
+    m_stresses.distribute(stress, _tags);
+  }
 }

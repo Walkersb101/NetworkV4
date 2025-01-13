@@ -68,7 +68,8 @@ public:
   void wrapNodes();
 
 public:
-  void computeForces(bool _evalBreak = false);
+  template <bool _evalBreak = false, bool _evalStress = false>
+  void computeForces();
 
   auto computeEnergy() -> double;
   void computeBreaks();
@@ -83,11 +84,13 @@ private:
   void applyforce(const bonded::BondInfo& _binfo,
                   const Utils::Math::vec2d& _dist,
                   const Utils::Math::vec2d& _force,
-                    const Utils::Tags::tagFlags& _tags);
+                    const Utils::Tags::tagFlags& _tags,
+                    bool _evalStress = false);
 
 #if defined(_OPENMP)
 private:
-  void computePass(auto _parts, bool _evalBreak = false);
+  template <bool _evalBreak = false, bool _evalStress = false>
+  void computePass(auto _parts);
 #endif
 
 private:

@@ -252,7 +252,7 @@ auto networkV4::protocols::quasiStaticStrainDouble::relaxBreak(
   // TODO: allow changing Gamma
   integration::AdaptiveOverdampedEulerHeun stepper(1.0, m_params);
 
-  _network.computeForces(true);
+  _network.computeForces<true,true>();
 
   breakCount += _network.getBreakQueue().size();
   while (!_network.getBreakQueue().empty()) {
@@ -265,7 +265,7 @@ auto networkV4::protocols::quasiStaticStrainDouble::relaxBreak(
   while (iter++ < m_minParams.maxIter) {
     Eprev = Ecurr;
     stepper.step(_network);
-    _network.computeForces(true);
+    _network.computeForces<true,true>();
     Ecurr = _network.getEnergy();
     m_t += stepper.getDt();
 

@@ -110,6 +110,7 @@ void networkV4::protocols::propogatorDouble::runStrain(network& _network)
       evalStrain(_network, subStepStrain);
       std::cout << m_deform->getStrain(_network) << std::endl;
     }
+    _network.computeForces<false, true>();
     m_strainCount++;
     SavedNetwork = _network;
 
@@ -140,6 +141,7 @@ void networkV4::protocols::propogatorDouble::relax(network& _network)
   //minimisation::AdaptiveHeunDecent minimizer(m_minParams, m_params);
   minimisation::fire2 minimizer(m_minParams);
   minimizer.minimise(_network);
+  _network.computeForces<false, true>();
 }
 
 auto networkV4::protocols::propogatorDouble::getMaxDataIndex(

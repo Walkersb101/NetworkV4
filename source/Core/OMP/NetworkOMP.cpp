@@ -23,7 +23,8 @@
 networkV4::partition::Partitions networkV4::OMP::threadPartitions;
 size_t networkV4::OMP::passes;
 
-void networkV4::network::computeForces(bool _evalBreak)
+template <bool _evalBreak, bool _evalStress>
+void networkV4::network::computeForces()
 {
   m_energy = 0.0;
   m_stresses.zero();
@@ -32,11 +33,12 @@ void networkV4::network::computeForces(bool _evalBreak)
   for (size_t pass = 0; pass < OMP::passes; ++pass) {
     auto passParts = OMP::threadPartitions | ranges::views::drop(pass)
         | ranges::views::stride(OMP::passes);
-    computePass(passParts, _evalBreak);
+    computePass<_evalBreak, _evalStress>(passParts);
   }
 }
 
-void networkV4::network::computePass(auto _parts, bool _evalBreak)
+template <bool _evalBreak, bool _evalStress>
+void networkV4::network::computePass(auto _parts)
 {
   const auto& bonds = m_bonds.getBonds();
   auto& types = m_bonds.getTypes();
@@ -46,9 +48,12 @@ void networkV4::network::computePass(auto _parts, bool _evalBreak)
   const auto& positions = m_nodes.positions();
   auto& forces = m_nodes.forces();
 
-#  pragma omp parallel for reduction(+ : m_energy) reduction(+ : m_stresses) \
-      reduction(+ : m_breakQueue) num_threads(_parts.size()) \
-      schedule(static, 1)
+#  pragma omp parallel for \
+    reduction(+ : m_energy) \
+    reduction(+ : m_stresses) \
+    reduction(+ : m_breakQueue) \
+    num_threads(_parts.size()) \
+    schedule(static, 1)
   for (const auto part : _parts) {
     for (size_t i = part.bondStart(); i < part.bondEnd(); i++) {
       const auto& bond = bonds[i];
@@ -60,7 +65,7 @@ void networkV4::network::computePass(auto _parts, bool _evalBreak)
       const auto& pos2 = positions[bond.dst];
       const auto dist = m_box.minDist(pos1, pos2);
 
-      if (_evalBreak) {
+      if constexpr (_evalBreak) {
         const bool broken = bonded::visitBreak(brk, dist);
         if (broken) {
           m_breakQueue.emplace_back(bond, type, brk, bTags);
@@ -78,9 +83,11 @@ void networkV4::network::computePass(auto _parts, bool _evalBreak)
         forces[bond.src] -= f;
         forces[bond.dst] += f;
 
-        const auto stress =
-            Utils::Math::tensorProduct(f, dist) * m_box.invArea();
-        m_stresses.distribute(stress, bTags);
+        if constexpr (_evalStress) {
+          const auto stress =
+              Utils::Math::tensorProduct(f, dist) * m_box.invArea();
+          m_stresses.distribute(stress, bTags);
+        }
       }
 
       const auto energy = bonded::visitEnergy(type, dist);
@@ -90,4 +97,15 @@ void networkV4::network::computePass(auto _parts, bool _evalBreak)
     }
   }
 }
+
+// Explicit template instantiation
+template void networkV4::network::computeForces<false, false>();
+template void networkV4::network::computeForces<true, false>();
+template void networkV4::network::computeForces<false, true>();
+template void networkV4::network::computeForces<true, true>();
+
+template void networkV4::network::computePass<false, false>(decltype(OMP::threadPartitions));
+template void networkV4::network::computePass<true, false>(decltype(OMP::threadPartitions));
+template void networkV4::network::computePass<false, true>(decltype(OMP::threadPartitions));
+template void networkV4::network::computePass<true, true>(decltype(OMP::threadPartitions));
 #endif
