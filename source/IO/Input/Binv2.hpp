@@ -39,7 +39,7 @@ public:
 
     const Utils::Math::vec2d domain = read<Utils::Math::vec2d>(file);
     const double shearStrain = read<double>(file);
-    const networkV4::box domainBox(domain, shearStrain * domain.at(1));
+    const networkV4::box domainBox(domain, shearStrain * domain[1]);
 
     networkV4::network network(domainBox, N, B);
 

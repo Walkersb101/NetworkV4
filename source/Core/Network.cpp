@@ -134,7 +134,7 @@ void networkV4::network::shear(double _step)
                  m_nodes.positions().end(),
                  m_nodes.positions().begin(),
                  [&](const Utils::Math::vec2d& _pos) {
-                   return _pos + Utils::Math::vec2d({_step * _pos.at(1), 0.0});
+                   return _pos + Utils::Math::vec2d({_step * _pos[1], 0.0});
                  });
 }
 

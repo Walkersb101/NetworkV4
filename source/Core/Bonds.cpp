@@ -140,7 +140,7 @@ auto networkV4::bonded::bonds::gatherTags() const
   Utils::Tags::tagStorage tags;
   tags.resize(size());
   for (const auto& [tag, bond] : ranges::views::zip(m_tags, m_bonds)) {
-    tags.at(bond.index) = tag;
+    tags[bond.index] = tag;
   }
   return tags;
 }

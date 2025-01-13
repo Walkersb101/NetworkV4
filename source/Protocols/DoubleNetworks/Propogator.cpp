@@ -299,8 +299,8 @@ auto networkV4::protocols::propogatorDouble::genTimeData(
           box.getLx(),
           box.getLy(),
           box.shearStrain(),
-          _network.getElongationStrain().at(0),
-          _network.getElongationStrain().at(1),
+          _network.getElongationStrain()[0],
+          _network.getElongationStrain()[1],
           globalStress(0,0),
           globalStress(0,1),
           globalStress(1,0),
@@ -358,15 +358,15 @@ auto networkV4::protocols::propogatorDouble::genBondData(
       harmonic ? (r - r0) / r0 : 0.0,
       bondSrc,
       bondDst,
-      pos1.at(0),
-      pos1.at(1),
-      pos2.at(0),
-      pos2.at(1),
+      pos1[0],
+      pos1[1],
+      pos2[0],
+      pos2[1],
       box.getLx(),
       box.getLy(),
       box.shearStrain(),
-      _network.getElongationStrain().at(0),
-      _network.getElongationStrain().at(1)};
+      _network.getElongationStrain()[0],
+      _network.getElongationStrain()[1]};
 }
 
 // -------------------------------------------------------------------------------------------------

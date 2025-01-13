@@ -110,10 +110,10 @@ inline void merge(stresses& _s1, const stresses& _s2)
   for (size_t i = 0; i < NUM_TAGS; ++i) {
     if (s2init.test(i)) {
       if (s1init.test(i)) {
-        _s1.m_values.at(i) += _s2.m_values.at(i);
+        _s1.m_values[i] += _s2.m_values[i];
       } else {
         _s1.m_stored.set(i);
-        _s1.m_values.at(i) = _s2.m_values.at(i);
+        _s1.m_values[i] = _s2.m_values[i];
       }
     }
   }

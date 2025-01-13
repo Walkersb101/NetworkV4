@@ -87,12 +87,12 @@ public:
     const auto partitionSize = 1.0 / m_partitionsCount;
     for (const auto& pos : _positions) {
       const auto lambda = _domain.x2Lambda(pos);
-      const auto p = static_cast<size_t>(lambda.at(0) * m_partitionsCount);
+      const auto p = static_cast<size_t>(lambda[0] * m_partitionsCount);
       m_partition.push_back(p);
 
-      const double px = (lambda.at(0) - p * partitionSize) / partitionSize;
+      const double px = (lambda[0] - p * partitionSize) / partitionSize;
       const auto x = static_cast<uint_fast32_t>(px * m_mortonRes);
-      const auto y = static_cast<uint_fast32_t>(lambda.at(1) * m_mortonRes);
+      const auto y = static_cast<uint_fast32_t>(lambda[1] * m_mortonRes);
       const auto hash = libmorton::morton2D_64_encode(x, y);
       m_mortonHash.push_back(hash);
     }

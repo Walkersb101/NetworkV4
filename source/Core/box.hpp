@@ -27,7 +27,7 @@ public:
     m_invxy = -_xy / (_Lx * _Ly);
   }
   box(const Utils::Math::vec2d& _domain, const double _xy = 0.0)
-      : box(_domain.at(0), _domain.at(1), _xy)
+      : box(_domain[0], _domain[1], _xy)
   {
   }
 
@@ -77,26 +77,26 @@ public:
 public:
   inline auto lambda2x(const Utils::Math::vec2d& _pos) const -> Utils::Math::vec2d
   {
-    return {m_Lx * _pos.at(0) + m_xy * _pos.at(1), m_Ly * _pos.at(1)};
+    return {m_Lx * _pos[0] + m_xy * _pos[1], m_Ly * _pos[1]};
   };
 
   inline auto x2Lambda(const Utils::Math::vec2d& _pos) const -> Utils::Math::vec2d
   {
-    return {m_invLx * _pos.at(0) + m_invxy * _pos.at(1), m_invLy * _pos.at(1)};
+    return {m_invLx * _pos[0] + m_invxy * _pos[1], m_invLy * _pos[1]};
   };
 
 public:
   inline auto wrapPosition(const Utils::Math::vec2d& _pos) const -> Utils::Math::vec2d
   {
     Utils::Math::vec2d lambda = x2Lambda(_pos);
-    while (lambda.at(0) > 1.0)
-      lambda.at(0) -= 1.0;
-    while (lambda.at(0) < 0.0)
-      lambda.at(0) += 1.0;
-    while (lambda.at(1) > 1.0)
-      lambda.at(1) -= 1.0;
-    while (lambda.at(1) < 0.0)
-      lambda.at(1) += 1.0;
+    while (lambda[0] > 1.0)
+      lambda[0] -= 1.0;
+    while (lambda[0] < 0.0)
+      lambda[0] += 1.0;
+    while (lambda[1] > 1.0)
+      lambda[1] -= 1.0;
+    while (lambda[1] < 0.0)
+      lambda[1] += 1.0;
     return lambda2x(lambda);
   }
 
@@ -104,20 +104,20 @@ public:
                       const Utils::Math::vec2d& _pos2) const -> Utils::Math::vec2d
   {
     Utils::Math::vec2d dist = _pos2 - _pos1;
-    while (std::abs(dist.at(1)) > m_halfLy) {
-      if (dist.at(1) > 0.0) {
-        dist.at(1) -= m_Ly;
-        dist.at(0) -= m_xy;
+    while (std::abs(dist[1]) > m_halfLy) {
+      if (dist[1] > 0.0) {
+        dist[1] -= m_Ly;
+        dist[0] -= m_xy;
       } else {
-        dist.at(1) += m_Ly;
-        dist.at(0) += m_xy;
+        dist[1] += m_Ly;
+        dist[0] += m_xy;
       }
     }
-    while (std::abs(dist.at(0)) > m_halfLx) {
-      if (dist.at(0) > 0.0)
-        dist.at(0) -= m_Lx;
+    while (std::abs(dist[0]) > m_halfLx) {
+      if (dist[0] > 0.0)
+        dist[0] -= m_Lx;
       else
-        dist.at(0) += m_Lx;
+        dist[0] += m_Lx;
     }
     return dist;
   }
