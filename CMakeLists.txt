@@ -72,10 +72,18 @@ FetchContent_Declare(
     URL "https://github.com/facebook/zstd/releases/download/v1.5.5/zstd-1.5.5.tar.gz"
     DOWNLOAD_EXTRACT_TIMESTAMP TRUE
     SOURCE_SUBDIR build/cmake
+    #GIT_REPOSITORY    https://github.com/facebook/zstd.git
+    #GIT_TAG           v1.5.6
 )
 
 FetchContent_MakeAvailable(zstd)
-target_link_libraries(NetworkV4_lib PRIVATE libzstd_static)
+target_link_libraries(NetworkV4_lib PUBLIC libzstd_static)
+
+target_include_directories(
+    NetworkV4_lib
+    PUBLIC
+    ${zstd_SOURCE_DIR}/lib
+)
 
 FetchContent_Declare(
   HighFive
