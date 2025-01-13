@@ -41,7 +41,7 @@ void networkV4::tomlLoad::readProtocol()
     m_protocolReader =
         std::make_unique<protocols::quasiStaticStrainDoubleReader>();
   } 
-  if (m_config.contains("Propogator")) {
+  else if (m_config.contains("Propogator")) {
     m_protocolReader =
         std::make_unique<protocols::propogatorDoubleReader>();
   } else {
