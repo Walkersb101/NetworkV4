@@ -7,6 +7,10 @@ project(
     HOMEPAGE_URL "https://example.com/"
     LANGUAGES CXX
 )
+
+# ---- Options ----
+option(USE_OPENMP "Enable OpenMP support" ON)
+
 # ---- Declare library ----
 
 add_library(
@@ -120,6 +124,21 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(range-v3)
 target_link_libraries(NetworkV4_lib PUBLIC range-v3)
+
+# ---- OpenMP ----
+
+if(USE_OPENMP)
+    message(STATUS "OpenMP requested")
+    find_package(OpenMP)
+    if(OpenMP_CXX_FOUND)
+        target_link_libraries(NetworkV4_lib PUBLIC OpenMP::OpenMP_CXX)
+        set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+        set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+        set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+    else()
+        message(WARNING "OpenMP requested but not found")
+    endif()
+endif()
 
 # ---- Declare executable ----
 

@@ -17,6 +17,14 @@
             }
         },
         {
+            "name": "openmp",
+            "description": "Toggle OpenMP support",
+            "hidden": true,
+            "cacheVariables": {
+                "USE_OPENMP": "ON"
+            }
+        },
+        {
             "name": "debug-flags",
             "description": "These flags are supported by both GCC and Clang",
             "hidden": true,
@@ -29,35 +37,7 @@
             "description": "These flags are supported by both GCC and Clang",
             "hidden": true,
             "cacheVariables": {
-                "CMAKE_CXX_FLAGS": "-g3 -O3 -fstack-clash-protection",
-                "CMAKE_EXE_LINKER_FLAGS": "-Wl,--allow-shlib-undefined,--as-needed,-z,noexecstack,-z,relro,-z,now,-z,nodlopen",
-                "CMAKE_SHARED_LINKER_FLAGS": "-Wl,--allow-shlib-undefined,--as-needed,-z,noexecstack,-z,relro,-z,now,-z,nodlopen"
-            }
-        },
-        {
-            "name": "openmp-Debug",
-            "description": "Enable OpenMP support",
-            "hidden": true,
-            "cacheVariables": {
-                "CMAKE_CXX_FLAGS": "-fopenmp -g"
-            }
-        },
-        {
-            "name": "openmp-Release",
-            "description": "Enable OpenMP support",
-            "hidden": true,
-            "cacheVariables": {
-                "CMAKE_CXX_FLAGS": "-fopenmp -O3 -fstack-clash-protection",
-                "CMAKE_EXE_LINKER_FLAGS": "-Wl,--allow-shlib-undefined,--as-needed,-z,noexecstack,-z,relro,-z,now,-z,nodlopen",
-                "CMAKE_SHARED_LINKER_FLAGS": "-Wl,--allow-shlib-undefined,--as-needed,-z,noexecstack,-z,relro,-z,now,-z,nodlopen"
-            }
-        },
-        {
-            "name": "openmp-Benchmark",
-            "description": "Enable OpenMP support",
-            "hidden": true,
-            "cacheVariables": {
-                "CMAKE_CXX_FLAGS": "-fopenmp -g -O3 -march=native -fno-omit-frame-pointer -fstack-clash-protection",
+                "CMAKE_CXX_FLAGS": "-O3 ftree-vectorize -march=native -fstack-clash-protection",
                 "CMAKE_EXE_LINKER_FLAGS": "-Wl,--allow-shlib-undefined,--as-needed,-z,noexecstack,-z,relro,-z,now,-z,nodlopen",
                 "CMAKE_SHARED_LINKER_FLAGS": "-Wl,--allow-shlib-undefined,--as-needed,-z,noexecstack,-z,relro,-z,now,-z,nodlopen"
             }
