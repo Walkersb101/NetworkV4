@@ -9,7 +9,7 @@ project(
 )
 
 # ---- Options ----
-option(USE_OPENMP "Enable OpenMP support" ON)
+option(USE_OPENMP "Enable OpenMP support" OFF)
 
 # ---- Declare library ----
 
