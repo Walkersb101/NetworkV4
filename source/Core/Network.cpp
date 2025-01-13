@@ -159,7 +159,7 @@ void networkV4::network::wrapNodes()
 }
 
 #if not defined(_OPENMP)
-template <bool _evalBreak = false, bool _evalStress = false>
+template <bool _evalBreak, bool _evalStress>
 void networkV4::network::computeForces()
 {
   m_energy = 0.0;
