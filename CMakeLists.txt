@@ -145,7 +145,11 @@ endif()
 add_executable(NetworkV4_exe source/main.cpp)
 add_executable(networkV4::exe ALIAS NetworkV4_exe)
 
-set_property(TARGET NetworkV4_exe PROPERTY OUTPUT_NAME networkV4)
+if (USE_OPENMP)
+    set_property(TARGET NetworkV4_exe PROPERTY OUTPUT_NAME networkV4_omp)
+else()
+    set_property(TARGET NetworkV4_exe PROPERTY OUTPUT_NAME networkV4)
+endif()
 
 target_compile_features(NetworkV4_exe PRIVATE cxx_std_20)
 
