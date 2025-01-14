@@ -142,21 +142,22 @@ private:
     const auto bondInfo = _net.getBonds().gatherBonds();
     const auto types = _net.getBonds().gatherTypes();
     const auto breaks = _net.getBonds().gatherBreaks();
+    const auto& nodesIndex = _net.getNodes().indices();
 
     std::vector<size_t> connections;
     connections.reserve(_net.getBonds().size() * 2);
     for (const networkV4::bonded::BondInfo& bond : bondInfo) {
-      connections.emplace_back(bond.src);
-      connections.emplace_back(bond.dst);
+      connections.emplace_back(nodesIndex[bond.src]);
+      connections.emplace_back(nodesIndex[bond.dst]);
     }
     bonds.reshapeMemSpace({connections.size()}).write(connections);
 
     auto params = createOrGetGroup(_file, "parameter");
-    auto bondParameters = initMatrixDataset<double>(
-        params, "Bonds", {_net.getBonds().size(), 3}, true);
+    auto forceParameters = initMatrixDataset<double>(
+        params, "Force", {_net.getBonds().size(), 2}, true);
 
     std::vector<double> data;
-    data.reserve(_net.getBonds().size() * 3);
+    data.reserve(_net.getBonds().size() * 2);
     for (auto [type, brk] : ranges::views::zip(types, breaks)) {
       if (std::holds_alternative<networkV4::Forces::HarmonicBond>(type)) {
         const auto& bondType = std::get<networkV4::Forces::HarmonicBond>(type);
@@ -166,15 +167,26 @@ private:
         data.push_back(0.0);
         data.push_back(0.0);
       }
+    }
+    forceParameters.reshapeMemSpace({data.size()}).write(data);
+
+    auto breakParameters = initMatrixDataset<double>(
+        params, "Break", {_net.getBonds().size(), 2}, true);
+
+    data.clear();
+    data.reserve(_net.getBonds().size() * 2);
+    for (auto [type, brk] : ranges::views::zip(types, breaks)) {
       if (std::holds_alternative<networkV4::BreakTypes::StrainBreak>(brk)) {
         const auto& breakType =
             std::get<networkV4::BreakTypes::StrainBreak>(brk);
+        data.push_back(breakType.r0());
         data.push_back(breakType.lambda());
       } else {
         data.push_back(0.0);
+        data.push_back(0.0);
       }
     }
-    bondParameters.reshapeMemSpace({data.size()}).write(data);
+    breakParameters.reshapeMemSpace({data.size()}).write(data);
 
     auto map = _net.getTags().getVecs();
 
