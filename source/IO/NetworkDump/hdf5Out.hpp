@@ -52,8 +52,8 @@ public:
     saveScalar(edgesGroup.getDataSet("time"), _time);
     saveMatrix(edgesGroup.getDataSet("value"), _net.getBox().getBox());
 
-    auto posView = Utils::spanView(
-        _net.getNodes().positions());  // Todo: work out why span is not working
+    const auto posData = _net.getNodes().gatherPositions();
+    auto posView = Utils::spanView(posData);  // Todo: work out why span is not working
     std::vector<double> poses;
     poses.assign(posView.begin(), posView.end());
 
@@ -71,6 +71,7 @@ public:
     std::vector<bool> connected;
     connected.reserve(_net.getBonds().size());
 
+    // generalise this
     for (const auto& typ : types) {
       if (std::holds_alternative<networkV4::Forces::HarmonicBond>(typ)) {
         connected.push_back(true);
