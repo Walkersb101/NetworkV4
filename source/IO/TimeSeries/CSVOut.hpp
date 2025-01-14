@@ -52,6 +52,7 @@ private:
           "Cannot open file: "
           + m_filePath.string());  // TODO: maybe this shouldnt just throw
     }
+    file << std::setprecision(config::IO::CSV::precision);
     for (const auto& x : _row | ranges::views::drop_last(1)) {
       std::visit([&file](const auto& x) { file << x << ","; }, x);
     }
