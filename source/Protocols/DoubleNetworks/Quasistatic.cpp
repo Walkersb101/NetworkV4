@@ -28,6 +28,7 @@ networkV4::protocols::quasiStaticStrainDouble::quasiStaticStrainDouble(
       "Reason",
       "StrainCount",
       "BreakCount",
+      "Time",
       "Domainx",
       "Domainy",
       "ShearStrain",
@@ -252,7 +253,7 @@ auto networkV4::protocols::quasiStaticStrainDouble::relaxBreak(
   // TODO: allow changing Gamma
   integration::AdaptiveOverdampedEulerHeun stepper(1.0, m_params);
 
-  _network.computeForces<true,true>();
+  _network.computeForces<true, true>();
 
   breakCount += _network.getBreakQueue().size();
   while (!_network.getBreakQueue().empty()) {
@@ -265,7 +266,7 @@ auto networkV4::protocols::quasiStaticStrainDouble::relaxBreak(
   while (iter++ < m_minParams.maxIter) {
     Eprev = Ecurr;
     stepper.step(_network);
-    _network.computeForces<true,true>();
+    _network.computeForces<true, true>();
     Ecurr = _network.getEnergy();
     m_t += stepper.getDt();
 
@@ -318,7 +319,8 @@ auto networkV4::protocols::quasiStaticStrainDouble::genTimeData(
   const auto& box = _network.getBox();
   auto counts = getCounts(_network);
 
-  return {_reason,
+  return {
+        _reason,
           m_strainCount,
           _breakCount,
           m_t,
@@ -341,8 +343,7 @@ auto networkV4::protocols::quasiStaticStrainDouble::genTimeData(
           sacStress(0, 0),
           sacStress(0, 1),
           sacStress(1, 0),
-          sacStress(1, 1)
-          };
+          sacStress(1, 1)};
 }
 
 auto networkV4::protocols::quasiStaticStrainDouble::genBondData(
@@ -413,8 +414,7 @@ auto networkV4::protocols::quasiStaticStrainDouble::genBondData(
       sacStress(0, 0),
       sacStress(0, 1),
       sacStress(1, 0),
-      sacStress(1, 1)
-      };
+      sacStress(1, 1)};
 }
 
 auto networkV4::protocols::quasiStaticStrainDouble::getCounts(
