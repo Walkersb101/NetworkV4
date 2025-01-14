@@ -104,6 +104,7 @@ void networkV4::protocols::quasiStaticStrainDouble::run(network& _network)
     m_strainCount++;
     auto [reason, aboveThreshold] = findSingleBreak(_network);
     if (reason == SingleBreakReason::NoBreaksInStep) {
+      _network.computeForces<false, true>();
       m_dataOut->write(genTimeData(_network, "Strain", aboveThreshold));
       m_networkOut->save(_network,
                          m_strainCount,
@@ -120,6 +121,7 @@ void networkV4::protocols::quasiStaticStrainDouble::run(network& _network)
       throw std::runtime_error("More than one bond above threshold");
     }
     m_t = 0.0;
+    _network.computeForces<false, true>();
 
     m_dataOut->write(genTimeData(_network, "Start", aboveThreshold));
     m_networkOut->save(
@@ -319,8 +321,7 @@ auto networkV4::protocols::quasiStaticStrainDouble::genTimeData(
   const auto& box = _network.getBox();
   auto counts = getCounts(_network);
 
-  return {
-        _reason,
+  return {_reason,
           m_strainCount,
           _breakCount,
           m_t,
