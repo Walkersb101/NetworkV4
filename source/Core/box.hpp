@@ -22,9 +22,7 @@ public:
     if (_Lx <= 0.0 || _Ly <= 0.0) {
       throw std::runtime_error("box::box: invalid box size");
     }
-    m_invLx = 1.0 / _Lx;
-    m_invLy = 1.0 / _Ly;
-    m_invxy = -_xy / (_Lx * _Ly);
+    updateDependent();
   }
   box(const Utils::Math::vec2d& _domain, const double _xy = 0.0)
       : box(_domain[0], _domain[1], _xy)
@@ -125,8 +123,10 @@ public:
 private:
     void updateDependent(){
         m_invLy = 1.0 / m_Ly;
+        m_invLx = 1.0 / m_Lx;
         m_invxy = -m_xy / (m_Lx * m_Ly);
         m_halfLy = 0.5 * m_Ly;
+        m_halfLx = 0.5 * m_Lx;
         m_area = m_Lx * m_Ly;
         m_invArea = 1.0 / m_area;
     }

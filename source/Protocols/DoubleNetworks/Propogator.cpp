@@ -22,6 +22,7 @@ networkV4::protocols::propogatorDouble::propogatorDouble(
   std::vector<IO::timeSeries::writeableTypes> dataHeader = {
       "Reason",
       "StrainCount",
+      "BreakCount",
       "Domainx",
       "Domainy",
       "ShearStrain",

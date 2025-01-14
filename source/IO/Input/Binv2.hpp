@@ -51,7 +51,7 @@ public:
 
     auto& tags = network.getTags();
     auto matrixTag = tags.add("matrix");
-    auto sacrificationTag = tags.add("sacrificial");
+    auto sacrificialTag = tags.add("sacrificial");
 
     networkV4::bonded::bonds& bonds = network.getBonds();
     for (size_t i = 0; i < B; ++i) {
@@ -83,10 +83,9 @@ public:
         breakType = networkV4::BreakTypes::None();
       }
 
-      size_t index = bonds.addBond(index1, index2, type, breakType, matrix ? matrixTag : sacrificationTag);
+      size_t index = bonds.addBond(index1, index2, type, breakType, matrix ? matrixTag : sacrificialTag);
     }
-    network.getStresses().init(matrixTag);
-    network.getStresses().init(sacrificationTag);
+    network.getStresses().init(matrixTag | sacrificialTag);
 
     return network;
   };
