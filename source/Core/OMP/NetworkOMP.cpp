@@ -80,8 +80,8 @@ void networkV4::network::computePass(auto _parts)
       const auto force = bonded::visitForce(type, dist);
       if (force) {
         const auto& f = force.value();
-        forces[bond.src] -= f;
-        forces[bond.dst] += f;
+        forces[bond.src] += f;
+        forces[bond.dst] -= f;
 
         if constexpr (_evalStress) {
           const auto stress =

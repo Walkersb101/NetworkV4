@@ -133,9 +133,8 @@ void networkV4::network::shear(double _step)
   std::transform(m_nodes.positions().begin(),
                  m_nodes.positions().end(),
                  m_nodes.positions().begin(),
-                 [&](const Utils::Math::vec2d& _pos) {
-                   return _pos + Utils::Math::vec2d({_step * _pos[1], 0.0});
-                 });
+                 [&](const Utils::Math::vec2d& _pos)
+                 { return _pos + Utils::Math::vec2d({_step * _pos[1], 0.0}); });
 }
 
 void networkV4::network::setBox(const box& _box)
@@ -159,7 +158,7 @@ void networkV4::network::wrapNodes()
 }
 
 #if not defined(_OPENMP)
-template <bool _evalBreak, bool _evalStress>
+template<bool _evalBreak, bool _evalStress>
 void networkV4::network::computeForces()
 {
   m_energy = 0.0;
@@ -258,12 +257,12 @@ void networkV4::network::applyforce(const bonded::BondInfo& _binfo,
                                     bool _evalStress)
 {
   auto& forces = m_nodes.forces();
-  forces[_binfo.src] -= _force;
-  forces[_binfo.dst] += _force;
+  forces[_binfo.src] += _force;
+  forces[_binfo.dst] -= _force;
 
   if (_evalStress) {
     const auto stress =
-        Utils::Math::tensorProduct(_force, _dist) * m_box.invArea();
+        0.5 * Utils::Math::tensorProduct(_force, -_dist) * m_box.invArea();
     m_stresses.distribute(stress, _tags);
   }
 }

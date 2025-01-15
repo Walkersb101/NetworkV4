@@ -101,7 +101,7 @@ public:
   inline auto minDist(const Utils::Math::vec2d& _pos1,
                       const Utils::Math::vec2d& _pos2) const -> Utils::Math::vec2d
   {
-    Utils::Math::vec2d dist = _pos2 - _pos1;
+    Utils::Math::vec2d dist = _pos1 - _pos2;
     while (std::abs(dist[1]) > m_halfLy) {
       if (dist[1] > 0.0) {
         dist[1] -= m_Ly;
