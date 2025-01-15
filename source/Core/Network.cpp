@@ -262,7 +262,7 @@ void networkV4::network::applyforce(const bonded::BondInfo& _binfo,
 
   if (_evalStress) {
     const auto stress =
-        0.5 * Utils::Math::tensorProduct(_force, -_dist) * m_box.invArea();
+        Utils::Math::tensorProduct(_force, -_dist) * m_box.invArea();
     m_stresses.distribute(stress, _tags);
   }
 }
