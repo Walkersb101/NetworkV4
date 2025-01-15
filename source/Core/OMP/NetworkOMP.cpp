@@ -85,7 +85,7 @@ void networkV4::network::computePass(auto _parts)
 
         if constexpr (_evalStress) {
           const auto stress =
-              Utils::Math::tensorProduct(f, dist) * m_box.invArea();
+              Utils::Math::tensorProduct(f, -dist) * m_box.invArea();
           m_stresses.distribute(stress, bTags);
         }
       }
