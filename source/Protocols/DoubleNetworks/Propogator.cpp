@@ -227,7 +227,6 @@ auto networkV4::protocols::propogatorDouble::breakData(const network& _network)
 auto networkV4::protocols::propogatorDouble::findSingleBreak(network& _network)
     -> bool
 {
-  network testNetwork = _network;
   double maxDistAboveA, maxDistAboveB;
   size_t breakCountA, breakCountB;
   bool converged = false;
@@ -235,9 +234,8 @@ auto networkV4::protocols::propogatorDouble::findSingleBreak(network& _network)
   double a = m_deform->getStrain(_network);
   double b = a + m_maxStep;
 
-  network bnet = _network;
 
-  testNetwork = _network;
+  network testNetwork = _network;
   evalStrain(testNetwork, a);
   std::tie(maxDistAboveA, breakCountA) = breakData(testNetwork);
 
@@ -246,14 +244,14 @@ auto networkV4::protocols::propogatorDouble::findSingleBreak(network& _network)
     return false;
   }
 
-  testNetwork = _network;
-  evalStrain(testNetwork, b);
-  std::tie(maxDistAboveB, breakCountB) = breakData(testNetwork);
+  network bnet = _network;
+  evalStrain(bnet, b);
+  std::tie(maxDistAboveB, breakCountB) = breakData(bnet);
 
   // TODO : add Log
   // Step not large enough to break
   if (maxDistAboveB < 0.0) {
-    _network = testNetwork;
+    _network = bnet;
     return false;
   }
 
@@ -272,10 +270,12 @@ auto networkV4::protocols::propogatorDouble::findSingleBreak(network& _network)
     if (maxDistAboveITP >= 0.) {
       b = xITP;
       maxDistAboveB = maxDistAboveITP;
+      breakCountB = breakCountITP;
       bnet = testNetwork;
     } else {
       a = xITP;
       maxDistAboveA = maxDistAboveITP;
+      breakCountA = breakCountITP;
     }
     if (std::abs(b - a) < 2 * m_rootTol) {
       break;
