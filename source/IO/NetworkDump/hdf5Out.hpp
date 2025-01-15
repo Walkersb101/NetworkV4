@@ -107,6 +107,7 @@ private:
     creator.createAttribute<std::string>("name", "HighFive");
     creator.createAttribute<std::string>("version", "v3.0.0-beta1");
   }
+  
   void initParticles(HighFive::File& _file, const networkV4::network& _net)
   {
     auto particles = createOrGetGroup(_file, "particles");
@@ -128,6 +129,7 @@ private:
     initScalarDataset<double>(positions, "time");
     initMatrixDataset<double>(positions, "value", {_net.getNodes().size(), 2});
   }
+
   void initConnectivity(HighFive::File& _file,
                         const networkV4::network& _net) const
   {

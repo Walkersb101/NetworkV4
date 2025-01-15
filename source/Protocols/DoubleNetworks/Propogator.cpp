@@ -1,5 +1,6 @@
-#include "Propogator.hpp"
 #include <iostream>
+
+#include "Propogator.hpp"
 
 networkV4::protocols::propogatorDouble::propogatorDouble(
     std::shared_ptr<deform::deformBase>& _deform,
@@ -139,7 +140,7 @@ void networkV4::protocols::propogatorDouble::evalStrain(network& _network,
 
 void networkV4::protocols::propogatorDouble::relax(network& _network)
 {
-  //minimisation::AdaptiveHeunDecent minimizer(m_minParams, m_params);
+  // minimisation::AdaptiveHeunDecent minimizer(m_minParams, m_params);
   minimisation::fire2 minimizer(m_minParams);
   minimizer.minimise(_network);
   _network.computeForces<false, true>();
@@ -234,6 +235,8 @@ auto networkV4::protocols::propogatorDouble::findSingleBreak(network& _network)
   double a = m_deform->getStrain(_network);
   double b = a + m_maxStep;
 
+  network bnet = _network;
+
   testNetwork = _network;
   evalStrain(testNetwork, a);
   std::tie(maxDistAboveA, breakCountA) = breakData(testNetwork);
@@ -269,6 +272,7 @@ auto networkV4::protocols::propogatorDouble::findSingleBreak(network& _network)
     if (maxDistAboveITP >= 0.) {
       b = xITP;
       maxDistAboveB = maxDistAboveITP;
+      bnet = testNetwork;
     } else {
       a = xITP;
       maxDistAboveA = maxDistAboveITP;
@@ -277,7 +281,7 @@ auto networkV4::protocols::propogatorDouble::findSingleBreak(network& _network)
       break;
     }
   }
-  _network = testNetwork;
+  _network = bnet;
   return true;
 }
 
@@ -302,19 +306,18 @@ auto networkV4::protocols::propogatorDouble::genTimeData(
           box.shearStrain(),
           _network.getElongationStrain()[0],
           _network.getElongationStrain()[1],
-          globalStress(0,0),
-          globalStress(0,1),
-          globalStress(1,0),
-          globalStress(1,1),
-          matStress(0,0),
-          matStress(0,1),
-          matStress(1,0),
-          matStress(1,1),
-          sacStress(0,0),
-          sacStress(0,1),
-          sacStress(1,0),
-          sacStress(1,1)
-          };
+          globalStress(0, 0),
+          globalStress(0, 1),
+          globalStress(1, 0),
+          globalStress(1, 1),
+          matStress(0, 0),
+          matStress(0, 1),
+          matStress(1, 0),
+          matStress(1, 1),
+          sacStress(0, 0),
+          sacStress(0, 1),
+          sacStress(1, 0),
+          sacStress(1, 1)};
 }
 
 auto networkV4::protocols::propogatorDouble::genBondData(
