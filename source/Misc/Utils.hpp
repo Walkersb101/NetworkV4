@@ -11,7 +11,8 @@ namespace Utils
 template<typename T, std::size_t N>
 auto spanView(const std::vector<Math::Vector<T, N>>& _vec) -> std::span<const T>
 {
-  return std::span<const T>(reinterpret_cast<const T*>(_vec.data()), _vec.size() * N);
+  return std::span<const T>(reinterpret_cast<const T*>(_vec.data()),
+                            _vec.size() * N);
 }
 
 template<typename T, std::size_t N>
@@ -26,18 +27,20 @@ inline auto sign(const T& _val) -> T
   return _val < 0 ? -1 : 1;
 }
 
-inline auto rms(const std::vector<Math::vec2d>& _vec) -> double
+template<typename T, std::size_t N>
+inline auto rms(const std::vector<Math::Vector<T, N>>& _vec) -> T
 {
-  double sum = 0.0;
+  T sum = 0.0;
   for (const auto& val : _vec) {
     sum += val.norm2();
   }
   return std::sqrt(sum / _vec.size());
 }
 
-inline auto maxComp(const std::vector<Math::vec2d>& _vec) -> double
+template<typename T, std::size_t N>
+inline auto maxComp(const std::vector<Math::Vector<T, N>>& _vec) -> T
 {
-  double max = 0.0;
+  T max = 0.0;
   for (const auto& val : _vec) {
     max = std::max(max, val.abs().max());
   }
