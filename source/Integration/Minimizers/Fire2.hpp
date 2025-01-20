@@ -49,7 +49,7 @@ struct Fire2Params
   double dtMin = config::integrators::adaptive::dtMin;
   double dtMax = config::integrators::adaptive::dtMax;
 
-  bool abc = false;
+  bool abc = true;
 };
 
 class fire2 : public minimiserBase
@@ -116,7 +116,7 @@ public:
         if (m_params.abc) {
           alpha = std::max(alpha, 1e-10);
           double abc = 1.0 - std::pow(1.0 - alpha, Npos);
-          scale1 = 1.0 - alpha / abc;
+          scale1 = (1.0 - alpha) / abc;
           scale2 =
               fdotf <= 1e-20 ? 0.0 : (alpha * std::sqrt(vdotv / fdotf)) / abc;
         } else {
