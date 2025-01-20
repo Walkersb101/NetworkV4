@@ -45,7 +45,7 @@ protected:
       return {};
     auto config = toml::find(_config, "Adaptive");
     integration::AdaptiveParams params;
-    if (config.contains("ESP"))
+    if (config.contains("ESPabs"))
       params.espAbs = toml::find<double>(config, "ESPabs");
     if (config.contains("ESPrel"))
       params.espRel = toml::find<double>(config, "ESPrel");
