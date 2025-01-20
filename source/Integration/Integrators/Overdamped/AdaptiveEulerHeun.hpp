@@ -65,14 +65,19 @@ public:
       // forces = f(r_{k+1}bar)
 
       const double halfOverdampedScale = 0.5 * overdampedScale;
-#pragma omp parallel for schedule(static)
+      double estimatedError = -1e10;
+#pragma omp parallel for schedule(static) reduction(max : estimatedError)
       for (size_t i = 0; i < nodes.size(); i++) {
         positions[i] = 0.5 * (positions[i] + m_rk[i])
             + forces[i] * halfOverdampedScale;  // eq 9
-      }
-      // Pos = r_{k+1}
+        // Pos = r_{k+1}
 
-      const double estimatedError = errorEstimate(nodes);
+        const double E = (forces[i] - m_frk[i]).norm() * halfOverdampedScale;
+        const double tau = m_params.espAbs
+            + m_params.espRel * (positions[i] - m_rk[i]).norm();
+        estimatedError = std::max(estimatedError, E / tau);
+      }
+      
       const double estimatedQ = std::pow(0.5 / estimatedError, 2);
       q = std::clamp(estimatedQ, m_params.qMin, m_params.qMax);
 
@@ -90,25 +95,6 @@ public:
     if (error)
       throw std::runtime_error("Adaptive Euler Heun failed to converge");
     m_nextDt = std::clamp(m_dt * q, m_params.dtMin, m_params.dtMax);
-  }
-
-private:
-  auto errorEstimate(const nodes& _nodes) const -> double
-  {
-    const auto& positions = _nodes.positions();
-    const auto& forces = _nodes.forces();
-
-    const double errorScale = m_dt * m_invGamma * 0.5;
-
-    double max = -1e10;
-#pragma omp parallel for reduction(max : max) schedule(static)
-    for (size_t i = 0; i < m_frk.size(); i++) {
-      const double E = (forces[i] - m_frk[i]).norm() * errorScale;
-      const double tau = m_params.espAbs
-          + m_params.espRel * (positions[i] - m_frk[i]).norm();
-      max = std::max(max, E / tau);
-    }
-    return max;
   }
 
 private:
