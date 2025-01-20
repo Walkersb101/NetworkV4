@@ -49,21 +49,6 @@ auto networkV4::nodes::size() const -> size_t
   return m_globalIndices.size();
 }
 
-// void networkV4::nodes::addNode(size_t _globalIndex,
-//                                const Utils::Math::vec2d& _position,
-//                                const Utils::Math::vec2d& _velocity,
-//                                double _mass,
-//                                const Utils::Math::vec2d& _force)
-//{
-//   if (hasIndex(_globalIndex)) {
-//     throw std::runtime_error("Node with index " +
-//     std::to_string(_globalIndex)
-//                              + " already exists");
-//   }
-//   // TODO: check if tags have been set
-//   pushNode(_globalIndex, _position, _velocity, _mass, _force);
-// }
-
 auto networkV4::nodes::addNode(const Utils::Math::vec2d& _position,
                                const Utils::Math::vec2d& _velocity,
                                double _mass) -> size_t
