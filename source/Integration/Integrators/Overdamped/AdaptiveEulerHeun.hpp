@@ -5,10 +5,10 @@
 
 #include <range/v3/view/zip.hpp>
 
-#include "Adaptive.hpp"
 #include "Core/Network.hpp"
-#include "IntegratorBase.hpp"
-#include "Overdamped.hpp"
+#include "Integration/Integrators/Adaptive.hpp"
+#include "Integration/Integrators/IntegratorBase.hpp"
+#include "Integration/Integrators/Overdamped/OverdampedBase.hpp"
 
 namespace networkV4
 {

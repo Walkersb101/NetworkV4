@@ -6,8 +6,8 @@
 #include <range/v3/view/zip.hpp>
 
 #include "Core/Network.hpp"
-#include "IntegratorBase.hpp"
-#include "Overdamped.hpp"
+#include "Integration/Integrators/IntegratorBase.hpp"
+#include "OverdampedBase.hpp"
 
 namespace networkV4
 {

@@ -2,9 +2,9 @@
 
 #include <cstddef>
 
-#include "Integration/Integrators/OverdampedEuler.hpp"
-#include "Integration/Integrators/OverdampedEulerHeun.hpp"
-#include "Integration/Integrators/AdaptiveOverdampedEulerHeun.hpp"
+#include "Integration/Integrators/Overdamped/Euler.hpp"
+#include "Integration/Integrators/Overdamped/EulerHeun.hpp"
+#include "Integration/Integrators/Overdamped/AdaptiveEulerHeun.hpp"
 
 namespace networkV4
 {

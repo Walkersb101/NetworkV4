@@ -77,11 +77,7 @@ private:
 
 private:
   auto breakData(const network& _network) -> std::tuple<double, size_t>;
-
-private:
-  auto xdoty(const std::vector<Utils::Math::vec2d>& _x,
-             const std::vector<Utils::Math::vec2d>& _y) -> double;
-
+  
 private:
   double m_maxStrain;
   bool m_oneBreak = false;

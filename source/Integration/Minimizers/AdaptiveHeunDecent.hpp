@@ -4,7 +4,7 @@
 
 #include <range/v3/view/zip.hpp>
 
-#include "Integration/Integrators/AdaptiveOverdampedEulerHeun.hpp"
+#include "Integration/Integrators/Overdamped/AdaptiveEulerHeun.hpp"
 #include "Integration/RunStyles/Run.hpp"
 #include "MinimiserBase.hpp"
 
@@ -59,25 +59,12 @@ public:
         return;
 
       double fdotf =
-          xdoty(_network.getNodes().forces(), _network.getNodes().forces());
+          Utils::Math::xdoty(_network.getNodes().forces(), _network.getNodes().forces());
       if (fdotf < m_Ftol * m_Ftol) {
         return;
       }
     }
   };
-
-private:
-  auto xdoty(const std::vector<Utils::Math::vec2d>& _x,
-             const std::vector<Utils::Math::vec2d>& _y) -> double
-  {
-    return std::inner_product(_x.begin(),
-                              _x.end(),
-                              _y.begin(),
-                              0.0,
-                              std::plus<double>(),
-                              [](Utils::Math::vec2d _a, Utils::Math::vec2d _b)
-                              { return _a * _b; });
-  }
 
 private:
   integration::AdaptiveParams m_params = integration::AdaptiveParams();

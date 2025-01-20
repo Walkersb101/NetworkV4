@@ -5,6 +5,7 @@
 #include <range/v3/view/zip.hpp>
 
 #include "MinimiserBase.hpp"
+#include "Misc/Math/Misc.hpp"
 #include "Misc/Utils.hpp"
 
 namespace networkV4
@@ -23,7 +24,8 @@ struct Fire2Params
               size_t _Nnegmax,
               double _dmax,
               double _dtMin,
-              double _dtMax)
+              double _dtMax,
+              bool _abc)
       : alpha0(_alpha0)
       , Ndelay(_Ndelay)
       , finc(_finc)
@@ -33,6 +35,7 @@ struct Fire2Params
       , dmax(_dmax)
       , dtMin(_dtMin)
       , dtMax(_dtMax)
+      , abc(_abc)
   {
   }
   double alpha0 = config::integrators::fire2::alpha0;
@@ -45,6 +48,8 @@ struct Fire2Params
 
   double dtMin = config::integrators::adaptive::dtMin;
   double dtMax = config::integrators::adaptive::dtMax;
+
+  bool abc = false;
 };
 
 class fire2 : public minimiserBase
@@ -79,36 +84,45 @@ public:
 
     double scale1, scale2, vdotf, vdotv, fdotf;
 
+    const auto& masses = _network.getNodes().masses();
+    const auto& forces = _network.getNodes().forces();
+
     nodes& nodes = _network.getNodes();
     auto& vels = nodes.velocities();
-    auto& forces = nodes.forces();
+    auto& pos = _network.getNodes().positions();
 
     _network.computeForces();
     double Eprev = _network.getEnergy();
     double Ecurr = _network.getEnergy();
 
-    // double maxComp = Utils::maxComp(_network.getNodes().forces());
-
-    fdotf = xdoty(forces, forces);
+    fdotf = Utils::Math::xdoty(forces, forces);
     if (fdotf < m_Ftol * m_Ftol) {
       return;
     }
 
     nodes.zeroVelocity();
-    // updateVelocities(_network, m_dt);
 
     size_t iter = 0;
     while (iter++ < m_maxIter) {
-      vdotf = xdoty(vels, forces);
+      vdotf = Utils::Math::xdoty(vels, forces);
+
       if (vdotf > 0.0) {
         Npos++;
         Nneg = 0;
 
-        vdotv = xdoty(vels, vels);
-        fdotf = xdoty(forces, forces);
+        vdotv = Utils::Math::xdoty(vels, vels);
+        fdotf = Utils::Math::xdoty(forces, forces);
 
-        scale1 = 1.0 - alpha;
-        scale2 = fdotf <= 1e-20 ? 0.0 : (alpha * std::sqrt(vdotv / fdotf));
+        if (m_params.abc) {
+          alpha = std::max(alpha, 1e-10);
+          double abc = 1.0 - std::pow(1.0 - alpha, Npos);
+          scale1 = 1.0 - alpha / abc;
+          scale2 =
+              fdotf <= 1e-20 ? 0.0 : (alpha * std::sqrt(vdotv / fdotf)) / abc;
+        } else {
+          scale1 = 1.0 - alpha;
+          scale2 = fdotf <= 1e-20 ? 0.0 : (alpha * std::sqrt(vdotv / fdotf));
+        }
 
         if (Npos > m_params.Ndelay) {
           m_dt = std::min(m_dt * m_params.finc, m_params.dtMax);
@@ -125,25 +139,33 @@ public:
           m_dt = std::max(m_dt * m_params.fdec, m_params.dtMin);
           alpha = m_params.alpha0;
         }
-        move(_network, -0.5 * m_dt);
+
+        double scale = 0.5 * m_dt;
+#pragma omp parallel for schedule(static)
+        for (size_t i = 0; i < vels.size(); i++) {
+          pos[i] -= scale * vels[i];
+        }
         nodes.zeroVelocity();
       }
 
-      updateVelocities(_network, m_dt);
-
-      // double maxAbsVel = maxAbsComponent(vels);
-      // m_dt =
-      //     std::max(std::min(m_dt, m_params.dmax / maxAbsVel),
-      //     m_params.dtMin);
-
-      if (vdotf > 0.0) {
 #pragma omp parallel for schedule(static)
-        for (size_t i = 0; i < vels.size(); i++) {
-          vels[i] *= scale1;
-          vels[i] += forces[i] * scale2;
+      for (size_t i = 0; i < vels.size(); i++) {
+        double fscale = m_dt / masses[i];
+        vels[i] += fscale * forces[i];
+        if (vdotf > 0.0) {
+          vels[i] = scale1 * vels[i] + scale2 * forces[i];
+          if (m_params.abc) {
+            // make sure that the displacement is not larger than dmax
+            double vmax = m_params.dmax / m_dt;
+            std::transform(vels[i].begin(),
+                           vels[i].end(),
+                           vels[i].begin(),
+                           [vmax](double _v)
+                           { return std::clamp(_v, -vmax, vmax); });
+          }
         }
+        pos[i] += m_dt * vels[i];
       }
-      move(_network, m_dt);
 
       Eprev = Ecurr;
       _network.computeForces();
@@ -156,56 +178,21 @@ public:
         break;
       }
 
-      fdotf = xdoty(forces, forces);
+      fdotf = Utils::Math::xdoty(forces, forces);
       if (Npos > m_params.Ndelay && fdotf < m_Ftol * m_Ftol) {
         break;
       }
     }
   }
 
-private:
-  auto xdoty(const std::vector<Utils::Math::vec2d>& _x,
-             const std::vector<Utils::Math::vec2d>& _y) -> double
-  {
-    double sum = 0.0;
-#pragma omp parallel for schedule(static) reduction(+ : sum)
-    for (size_t i = 0; i < _x.size(); i++) {
-      sum += _x[i] * _y[i];
-    }
-    return sum;
-  }
-
-  auto maxAbsComponent(const std::vector<Utils::Math::vec2d>& _vec) -> double
-  {
-    return std::accumulate(_vec.begin(),
-                           _vec.end(),
-                           0.0,
-                           [](double _max, const Utils::Math::vec2d& _v)
-                           { return std::max(_max, _v.abs().max()); });
-  }
-
-  void updateVelocities(network& _network, double _alpha)
-  {
-    const auto& masses = _network.getNodes().masses();
-    auto& vels = _network.getNodes().velocities();
-    const auto& forces = _network.getNodes().forces();
-
-#pragma omp parallel for schedule(static)
-    for (size_t i = 0; i < vels.size(); i++) {
-      vels[i] += forces[i] * (_alpha / masses[i]);
-    }
-  }
-
-  void move(network& _network, double _alpha)
-  {
-    const auto& vels = _network.getNodes().velocities();
-    auto& pos = _network.getNodes().positions();
-
-#pragma omp parallel for schedule(static)
-    for (size_t i = 0; i < pos.size(); i++) {
-      pos[i] += vels[i] * _alpha;
-    }
-  }
+  // auto maxAbsComponent(const std::vector<Utils::Math::vec2d>& _vec) -> double
+  //{
+  //   return std::accumulate(_vec.begin(),
+  //                          _vec.end(),
+  //                          0.0,
+  //                          [](double _max, const Utils::Math::vec2d& _v)
+  //                          { return std::max(_max, _v.abs().max()); });
+  // }
 
 private:
   Fire2Params m_params = Fire2Params();

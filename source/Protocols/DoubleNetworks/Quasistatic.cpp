@@ -293,8 +293,8 @@ auto networkV4::protocols::quasiStaticStrainDouble::relaxBreak(
       return breakCount;
     }
 
-    double fdotf =
-        xdoty(_network.getNodes().forces(), _network.getNodes().forces());
+    double fdotf = Utils::Math::xdoty(_network.getNodes().forces(),
+                                      _network.getNodes().forces());
     if (!brokenInStep && fdotf < m_minParams.Ftol * m_minParams.Ftol) {
       return breakCount;
     }
@@ -469,19 +469,6 @@ auto networkV4::protocols::quasiStaticStrainDouble::breakData(
         std::max(maxThres, bonded::visitThreshold(brk, dist).value_or(-1e10));
   }
   return {maxThres, broken};
-}
-
-auto networkV4::protocols::quasiStaticStrainDouble::xdoty(
-    const std::vector<Utils::Math::vec2d>& _x,
-    const std::vector<Utils::Math::vec2d>& _y) -> double
-{
-  return std::inner_product(_x.begin(),
-                            _x.end(),
-                            _y.begin(),
-                            0.0,
-                            std::plus<double>(),
-                            [](Utils::Math::vec2d _a, Utils::Math::vec2d _b)
-                            { return _a * _b; });
 }
 
 //-------------------------------------------------------------------------------------------------
