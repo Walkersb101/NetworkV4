@@ -14,7 +14,7 @@ namespace networkV4
 {
 namespace integration
 {
-
+// based on https://arxiv.org/pdf/2108.03399
 class AdaptiveOverdampedEulerHeun
     : public Overdamped
     , public Adaptive
@@ -36,10 +36,13 @@ public:
 
   void step(network& _network)
   {
+    auto& nodes = _network.getNodes();
+    auto& positions = nodes.positions();
+    auto& forces = nodes.forces();
+
     m_dt = m_nextDt;
     double q = m_params.qMin;
     size_t iter = 0;
-    networkV4::nodes& nodes = _network.getNodes();
 
     bool error = false;
     bool qGood = false;
@@ -47,30 +50,27 @@ public:
 
     double startEnergy = decent ? _network.getEnergy() : 0.0;
 
-    m_rn = nodes.positions();
-    m_frn = nodes.forces();
+    m_rk = positions;
+    m_frk = forces;
     while (iter++ < m_params.maxInnerIter) {
       const double overdampedScale = m_dt * m_invGamma;
 
-      std::transform(nodes.positions().begin(),
-                     nodes.positions().end(),
-                     nodes.forces().begin(),
-                     nodes.positions().begin(),
-                     [overdampedScale](const auto& position, const auto& force)
-                     { return position + force * overdampedScale; });
+#pragma omp parallel for schedule(static)
+      for (size_t i = 0; i < nodes.size(); i++) {
+        positions[i] += forces[i] * overdampedScale;  // eq 8
+      }
+      // Pos = r_{k+1}bar
 
       _network.computeForces();
-      m_frnbar = nodes.forces();
+      // forces = f(r_{k+1}bar)
 
       const double halfOverdampedScale = 0.5 * overdampedScale;
-      for (auto [position, velocity, force, tempForce] : ranges::views::zip(
-               nodes.positions(), nodes.velocities(), nodes.forces(), m_frn))
-      {
-        position += (force - tempForce) * halfOverdampedScale;
-        force = (force + tempForce) * 0.5;
-        velocity = force * m_invGamma;
+#pragma omp parallel for schedule(static)
+      for (size_t i = 0; i < nodes.size(); i++) {
+        positions[i] = 0.5 * (positions[i] + m_rk[i])
+            + forces[i] * halfOverdampedScale;  // eq 9
       }
-      //_network.computeForces();
+      // Pos = r_{k+1}
 
       const double estimatedError = errorEstimate(nodes);
       const double estimatedQ = std::pow(0.5 / estimatedError, 2);
@@ -83,8 +83,8 @@ public:
       if ((qGood && energyGood) || error)
         break;
 
-      nodes.positions() = m_rn;
-      nodes.forces() = m_frn;
+      nodes.positions() = m_rk;
+      nodes.forces() = m_frk;
       m_dt = std::clamp(m_dt * q, m_params.dtMin, m_params.dtMax);
     }
     if (error)
@@ -95,28 +95,25 @@ public:
 private:
   auto errorEstimate(const nodes& _nodes) const -> double
   {
-    // based on https://arxiv.org/pdf/2108.03399
+    const auto& positions = _nodes.positions();
+    const auto& forces = _nodes.forces();
+
     const double errorScale = m_dt * m_invGamma * 0.5;
 
-    // double sum = 0;
     double max = -1e10;
-    for (auto [frn, frnbar, rn, rnp1] :
-         ranges::views::zip(m_frn, m_frnbar, m_rn, _nodes.positions()))
-    {
-      const double E = (frnbar - frn).norm() * errorScale;
-      const double tau = m_params.espAbs + m_params.espRel * (rnp1 - rn).norm();
-      // const double test = pow(E / tau, 2);
-      // sum += std::pow(E / tau, 2);
+#pragma omp parallel for reduction(max : max) schedule(static)
+    for (size_t i = 0; i < m_frk.size(); i++) {
+      const double E = (forces[i] - m_frk[i]).norm() * errorScale;
+      const double tau = m_params.espAbs
+          + m_params.espRel * (positions[i] - m_frk[i]).norm();
       max = std::max(max, E / tau);
     }
-    // return std::sqrt(sum);
     return max;
   }
 
 private:
-  std::vector<Utils::Math::vec2d> m_rn;
-  std::vector<Utils::Math::vec2d> m_frn;
-  std::vector<Utils::Math::vec2d> m_frnbar;
+  std::vector<Utils::Math::vec2d> m_rk;
+  std::vector<Utils::Math::vec2d> m_frk;
 
   bool decent = false;
 };
