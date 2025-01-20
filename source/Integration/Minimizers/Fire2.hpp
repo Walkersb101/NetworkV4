@@ -148,6 +148,7 @@ public:
         nodes.zeroVelocity();
       }
 
+      double vmax = m_params.dmax / m_dt;
 #pragma omp parallel for schedule(static)
       for (size_t i = 0; i < vels.size(); i++) {
         double fscale = m_dt / masses[i];
@@ -156,7 +157,6 @@ public:
           vels[i] = scale1 * vels[i] + scale2 * forces[i];
           if (m_params.abc) {
             // make sure that the displacement is not larger than dmax
-            double vmax = m_params.dmax / m_dt;
             std::transform(vels[i].begin(),
                            vels[i].end(),
                            vels[i].begin(),
