@@ -15,7 +15,7 @@
 #include "Core/Bonds.hpp"
 #include "Core/Nodes.hpp"
 #include "Misc/Math/Vector.hpp"
-#include "Misc/Tensor2.hpp"
+#include "Misc/Math/Tensor2.hpp"
 #include "OMP.hpp"
 
 #if defined(_OPENMP)

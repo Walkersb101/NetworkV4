@@ -15,7 +15,7 @@
 #include "Core/Bonds.hpp"
 #include "Core/Nodes.hpp"
 #include "Core/box.hpp"
-#include "Misc/Tensor2.hpp"
+#include "Misc/Math/Tensor2.hpp"
 #include "Misc/Math/Vector.hpp"
 
 namespace networkV4

@@ -13,7 +13,7 @@
 #include "Core/Bonds.hpp"
 #include "Core/Nodes.hpp"
 #include "Misc/Math/Vector.hpp"
-#include "Misc/Tensor2.hpp"
+#include "Misc/Math/Tensor2.hpp"
 
 networkV4::network::network(const box& _box, const size_t _N, const size_t _B)
     : m_box(_box)
