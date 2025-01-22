@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <vector>
 
-#include "Misc/Tensor2.hpp"
+#include "Misc/Math/Tensor2.hpp"
 
 namespace networkV4
 {

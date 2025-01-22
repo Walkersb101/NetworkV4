@@ -8,10 +8,9 @@
 #include "Core/Nodes.hpp"
 #include "Core/Stresses.hpp"
 #include "Core/box.hpp"
-#include "Misc/Enums.hpp"
 #include "Misc/Tags/TagMap.hpp"
 #include "Misc/Tags/TagStorage.hpp"
-#include "Misc/Tensor2.hpp"
+#include "Misc/Math/Tensor2.hpp"
 #include "Misc/Math/Vector.hpp"
 
 namespace networkV4

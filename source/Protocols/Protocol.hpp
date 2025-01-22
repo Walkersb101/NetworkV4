@@ -5,7 +5,6 @@
 #include "Core/Network.hpp"
 #include "IO/NetworkDump/NetworkOut.hpp"
 #include "IO/TimeSeries/DataOut.hpp"
-#include "Misc/Enums.hpp"
 #include "deform.hpp"
 
 namespace networkV4
