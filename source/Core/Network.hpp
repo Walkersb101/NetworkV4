@@ -42,12 +42,6 @@ public:
   auto getTags() -> Utils::Tags::tagMap&;
   auto getTags() const -> const Utils::Tags::tagMap&;
 
-  auto getBondTags() -> Utils::Tags::tagStorage&;
-  auto getBondTags() const -> const Utils::Tags::tagStorage&;
-
-  auto getNodeTags() -> Utils::Tags::tagStorage&;
-  auto getNodeTags() const -> const Utils::Tags::tagStorage&;
-
 public:
   auto getStresses()
       -> stresses&;  // TODO: make so Input and intergrators can access nodes
@@ -105,8 +99,6 @@ private:
   bondQueue m_breakQueue;
 
   Utils::Tags::tagMap m_tags;
-  Utils::Tags::tagStorage m_bondTags;
-  Utils::Tags::tagStorage m_nodeTags;
 };
 
 inline void merge(bondQueue& _b1, const bondQueue& _b2)
