@@ -125,6 +125,14 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(range-v3)
 target_link_libraries(NetworkV4_lib PUBLIC range-v3)
 
+FetchContent_Declare(
+    expected
+    GIT_REPOSITORY https://github.com/TartanLlama/expected.git
+    GIT_TAG v1.1.0
+)
+FetchContent_MakeAvailable(expected)
+target_link_libraries(NetworkV4_lib PUBLIC expected)
+
 # ---- OpenMP ----
 
 if(USE_OPENMP)

@@ -11,6 +11,14 @@ namespace networkV4
 {
 namespace roots
 {
+enum class rootErrors : std::uint8_t
+{
+  MinLargerThanMax,
+  RootNotBracketed,
+  MaxIterationsReached,
+  rootBelowLowerBound,
+};
+
 class ITP
 {
 public:
