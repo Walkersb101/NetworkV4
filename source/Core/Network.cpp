@@ -74,26 +74,6 @@ auto networkV4::network::getTags() const -> const Utils::Tags::tagMap&
   return m_tags;
 }
 
-auto networkV4::network::getBondTags() -> Utils::Tags::tagStorage&
-{
-  return m_bondTags;
-}
-
-auto networkV4::network::getBondTags() const -> const Utils::Tags::tagStorage&
-{
-  return m_bondTags;
-}
-
-auto networkV4::network::getNodeTags() -> Utils::Tags::tagStorage&
-{
-  return m_nodeTags;
-}
-
-auto networkV4::network::getNodeTags() const -> const Utils::Tags::tagStorage&
-{
-  return m_nodeTags;
-}
-
 auto networkV4::network::getStresses() -> stresses&
 {
   return m_stresses;
