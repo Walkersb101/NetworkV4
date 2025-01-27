@@ -133,8 +133,8 @@ void networkV4::protocols::quasiStaticStrainDouble::run(network& _network)
     _network.computeForces<true, true>();
     auto breakCount = processBreakQueue(_network);
     auto reason = checkIfNeedToSave(_network);
+    m_dataOut->write(genTimeData(_network, "Start", breakCount));
     if (reason) {
-      m_dataOut->write(genTimeData(_network, "Start", breakCount));
       m_networkOut->save(_network,
                          m_strainCount,
                          0.0,
@@ -142,8 +142,8 @@ void networkV4::protocols::quasiStaticStrainDouble::run(network& _network)
     }
 
     breakCount = relaxBreak(_network, breakCount);
+    m_dataOut->write(genTimeData(_network, "End", breakCount));
     if (reason) {
-      m_dataOut->write(genTimeData(_network, "End", breakCount));
       m_networkOut->save(
           _network, m_strainCount, m_t, "End-" + std::to_string(m_strainCount));
     }
