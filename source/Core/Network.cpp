@@ -12,8 +12,8 @@
 
 #include "Core/Bonds.hpp"
 #include "Core/Nodes.hpp"
-#include "Misc/Math/Vector.hpp"
 #include "Misc/Math/Tensor2.hpp"
+#include "Misc/Math/Vector.hpp"
 
 networkV4::network::network(const box& _box, const size_t _N, const size_t _B)
     : m_box(_box)
@@ -152,6 +152,16 @@ void networkV4::network::computeForces()
                                                            m_bonds.getBreaks(),
                                                            m_bonds.getTags()))
   {
+    // TODO: This doesn't need to be done if we are not evaluating breaks, or
+    // type is virtual
+    // TODO: could this be done with a list of active bonds? Could add a type
+    // which handels breaks (just set active to false or convert o virtual)
+    if constexpr (!_evalBreak
+                  && std::is_same_v<Forces::VirtualBond, decltype(type)>)
+    {
+      continue;
+    }
+
     const auto& pos1 = positions[bond.src];
     const auto& pos2 = positions[bond.dst];
     const auto dist = m_box.minDist(pos1, pos2);

@@ -142,6 +142,7 @@ void networkV4::protocols::quasiStaticStrainDouble::run(network& _network)
     }
 
     breakCount = relaxBreak(_network, breakCount);
+
     m_dataOut->write(genTimeData(_network, "End", breakCount));
     if (reason) {
       m_networkOut->save(
@@ -262,6 +263,7 @@ auto networkV4::protocols::quasiStaticStrainDouble::findNextBreak(
 
     breakFound = true;
   }
+  resultNetwork.computeForces<false, true>();
   return resultNetwork;
 }
 

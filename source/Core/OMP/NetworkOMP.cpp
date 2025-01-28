@@ -14,8 +14,8 @@
 
 #include "Core/Bonds.hpp"
 #include "Core/Nodes.hpp"
-#include "Misc/Math/Vector.hpp"
 #include "Misc/Math/Tensor2.hpp"
+#include "Misc/Math/Vector.hpp"
 #include "OMP.hpp"
 
 #if defined(_OPENMP)
@@ -23,7 +23,7 @@
 networkV4::partition::Partitions networkV4::OMP::threadPartitions;
 size_t networkV4::OMP::passes;
 
-template <bool _evalBreak, bool _evalStress>
+template<bool _evalBreak, bool _evalStress>
 void networkV4::network::computeForces()
 {
   m_energy = 0.0;
@@ -37,7 +37,7 @@ void networkV4::network::computeForces()
   }
 }
 
-template <bool _evalBreak, bool _evalStress>
+template<bool _evalBreak, bool _evalStress>
 void networkV4::network::computePass(auto _parts)
 {
   const auto& bonds = m_bonds.getBonds();
@@ -48,18 +48,21 @@ void networkV4::network::computePass(auto _parts)
   const auto& positions = m_nodes.positions();
   auto& forces = m_nodes.forces();
 
-#  pragma omp parallel for \
-    reduction(+ : m_energy) \
-    reduction(+ : m_stresses) \
-    reduction(+ : m_breakQueue) \
-    num_threads(_parts.size()) \
-    schedule(static, 1)
+#  pragma omp parallel for reduction(+ : m_energy) reduction(+ : m_stresses) \
+      reduction(+ : m_breakQueue) num_threads(_parts.size()) \
+      schedule(static, 1)
   for (const auto part : _parts) {
     for (size_t i = part.bondStart(); i < part.bondEnd(); i++) {
       const auto& bond = bonds[i];
       auto& type = types[i];
       auto& brk = breaks[i];
       auto& bTags = tags[i];
+
+      if constexpr (!_evalBreak
+                    && std::is_same_v<Forces::VirtualBond, decltype(type)>)
+      {
+        continue;
+      }
 
       const auto& pos1 = positions[bond.src];
       const auto& pos2 = positions[bond.dst];
@@ -104,8 +107,12 @@ template void networkV4::network::computeForces<true, false>();
 template void networkV4::network::computeForces<false, true>();
 template void networkV4::network::computeForces<true, true>();
 
-template void networkV4::network::computePass<false, false>(decltype(OMP::threadPartitions));
-template void networkV4::network::computePass<true, false>(decltype(OMP::threadPartitions));
-template void networkV4::network::computePass<false, true>(decltype(OMP::threadPartitions));
-template void networkV4::network::computePass<true, true>(decltype(OMP::threadPartitions));
+template void networkV4::network::computePass<false, false>(
+    decltype(OMP::threadPartitions));
+template void networkV4::network::computePass<true, false>(
+    decltype(OMP::threadPartitions));
+template void networkV4::network::computePass<false, true>(
+    decltype(OMP::threadPartitions));
+template void networkV4::network::computePass<true, true>(
+    decltype(OMP::threadPartitions));
 #endif
