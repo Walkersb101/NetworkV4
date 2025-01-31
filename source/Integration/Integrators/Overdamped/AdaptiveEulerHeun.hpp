@@ -22,14 +22,12 @@ class AdaptiveOverdampedEulerHeun
 {
 public:
   AdaptiveOverdampedEulerHeun() = default;
-  AdaptiveOverdampedEulerHeun(double _gamma,
+  AdaptiveOverdampedEulerHeun(double _zeta,
                               const AdaptiveParams& _params,
-                              double _dt = config::integrators::default_dt,
-                              bool _decent = false)
-      : Overdamped(_gamma)
+                              double _dt = config::integrators::default_dt)
+      : Overdamped(_zeta)
       , Adaptive(_params)
       , IntegratorBase(_dt)
-      , decent(_decent)
   {
   }
   ~AdaptiveOverdampedEulerHeun() override = default;
@@ -46,14 +44,11 @@ public:
 
     bool error = false;
     bool qGood = false;
-    bool energyGood = false;
-
-    double startEnergy = decent ? _network.getEnergy() : 0.0;
 
     m_rk = positions;
     m_frk = forces;
     while (iter++ < m_params.maxInnerIter) {
-      const double overdampedScale = m_dt * m_invGamma;
+      const double overdampedScale = m_dt * m_invZeta;
 
 #pragma omp parallel for schedule(static)
       for (size_t i = 0; i < nodes.size(); i++) {
@@ -68,31 +63,30 @@ public:
       double estimatedError = -1e10;
 #pragma omp parallel for schedule(static) reduction(max : estimatedError)
       for (size_t i = 0; i < nodes.size(); i++) {
-        positions[i] = 0.5 * (positions[i] + m_rk[i])
-            + forces[i] * halfOverdampedScale;  // eq 9
+        positions[i] =
+            m_rk[i] + halfOverdampedScale * (m_frk[i] + forces[i]);  // eq 9
         // Pos = r_{k+1}
 
         const double E = (forces[i] - m_frk[i]).norm() * halfOverdampedScale;
-        const double tau = m_params.espAbs
-            + m_params.espRel * (positions[i] - m_rk[i]).norm();
+        const double tau =
+            m_params.espAbs + m_params.espRel * (positions[i] - m_rk[i]).norm();
         estimatedError = std::max(estimatedError, E / tau);
       }
-      
+
       const double estimatedQ = std::pow(0.5 / estimatedError, 2);
       q = std::clamp(estimatedQ, m_params.qMin, m_params.qMax);
 
       error = (std::isnan(q) || (m_dt == m_params.dtMin && q < 1.0));
       qGood = (q > 1.0);
-      energyGood = !decent || (_network.computeEnergy() < startEnergy);
 
-      if ((qGood && energyGood) || error)
+      if (qGood || error)
         break;
 
       nodes.positions() = m_rk;
       nodes.forces() = m_frk;
-      m_dt = std::clamp(m_dt * q, m_params.dtMin, m_params.dtMax);
+      m_dt = m_dt * q;
     }
-    if (error)
+    if (error || iter >= m_params.maxInnerIter)
       throw std::runtime_error("Adaptive Euler Heun failed to converge");
     m_nextDt = std::clamp(m_dt * q, m_params.dtMin, m_params.dtMax);
   }
@@ -100,8 +94,6 @@ public:
 private:
   std::vector<Utils::Math::vec2d> m_rk;
   std::vector<Utils::Math::vec2d> m_frk;
-
-  bool decent = false;
 };
 
 }  // namespace integration

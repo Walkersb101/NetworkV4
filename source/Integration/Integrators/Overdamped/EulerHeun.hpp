@@ -20,8 +20,8 @@ class OverdampedEulerHeun
 {
 public:
   OverdampedEulerHeun() = default;
-  OverdampedEulerHeun(double _gamma, double _dt)
-      : Overdamped(_gamma)
+  OverdampedEulerHeun(double _zeta, double _dt)
+      : Overdamped(_zeta)
       , IntegratorBase(_dt)
   {
   }
@@ -29,7 +29,7 @@ public:
 
   void step(network& _network) override
   {
-    const double overdampedScale = m_dt * m_invGamma;
+    const double overdampedScale = m_dt * m_invZeta;
 
     networkV4::nodes& nodes = _network.getNodes();
     m_fn = nodes.forces();
@@ -48,7 +48,7 @@ public:
     {
       position += (force - tempForce) * halfOverdampedScale;
       force = (force + tempForce) * 0.5;
-      velocity = force * m_invGamma;
+      velocity = force * m_invZeta;
     }
   }
 

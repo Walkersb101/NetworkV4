@@ -6,6 +6,7 @@
 
 #include "Integration/Integrators/Adaptive.hpp"
 #include "Integration/Minimizers/AdaptiveHeunDecent.hpp"
+#include "Integration/Minimizers/SD.hpp"
 #include "Integration/Minimizers/Fire2.hpp"
 #include "Misc/Config.hpp"
 #include "Misc/Roots.hpp"
@@ -107,6 +108,8 @@ private:
       -> std::tuple<std::size_t, std::size_t, std::size_t>;
   auto checkIfNeedToSave(const network& _network) -> std::optional<std::string>;
   auto processBreakQueue(network& _network) -> std::size_t;
+
+  auto hybridStep(network& _network, auto& _stepper) -> tl::expected<double, lineSearch::lineSearchState>;
 
 private:
   auto breakData(const network& _network) -> std::tuple<double, size_t>;

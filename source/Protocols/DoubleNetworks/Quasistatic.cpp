@@ -52,6 +52,7 @@ networkV4::protocols::quasiStaticStrainDouble::quasiStaticStrainDouble(
 
   std::vector<IO::timeSeries::writeableTypes> bondHeader = {
       "StrainCount",
+      "time",
       "Type",
       "mu",
       "lambda",
@@ -129,6 +130,7 @@ void networkV4::protocols::quasiStaticStrainDouble::run(network& _network)
       std::visit([&](auto& info) { info.reset(); }, m_savePoints.time.value());
     }
 
+    m_strainCount++;
     _network = newNetwork.value();
     _network.computeForces<true, true>();
     auto breakCount = processBreakQueue(_network);
@@ -142,13 +144,11 @@ void networkV4::protocols::quasiStaticStrainDouble::run(network& _network)
     }
 
     breakCount = relaxBreak(_network, breakCount);
-
     m_dataOut->write(genTimeData(_network, "End", breakCount));
     if (reason) {
       m_networkOut->save(
           _network, m_strainCount, m_t, "End-" + std::to_string(m_strainCount));
     }
-    m_t = 0.0;
 
     if (m_oneBreak)
       break;
@@ -164,6 +164,7 @@ auto networkV4::protocols::quasiStaticStrainDouble::evalStrain(
   m_deform->strain(result, step);
 
   minimisation::fire2 minimizer(m_minParams);
+  // minimisation::SD minimizer(m_minParams);
   minimizer.minimise(result);
   result.computeForces<false, true>();
   return result;
@@ -210,8 +211,8 @@ auto networkV4::protocols::quasiStaticStrainDouble::converge(
 }
 
 auto networkV4::protocols::quasiStaticStrainDouble::findNextBreak(
-    const network& _network,
-    bool _singleBreak) -> tl::expected<network, nextBreakErrors>
+    const network& _network, bool _singleBreak)
+    -> tl::expected<network, nextBreakErrors>
 {
   auto startStrain = m_deform->getStrain(_network);
   auto resultNetwork = evalStrain(_network, startStrain);
@@ -264,7 +265,6 @@ auto networkV4::protocols::quasiStaticStrainDouble::findNextBreak(
 
     breakFound = true;
   }
-  resultNetwork.computeForces<false, true>();
   return resultNetwork;
 }
 
@@ -275,16 +275,27 @@ auto networkV4::protocols::quasiStaticStrainDouble::relaxBreak(
   double Eprev = Ecurr;
   size_t breakCount = startBreaks;
 
-  // TODO: allow changing Gamma
   integration::AdaptiveOverdampedEulerHeun stepper(1.0, m_params);
 
   size_t iter = 0;
   while (iter++ < m_minParams.maxIter) {
     Eprev = Ecurr;
-    stepper.step(_network);
+
+    auto status = hybridStep(_network, stepper);
+    double dt = status.value_or(0.0);
+    if (!status) {
+      if (status.error() == lineSearch::lineSearchState::zeroAlpha
+          || status.error() == lineSearch::lineSearchState::zeroquad)
+      {
+        break;
+      } else {
+        throw std::runtime_error("lineSearch error");
+      }
+    }
+
     _network.computeForces<true, false>();
     Ecurr = _network.getEnergy();
-    m_t += stepper.getDt();
+    m_t += dt;
 
     bool brokenInStep = !_network.getBreakQueue().empty();
     breakCount += processBreakQueue(_network);
@@ -298,13 +309,13 @@ auto networkV4::protocols::quasiStaticStrainDouble::relaxBreak(
         && fabs(Ecurr - Eprev) < m_minParams.Etol * 0.5
                 * (fabs(Ecurr) + fabs(Eprev) + minimisation::EPS_ENERGY))
     {
-      return breakCount;
+      break;
     }
 
     double fdotf = Utils::Math::xdoty(_network.getNodes().forces(),
                                       _network.getNodes().forces());
     if (!brokenInStep && fdotf < m_minParams.Ftol * m_minParams.Ftol) {
-      return breakCount;
+      break;
     }
     // std::cout << std::setprecision(10) << iter << " " << error << " "
     //           << _network.getEnergy() << " " << integrator.getDt() << " "
@@ -312,13 +323,13 @@ auto networkV4::protocols::quasiStaticStrainDouble::relaxBreak(
     //           << tools::maxAbsComponent(_network.getNodes().forces())
     //           << std::endl;
   }
+  _network.computeForces<false, true>();
   return breakCount;
 }
 
 auto networkV4::protocols::quasiStaticStrainDouble::genTimeData(
-    const network& _network,
-    const std::string& _reason,
-    size_t _breakCount) -> std::vector<IO::timeSeries::writeableTypes>
+    const network& _network, const std::string& _reason, size_t _breakCount)
+    -> std::vector<IO::timeSeries::writeableTypes>
 {
   const auto& stresses = _network.getStresses();
   const auto& globalStress = stresses.total();
@@ -356,8 +367,8 @@ auto networkV4::protocols::quasiStaticStrainDouble::genTimeData(
 }
 
 auto networkV4::protocols::quasiStaticStrainDouble::genBondData(
-    const network& _network,
-    const breakInfo& _bond) -> std::vector<IO::timeSeries::writeableTypes>
+    const network& _network, const breakInfo& _bond)
+    -> std::vector<IO::timeSeries::writeableTypes>
 {
   auto sacTag = _network.getTags().get("sacrificial");
   auto matTag = _network.getTags().get("matrix");
@@ -479,6 +490,30 @@ auto networkV4::protocols::quasiStaticStrainDouble::processBreakQueue(
     _network.getBreakQueue().pop_front();
   }
   return breakCount;
+}
+
+auto networkV4::protocols::quasiStaticStrainDouble::hybridStep(
+    network& _network, auto& _stepper)
+    -> tl::expected<double, lineSearch::lineSearchState>
+{
+  auto rk = _network.getNodes().positions();
+  double Eoriginal = _network.getEnergy();
+
+  _stepper.step(_network);
+  _network.computeForces();
+  double Ecurr = _network.getEnergy();
+  if (Ecurr < Eoriginal)
+    return _stepper.getDt();
+
+  _network.getNodes().positions() = rk;
+  _network.computeForces();
+
+  const double zeta = _stepper.getZeta();  // TODO: allow changing zeta
+  lineSearch::lineSearchQuad lineSearch(zeta * m_params.dtMax);
+  auto h = _network.getNodes().forces();
+  auto status = lineSearch.search(h, _network);
+  _network.computeForces();
+  return status;
 }
 
 auto networkV4::protocols::quasiStaticStrainDouble::breakData(

@@ -38,14 +38,21 @@ public:
   }
 
 public:
-  void minimise(network& _network) override
+  void minimise(network& _network) override 
   {
-    integration::AdaptiveOverdampedEulerHeun stepper(1.0, m_params, m_dt, true);
+    integration::AdaptiveOverdampedEulerHeun stepper(1.0, m_params, m_dt);
 
     _network.computeForces();
 
     double Ecurr = _network.getEnergy();
     double Eprev = Ecurr;
+
+    double fdotf = Utils::Math::xdoty(_network.getNodes().forces(),
+                                      _network.getNodes().forces());
+    if (fdotf < m_Ftol * m_Ftol)
+      return;
+
+    double ediff = 0.0;
 
     size_t iter = 0;
     while (iter++ < m_maxIter) {
@@ -54,15 +61,15 @@ public:
       _network.computeForces();
       Ecurr = _network.getEnergy();
 
+      ediff = Ecurr - Eprev;
       if (fabs(Ecurr - Eprev)
           < m_Etol * 0.5 * (fabs(Ecurr) + fabs(Eprev) + EPS_ENERGY))
         return;
 
-      double fdotf =
-          Utils::Math::xdoty(_network.getNodes().forces(), _network.getNodes().forces());
-      if (fdotf < m_Ftol * m_Ftol) {
+      fdotf = Utils::Math::xdoty(_network.getNodes().forces(),
+                                        _network.getNodes().forces());
+      if (fdotf < m_Ftol * m_Ftol)
         return;
-      }
     }
   };
 

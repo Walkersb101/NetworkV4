@@ -18,8 +18,8 @@ class OverdampedEuler
 {
 public:
   OverdampedEuler() = default;
-  OverdampedEuler(double _gamma, double _dt)
-      : Overdamped(_gamma)
+  OverdampedEuler(double _zeta, double _dt)
+      : Overdamped(_zeta)
       , IntegratorBase(_dt)
   {
   }
@@ -32,7 +32,7 @@ public:
     std::transform(nodes.forces().begin(),
                    nodes.forces().end(),
                    nodes.velocities().begin(),
-                   [this](const auto& force) { return force * m_invGamma; });
+                   [this](const auto& force) { return force * m_invZeta; });
     std::transform(nodes.positions().begin(),
                    nodes.positions().end(),
                    nodes.velocities().begin(),

@@ -27,19 +27,31 @@ inline double default_dt = 1e-3;
 
 namespace adaptive
 {
-inline std::size_t maxIter = 10;
+inline std::size_t maxIter = 20;
 
-inline double dtMin = 1e-6;
+inline double dtMin = 1e-10;
 inline double dtMax = 1e-1;
 
 inline double qMin = 1e-3;
 inline double qMax = 1.2;
 
-inline double espRel = 0.0;//1e-3;
+inline double espRel = 0.0;  // 1e-3;
 inline double espAbs = 1e-3;
 
+}  // namespace adaptive
 
-}  // namespace adaptiveIntegrator
+namespace lineSearch
+{
+namespace quad
+{
+inline double esp = 1e-28;
+inline double tol = 0.1;
+inline double backTrackSlope = 0.4;
+inline double EMACH = 1.0e-8;
+inline double alphaMax = 1.0;
+inline double alphaReduce = 0.5;
+}  // namespace quad
+}  // namespace lineSearch
 
 namespace miminizer
 {
@@ -124,8 +136,8 @@ inline std::string fileName = "output.h5";
 
 namespace partition
 {
-    inline std::size_t mortonRes = 1024;
-    inline std::size_t passes = 2;
-}
+inline std::size_t mortonRes = 1024;
+inline std::size_t passes = 2;
+}  // namespace partition
 
 }  // namespace config

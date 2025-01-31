@@ -14,16 +14,19 @@ class Overdamped
 {
 public:
   Overdamped() = default;
-  Overdamped(double _gamma)
-      : m_gamma(_gamma)
-      , m_invGamma(1.0 / _gamma)
+  Overdamped(double _zeta)
+      : m_zeta(_zeta)
+      , m_invZeta(1.0 / _zeta)
   {
   }
   virtual ~Overdamped() = default;
 
+public:
+    auto getZeta() const -> double { return m_zeta; }
+
 protected:
-  double m_gamma = 1.0;
-  double m_invGamma = 1.0;
+  double m_zeta = 1.0;
+  double m_invZeta = 1.0;
 };
 
 }  // namespace integration
