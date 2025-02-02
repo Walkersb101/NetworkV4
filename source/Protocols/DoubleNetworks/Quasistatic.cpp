@@ -301,6 +301,7 @@ auto networkV4::protocols::quasiStaticStrainDouble::relaxBreak(
     breakCount += processBreakQueue(_network);
     auto reason = checkIfNeedToSave(_network);
     if (reason) {
+      _network.computeForces<false, true>();
       m_dataOut->write(genTimeData(_network, reason.value(), breakCount));
       m_networkOut->save(_network, m_strainCount, m_t, reason.value());
     }
