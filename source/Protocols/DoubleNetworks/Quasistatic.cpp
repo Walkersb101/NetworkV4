@@ -149,6 +149,7 @@ void networkV4::protocols::quasiStaticStrainDouble::run(network& _network)
       m_networkOut->save(
           _network, m_strainCount, m_t, "End-" + std::to_string(m_strainCount));
     }
+    m_t = 0.0;
 
     if (m_oneBreak)
       break;
