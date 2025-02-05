@@ -250,7 +250,8 @@ auto networkV4::protocols::quasiStaticStrainDouble::findNextBreak(
 
     auto converged = converge(resultNetwork, bNetwork, a, b, fa, fb, m_rootTol);
     if (!converged) {
-      return tl::make_unexpected(nextBreakErrors::DidNotConverge);
+      // TODO: Log
+      // return tl::make_unexpected(nextBreakErrors::DidNotConverge);
     }
 
     resultNetwork = converged.value();

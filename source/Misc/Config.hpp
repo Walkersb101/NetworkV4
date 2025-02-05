@@ -87,7 +87,7 @@ inline double minTol = 1e-10;
 
 namespace ITPMethod
 {
-inline size_t n0 = 10;
+inline size_t n0 = 20;
 inline double k1Scale = 0.2;
 inline double k2 = 2.0;
 }  // namespace ITPMethod
