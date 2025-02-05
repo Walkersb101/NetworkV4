@@ -208,7 +208,10 @@ auto networkV4::protocols::quasiStaticStrainDouble::converge(
       return networkB;
     }
   }
-  return tl::make_unexpected(roots::rootErrors::MaxIterationsReached);
+  // TODO: Log
+  //  Should Converge use to limited n0, unless discotiuity is found
+  return networkB;
+  // return tl::make_unexpected(roots::rootErrors::MaxIterationsReached);
 }
 
 auto networkV4::protocols::quasiStaticStrainDouble::findNextBreak(
@@ -250,7 +253,17 @@ auto networkV4::protocols::quasiStaticStrainDouble::findNextBreak(
 
     auto converged = converge(resultNetwork, bNetwork, a, b, fa, fb, m_rootTol);
     if (!converged) {
-      //TODO: Log
+      // TODO: Log
+      switch (converged.error()) {
+        case roots::rootErrors::RootNotBracketed:
+          std::cout << "RootNotBracketed" << std::endl;
+        case roots::rootErrors::MinLargerThanMax:
+          std::cout << "MinLargerThanMax" << std::endl;
+        case roots::rootErrors::MaxIterationsReached:
+          std::cout << "MaxIterationsReached" << std::endl;
+        case roots::rootErrors::rootBelowLowerBound:
+          std::cout << "rootBelowLowerBound" << std::endl;
+      }
       return tl::make_unexpected(nextBreakErrors::DidNotConverge);
     }
 
