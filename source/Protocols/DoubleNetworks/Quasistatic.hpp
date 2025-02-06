@@ -35,8 +35,9 @@ public:
         std::nullopt;
   };
 
-  enum class nextBreakErrors : std::uint8_t
+  enum class nextBreakState : std::uint8_t
   {
+    success,
     BreakAtLowerBound,
     DidNotConverge,
     MaxStrainReached,
@@ -90,12 +91,12 @@ private:
                 double _b,
                 double _fa,
                 double _fb,
-                double _tol) -> tl::expected<network, roots::rootErrors>;
+                double _tol) -> std::pair<network, roots::rootState>;
 
   auto findNextBreak(const network& _network, bool _singleBreak = false)
-      -> tl::expected<network, nextBreakErrors>;
+      -> std::pair<network, nextBreakState>;
 
-  auto relaxBreak(network& _network, size_t startBreaks) -> std::size_t;
+  void relaxBreak(network& _network, size_t startBreaks);
 
 private:
   auto genTimeData(const network& _network,

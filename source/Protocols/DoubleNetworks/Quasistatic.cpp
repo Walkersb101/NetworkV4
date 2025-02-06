@@ -102,55 +102,40 @@ void networkV4::protocols::quasiStaticStrainDouble::run(network& _network)
   bool stop = false;
 
   while (!stop) {
-    auto newNetwork = findNextBreak(_network, m_errorOnNotSingleBreak);
-    if (!newNetwork) {
-      switch (newNetwork.error()) {
-        case nextBreakErrors::BreakAtLowerBound:
-          throw std::runtime_error("Break at lower bound");
-        case nextBreakErrors::DidNotConverge:
-          throw std::runtime_error("Did not converge");
-        case nextBreakErrors::convergedWithMoreThanOneBreak:
-          throw std::runtime_error(
-              "More than one bond above threshold and "
-              "errorOnNotSingleBreak is true");
-        case nextBreakErrors::ConvergedWithZeroBreaks: {
-          // TODO: Log
-        }
-        case nextBreakErrors::MaxStrainReached: {
-          stop = true;
-          continue;
-        }
-        default:
-          throw std::runtime_error("Unknown error");
+    auto [newNetwork, state] = findNextBreak(_network, m_errorOnNotSingleBreak);
+    switch (state) {
+      case nextBreakState::DidNotConverge:
+        throw std::runtime_error("Did not converge");
+      case nextBreakState::convergedWithMoreThanOneBreak:
+        throw std::runtime_error(
+            "More than one bond above threshold and "
+            "errorOnNotSingleBreak is true");
+      case nextBreakState::ConvergedWithZeroBreaks: {
+        throw std::runtime_error("Converged with zero breaks");
       }
+      case nextBreakState::MaxStrainReached: {
+        stop = true;
+        continue;
+      }
+      case nextBreakState::BreakAtLowerBound: {
+        std::cout << "Break at lower bound" << std::endl;
+        break;
+      }
+      case nextBreakState::success: {
+        m_t = 0.0;
+        if (m_savePoints.time) {
+          std::visit([&](auto& info) { info.reset(); },
+                     m_savePoints.time.value());
+        }
+        m_strainCount++;
+      }
+      default:
+        throw std::runtime_error("Unknown error");
     }
 
-    m_t = 0.0;
-    if (m_savePoints.time) {
-      std::visit([&](auto& info) { info.reset(); }, m_savePoints.time.value());
-    }
-
-    m_strainCount++;
-    _network = newNetwork.value();
-    _network.computeForces<true, true>();
+    _network = newNetwork;
     auto breakCount = processBreakQueue(_network);
-    auto reason = checkIfNeedToSave(_network);
-    m_dataOut->write(genTimeData(_network, "Start", breakCount));
-    if (reason) {
-      m_networkOut->save(_network,
-                         m_strainCount,
-                         0.0,
-                         "Start-" + std::to_string(m_strainCount));
-    }
-
-    breakCount = relaxBreak(_network, breakCount);
-    m_dataOut->write(genTimeData(_network, "End", breakCount));
-    if (reason) {
-      m_networkOut->save(
-          _network, m_strainCount, m_t, "End-" + std::to_string(m_strainCount));
-    }
-    m_t = 0.0;
-
+    relaxBreak(_network, breakCount);
     if (m_oneBreak)
       break;
   }
@@ -178,15 +163,15 @@ auto networkV4::protocols::quasiStaticStrainDouble::converge(
     double _b,
     double _fa,
     double _fb,
-    double _tol) -> tl::expected<network, roots::rootErrors>
+    double _tol) -> std::pair<network, roots::rootState>
 {
   auto networkB = _bNetwork;
 
   if (_a > _b)
-    return tl::make_unexpected(roots::rootErrors::MinLargerThanMax);
+    return std::make_pair(networkB, roots::rootState::MinLargerThanMax);
 
   if (_fa * _fb > 0.0)
-    return tl::make_unexpected(roots::rootErrors::RootNotBracketed);
+    return std::make_pair(networkB, roots::rootState::RootNotBracketed);
 
   roots::ITP solver(_a, _b, _tol);
 
@@ -205,24 +190,21 @@ auto networkV4::protocols::quasiStaticStrainDouble::converge(
     }
 
     if (std::abs(_b - _a) < 2 * _tol) {
-      return networkB;
+      return std::make_pair(networkB, roots::rootState::converged);
     }
   }
-  // TODO: Log
-  //  Should Converge use to limited n0, unless discotiuity is found
-  return networkB;
-  // return tl::make_unexpected(roots::rootErrors::MaxIterationsReached);
+  return std::make_pair(networkB, roots::rootState::MaxIterationsReached);
 }
 
 auto networkV4::protocols::quasiStaticStrainDouble::findNextBreak(
     const network& _network, bool _singleBreak)
-    -> tl::expected<network, nextBreakErrors>
+    -> std::pair<network, nextBreakState>
 {
   auto startStrain = m_deform->getStrain(_network);
   auto resultNetwork = evalStrain(_network, startStrain);
 
   if (get<size_t>(breakData(resultNetwork)) > 0)
-    return tl::make_unexpected(nextBreakErrors::BreakAtLowerBound);
+    return std::make_pair(resultNetwork, nextBreakState::BreakAtLowerBound);
 
   bool breakFound = false;
   while (!breakFound) {
@@ -230,12 +212,12 @@ auto networkV4::protocols::quasiStaticStrainDouble::findNextBreak(
     double b = std::min(a + m_maxStep, m_maxStrain);
 
     if (a == m_maxStrain)
-      return tl::make_unexpected(nextBreakErrors::MaxStrainReached);
+      return std::make_pair(resultNetwork, nextBreakState::MaxStrainReached);
 
     auto [fa, breakCountA] = breakData(resultNetwork);
 
     if (breakCountA > 0)
-      return tl::make_unexpected(nextBreakErrors::BreakAtLowerBound);
+      return std::make_pair(resultNetwork, nextBreakState::BreakAtLowerBound);
 
     auto bNetwork = evalStrain(resultNetwork, b);
     auto [fb, breakCountB] = breakData(bNetwork);
@@ -251,41 +233,41 @@ auto networkV4::protocols::quasiStaticStrainDouble::findNextBreak(
       continue;
     }
 
-    auto converged = converge(resultNetwork, bNetwork, a, b, fa, fb, m_rootTol);
-    if (!converged) {
-      // TODO: Log
-      switch (converged.error()) {
-        case roots::rootErrors::RootNotBracketed:
-          std::cout << "RootNotBracketed" << std::endl;
-        case roots::rootErrors::MinLargerThanMax:
-          std::cout << "MinLargerThanMax" << std::endl;
-        case roots::rootErrors::MaxIterationsReached:
-          std::cout << "MaxIterationsReached" << std::endl;
-        case roots::rootErrors::rootBelowLowerBound:
-          std::cout << "rootBelowLowerBound" << std::endl;
-      }
-      return tl::make_unexpected(nextBreakErrors::DidNotConverge);
+    auto convergeResult =
+        converge(resultNetwork, bNetwork, a, b, fa, fb, m_rootTol);
+    auto resultNetwork = convergeResult.first;
+    auto state = convergeResult.second;
+    if (state != roots::rootState::converged) {
+      return std::make_pair(resultNetwork, nextBreakState::DidNotConverge);
     }
 
-    resultNetwork = converged.value();
     auto [maxDistAbove, breakCount] = breakData(resultNetwork);
 
     if (breakCount == 0) {
-      return tl::make_unexpected(nextBreakErrors::ConvergedWithZeroBreaks);
+      return std::make_pair(resultNetwork,
+                            nextBreakState::ConvergedWithZeroBreaks);
     }
     if (_singleBreak && breakCount > 1) {
-      return tl::make_unexpected(
-          nextBreakErrors::convergedWithMoreThanOneBreak);
+      return std::make_pair(resultNetwork,
+                            nextBreakState::convergedWithMoreThanOneBreak);
     }
 
     breakFound = true;
   }
-  return resultNetwork;
+  return std::make_pair(resultNetwork, nextBreakState::success);
 }
 
-auto networkV4::protocols::quasiStaticStrainDouble::relaxBreak(
-    network& _network, size_t startBreaks) -> size_t
+void networkV4::protocols::quasiStaticStrainDouble::relaxBreak(
+    network& _network, size_t startBreaks)
 {
+  _network.computeForces<true, true>();
+  auto reason = checkIfNeedToSave(_network);
+  m_dataOut->write(genTimeData(_network, "Start", startBreaks));
+  if (reason) {
+    m_networkOut->save(
+        _network, m_strainCount, 0.0, "Start-" + std::to_string(m_strainCount));
+  }
+
   double Ecurr = _network.getEnergy();
   double Eprev = Ecurr;
   size_t breakCount = startBreaks;
@@ -340,7 +322,13 @@ auto networkV4::protocols::quasiStaticStrainDouble::relaxBreak(
     //           << std::endl;
   }
   _network.computeForces<false, true>();
-  return breakCount;
+
+  m_dataOut->write(genTimeData(_network, "End", breakCount));
+  if (reason) {
+    m_networkOut->save(
+        _network, m_strainCount, m_t, "End-" + std::to_string(m_strainCount));
+  }
+  m_t = 0.0;
 }
 
 auto networkV4::protocols::quasiStaticStrainDouble::genTimeData(

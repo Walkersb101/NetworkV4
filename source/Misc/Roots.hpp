@@ -11,8 +11,9 @@ namespace networkV4
 {
 namespace roots
 {
-enum class rootErrors : std::uint8_t
+enum class rootState : std::uint8_t
 {
+  converged,
   MinLargerThanMax,
   RootNotBracketed,
   MaxIterationsReached,
