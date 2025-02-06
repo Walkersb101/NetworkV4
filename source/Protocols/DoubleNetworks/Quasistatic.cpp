@@ -103,16 +103,21 @@ void networkV4::protocols::quasiStaticStrainDouble::run(network& _network)
 
   while (!stop) {
     auto [newNetwork, state] = findNextBreak(_network, m_errorOnNotSingleBreak);
+    bool NewStrain = true;
+    _network = std::move(newNetwork);
     switch (state) {
-      case nextBreakState::DidNotConverge:
-        throw std::runtime_error("Did not converge");
+      case nextBreakState::DidNotConverge: {
+        auto [maxDistAbove, breakCount] = breakData(_network);
+        if (breakCount == 0) {
+          continue;
+        }
+      }
       case nextBreakState::convergedWithMoreThanOneBreak:
         throw std::runtime_error(
             "More than one bond above threshold and "
             "errorOnNotSingleBreak is true");
       case nextBreakState::ConvergedWithZeroBreaks: {
-        std::cout <<"Converged with zero breaks" << std::endl;
-        _network = newNetwork;
+        std::cout << "Converged with zero breaks" << std::endl;
         continue;
       }
       case nextBreakState::MaxStrainReached: {
@@ -121,19 +126,23 @@ void networkV4::protocols::quasiStaticStrainDouble::run(network& _network)
       }
       case nextBreakState::BreakAtLowerBound: {
         std::cout << "Break at lower bound" << std::endl;
+        NewStrain = false;
         break;
       }
       case nextBreakState::success: {
-        m_t = 0.0;
-        if (m_savePoints.time) {
-          std::visit([&](auto& info) { info.reset(); },
-                     m_savePoints.time.value());
-        }
-        m_strainCount++;
         break;
       }
       default:
         throw std::runtime_error("Unknown error");
+    }
+
+    if (NewStrain) {
+      m_t = 0.0;
+      if (m_savePoints.time) {
+        std::visit([&](auto& info) { info.reset(); },
+                   m_savePoints.time.value());
+      }
+      m_strainCount++;
     }
 
     _network = newNetwork;
