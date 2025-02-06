@@ -145,7 +145,6 @@ void networkV4::protocols::quasiStaticStrainDouble::run(network& _network)
       m_strainCount++;
     }
 
-    _network = newNetwork;
     auto breakCount = processBreakQueue(_network);
     relaxBreak(_network, breakCount);
     if (m_oneBreak)
