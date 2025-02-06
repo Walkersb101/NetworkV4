@@ -128,6 +128,7 @@ void networkV4::protocols::quasiStaticStrainDouble::run(network& _network)
                      m_savePoints.time.value());
         }
         m_strainCount++;
+        break;
       }
       default:
         throw std::runtime_error("Unknown error");
