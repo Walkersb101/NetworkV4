@@ -59,14 +59,14 @@ FetchContent_MakeAvailable(toml)
 
 target_link_libraries(NetworkV4_lib PUBLIC toml11::toml11)
 
-FetchContent_Declare(
-  trng4
-  GIT_REPOSITORY https://github.com/rabauke/trng4.git
-  GIT_TAG 1ef58a7
-  )
-FetchContent_MakeAvailable(trng4)
-
-target_link_libraries(NetworkV4_lib PUBLIC trng4)
+#FetchContent_Declare(
+#  trng4
+#  GIT_REPOSITORY https://github.com/rabauke/trng4.git
+#  GIT_TAG 1ef58a7
+#  )
+#FetchContent_MakeAvailable(trng4)
+#
+#target_link_libraries(NetworkV4_lib PUBLIC trng4)
 
 set(ZSTD_BUILD_STATIC ON)
 set(ZSTD_BUILD_SHARED OFF)
@@ -101,14 +101,15 @@ FetchContent_MakeAvailable(highfive)
 include_directories(BEFORE SYSTEM ${highfive_SOURCE_DIR} ${highfive_BINARY_DIR}/include)
 target_link_libraries(NetworkV4_lib PUBLIC HighFive)
 
-FetchContent_Declare(
-    spdlog
-    GIT_REPOSITORY https://github.com/gabime/spdlog.git
-    GIT_TAG v1.15.0
-)
-FetchContent_MakeAvailable(spdlog)
-target_link_libraries(NetworkV4_lib PUBLIC spdlog::spdlog_header_only)
+#FetchContent_Declare(
+#    spdlog
+#    GIT_REPOSITORY https://github.com/gabime/spdlog.git
+#    GIT_TAG v1.15.0
+#)
+#FetchContent_MakeAvailable(spdlog)
+#target_link_libraries(NetworkV4_lib PUBLIC spdlog::spdlog_header_only)
 
+set(BUILD_TESTING OFF)
 FetchContent_Declare(
     libmorton
     GIT_REPOSITORY https://github.com/Forceflow/libmorton.git
