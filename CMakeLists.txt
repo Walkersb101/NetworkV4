@@ -20,7 +20,7 @@ add_library(
     source/Core/Nodes.cpp
     source/Core/Simulation.cpp
 
-    source/Core/OMP/NetworkOMP.cpp
+    source/Core/Threading/NetworkOMP.cpp
 
     source/IO/BaseIO.cpp
     source/IO/TimeSeries/DataOut.cpp
