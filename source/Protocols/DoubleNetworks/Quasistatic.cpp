@@ -113,9 +113,12 @@ void networkV4::protocols::quasiStaticStrainDouble::run(network& _network)
         }
       }
       case nextBreakState::convergedWithMoreThanOneBreak:
-        throw std::runtime_error(
-            "More than one bond above threshold and "
-            "errorOnNotSingleBreak is true");
+        if (m_errorOnNotSingleBreak)
+          throw std::runtime_error(
+              "More than one bond above threshold and "
+              "errorOnNotSingleBreak is true");
+        else
+          std::cout << "More than one bond above threshold" << std::endl;
       case nextBreakState::ConvergedWithZeroBreaks: {
         std::cout << "Converged with zero breaks" << std::endl;
         continue;
