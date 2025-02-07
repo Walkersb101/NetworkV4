@@ -6,7 +6,7 @@
 #include <toml.hpp>
 
 #include "Core/Network.hpp"
-#include "Core/OMP/OMP.hpp"
+#include "Core/Threading/OMP.hpp"
 #include "IO/Input/Binv2.hpp"
 #include "IO/NetworkDump/BinV2Out.hpp"
 #include "IO/NetworkDump/NetworkOut.hpp"
