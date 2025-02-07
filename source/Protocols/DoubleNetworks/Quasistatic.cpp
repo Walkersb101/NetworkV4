@@ -148,6 +148,7 @@ void networkV4::protocols::quasiStaticStrainDouble::run(network& _network)
       m_strainCount++;
     }
 
+    _network.computeForces<true, false>();
     auto breakCount = processBreakQueue(_network);
     relaxBreak(_network, breakCount);
     if (m_oneBreak)
@@ -249,7 +250,7 @@ auto networkV4::protocols::quasiStaticStrainDouble::findNextBreak(
 
     auto convergeResult =
         converge(resultNetwork, bNetwork, a, b, fa, fb, m_rootTol);
-    auto resultNetwork = convergeResult.first;
+    resultNetwork = convergeResult.first;
     auto state = convergeResult.second;
     if (state != roots::rootState::converged) {
       return std::make_pair(resultNetwork, nextBreakState::DidNotConverge);
@@ -274,7 +275,7 @@ auto networkV4::protocols::quasiStaticStrainDouble::findNextBreak(
 void networkV4::protocols::quasiStaticStrainDouble::relaxBreak(
     network& _network, size_t startBreaks)
 {
-  _network.computeForces<true, true>();
+  _network.computeForces<false, true>();
   auto reason = checkIfNeedToSave(_network);
   m_dataOut->write(genTimeData(_network, "Start", startBreaks));
   if (reason) {
