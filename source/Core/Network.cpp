@@ -147,7 +147,7 @@ void networkV4::network::computeForces()
 
   const auto& positions = m_nodes.positions();
 
-  for (auto&& [bond, type, brk, tags] : ranges::views::zip(m_bonds.getBonds(),
+  for (auto&& [bond, type, brk, tags] : ranges::views::zip(m_bonds.getLocalIndex(),
                                                            m_bonds.getTypes(),
                                                            m_bonds.getBreaks(),
                                                            m_bonds.getTags()))
