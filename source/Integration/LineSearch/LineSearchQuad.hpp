@@ -99,9 +99,10 @@ private:
                  const double _alpha) -> double
   {
     auto& positions = _network.getNodes().positions();
-    for (size_t i = 0; i < positions.size(); i++) {
-      positions[i] = m_rk[i] + _alpha * _h[i];
-    }
+    std::transform(m_rk.begin(), m_rk.end(), _h.begin(), positions.begin(),
+             [_alpha](const Utils::Math::vec2d& rk, const Utils::Math::vec2d& h) {
+             return rk + _alpha * h;
+             });
     _network.computeForces();
     return _network.getEnergy();
   }

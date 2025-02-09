@@ -64,33 +64,82 @@ using Partitions = std::vector<Partition>;
 class PartitionGenerator
 {
 public:
-  PartitionGenerator()
+  PartitionGenerator() = delete;
+  PartitionGenerator(size_t _nodeCount)
   {
+    m_partition = std::vector<size_t>(_nodeCount, 0);
 #if defined(_OPENMP)
     int maxThreads = omp_get_max_threads();
     // if (maxThreads > 1) {
-    //maxThreads = 2;
+    // maxThreads = 2;
     m_partitionsCount = 2 * maxThreads;
     m_passes = 2;
     //}
 #endif
   }
 
-  void assignNodes(const std::vector<Utils::Math::vec2d>& _positions,
-                   const box& _domain)
+  void assignNodesbyX(const std::vector<Utils::Math::vec2d>& _positions,
+                      const box& _domain)
   {
     m_partition.clear();
     m_partition.reserve(_positions.size());
-    m_mortonHash.clear();
-    m_mortonHash.reserve(_positions.size());
 
     const auto partitionSize = 1.0 / m_partitionsCount;
     for (const auto& pos : _positions) {
       const auto lambda = _domain.x2Lambda(pos);
       const auto p = static_cast<size_t>(lambda[0] * m_partitionsCount);
       m_partition.push_back(p);
+    }
+  }
 
-      const double px = (lambda[0] - p * partitionSize) / partitionSize;
+  void weightNodesbyBonds(const bonded::bonds& _bonds,
+                          const std::vector<Utils::Math::vec2d>& _positions,
+                          const box& _domain)
+  {
+    std::vector<size_t> bondsOwned(_positions.size(), 0);
+    for (const auto& bond : _bonds.getLocalIndex()) {
+      bondsOwned[bond.src]++;
+    }
+
+    m_partition.clear();
+    m_partition.reserve(_positions.size());
+
+    size_t partition = 0;
+    size_t partitionBondCount = 0;
+    size_t partitionNodeCountTarget = _bonds.size() / m_partitionsCount;
+    for (size_t count : bondsOwned) {
+      partitionBondCount += count;
+      if (partitionBondCount > partitionNodeCountTarget) {
+        partition++;
+        partitionBondCount = 0;
+      }
+      m_partition.push_back(partition);
+    }
+  }
+
+  void hashPositions(const std::vector<Utils::Math::vec2d>& _positions,
+                     const box& _domain)
+  {
+    assert(m_partition.size() == _positions.size());
+
+    m_mortonHash.clear();
+    m_mortonHash.reserve(_positions.size());
+
+    std::vector<double> minXs(m_partitionsCount, 1.0);
+    std::vector<double> maxXs(m_partitionsCount, 0.0);
+    for (const auto& [pos, partition] : ranges::view::zip(_positions, m_partition)) {
+      const auto lambda = _domain.x2Lambda(pos);
+      minXs[partition] = std::min(minXs[partition], lambda[0]);
+      maxXs[partition] = std::max(maxXs[partition], lambda[0]);
+    }
+
+
+    for (const auto& [pos, partition] : ranges::view::zip(_positions, m_partition)) { 
+      const auto lambda = _domain.x2Lambda(pos);
+      
+      const double minX = minXs[partition];
+      const double maxX = maxXs[partition];
+      const double px = (lambda[0] - minX) / (maxX - minX);
       const auto x = static_cast<uint_fast32_t>(px * m_mortonRes);
       const auto y = static_cast<uint_fast32_t>(lambda[1] * m_mortonRes);
       const auto hash = libmorton::morton2D_64_encode(x, y);
@@ -98,9 +147,22 @@ public:
     }
   }
 
+  void sortNodesByX(nodes& _nodes, const box& _domain)
+  {
+    _nodes.reorder(_nodes.positions(),
+                   [&_domain](const auto& _a, const auto& _b)
+                   {
+                     const auto px1 = _domain.x2Lambda(_a)[0];
+                     const auto px2 = _domain.x2Lambda(_b)[0];
+                     return px1 < px2;
+                   });
+  };
+
   void sortNodes(nodes& _nodes)
   {
-    if (m_partition.size() != _nodes.size()) {
+    if (m_partition.size() != _nodes.size()
+        || m_mortonHash.size() != _nodes.size())
+    {
       throw std::runtime_error(
           "PartitionGenerator::sortGlobal: partition size does not match node "
           "size");
@@ -120,13 +182,12 @@ public:
 
   void sortBonds(bonded::bonds& _bonds, const nodes& _nodes)
   {
+    //TODO: More than once call causes errors
     const NodeMap nodeMap = _nodes.getNodeMap();
     _bonds.remap(nodeMap);
     _bonds.flipSrcDst();
 
-    checkPasses(_bonds);
-
-    _bonds.reorder(_bonds.getBonds(),
+    _bonds.reorder(_bonds.getLocalIndex(),
                    [](const auto& _a, const auto& _b)
                    {
                      if (_a.src < _b.src)  // Sort by source node
@@ -139,8 +200,8 @@ public:
 
   auto getPasses() const -> size_t { return m_passes; }
 
-  auto generatePartitions(const nodes& _nodes,
-                          const bonded::bonds& _bonds) -> Partitions
+  auto generatePartitions(const nodes& _nodes, const bonded::bonds& _bonds)
+      -> Partitions
   {
     Partitions partitions;
     partitions.reserve(m_partitionsCount);
@@ -154,20 +215,20 @@ public:
       const size_t nodesStart = std::distance(m_partition.begin(), nodefirst);
       const size_t nodesEnd = std::distance(m_partition.begin(), nodelast);
 
-      auto bondfirst = std::find_if(_bonds.getBonds().begin(),
-                                    _bonds.getBonds().end(),
+      auto bondfirst = std::find_if(_bonds.getLocalIndex().begin(),
+                                    _bonds.getLocalIndex().end(),
                                     [&](const auto& _bond)
                                     { return m_partition[_bond.src] == i; });
-      auto bondlast = std::find_if(_bonds.getBonds().rbegin(),
-                                   _bonds.getBonds().rend(),
+      auto bondlast = std::find_if(_bonds.getLocalIndex().rbegin(),
+                                   _bonds.getLocalIndex().rend(),
                                    [&](const auto& _bond)
                                    { return m_partition[_bond.src] == i; })
                           .base();
 
       const size_t bondsStart =
-          std::distance(_bonds.getBonds().begin(), bondfirst);
+          std::distance(_bonds.getLocalIndex().begin(), bondfirst);
       const size_t bondsEnd =
-          std::distance(_bonds.getBonds().begin(), bondlast);
+          std::distance(_bonds.getLocalIndex().begin(), bondlast);
 
       partitions.emplace_back(i, nodesStart, nodesEnd, bondsStart, bondsEnd);
     }
@@ -177,7 +238,7 @@ public:
 
   void checkPasses(const bonded::bonds& _bonds)
   {
-    for (const auto& bond : _bonds.getBonds()) {
+    for (const auto& bond : _bonds.getLocalIndex()) {
       const size_t srcPar = m_partition[bond.src];
       const size_t dstPar = m_partition[bond.dst];
 

@@ -180,20 +180,25 @@ void networkV4::Simulation::initNetwork()
   auto& bonds = m_network.getBonds();
   const auto& box = m_network.getBox();
 
-  partition::PartitionGenerator partGen;
-  partGen.assignNodes(nodes.positions(), box);
+  partition::PartitionGenerator partGen(nodes.size());
+
+  #if defined(_OPENMP)
+    partGen.sortNodesByX(nodes, box);
+    partGen.sortBonds(bonds, nodes);
+    partGen.weightNodesbyBonds(bonds, nodes.positions(), box);
+  #endif
+
+  partGen.hashPositions(nodes.positions(), box);
   partGen.sortNodes(nodes);
   partGen.sortBonds(bonds, nodes);
-  partGen.checkPasses(bonds);
-
-auto test = bonds.gatherBonds();
-
+  
 #if defined(_OPENMP)
+  partGen.checkPasses(bonds);
   OMP::threadPartitions = partGen.generatePartitions(nodes, bonds);
   OMP::passes = partGen.getPasses();
 #endif
 
-  m_network.computeForces();
+  m_network.computeForces<false,true>();
 }
 
 /*
