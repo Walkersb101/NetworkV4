@@ -383,7 +383,7 @@ auto networkV4::protocols::quasiStaticStrainDouble::getCounts(
   const auto& bonds = _network.getBonds();
 
   for (const auto& [bond, type, tags] :
-       ranges::views::zip(bonds.getBonds(), bonds.getTypes(), bonds.getTags()))
+       ranges::views::zip(bonds.getLocalIndex(), bonds.getTypes(), bonds.getTags()))
   {
     if (std::holds_alternative<Forces::VirtualBond>(type)) {
       continue;
@@ -440,7 +440,7 @@ auto networkV4::protocols::quasiStaticStrainDouble::breakData(
   const auto& box = _network.getBox();
 
   for (const auto& [bond, type, brk] : ranges::views::zip(
-           bonds.getBonds(), bonds.getTypes(), bonds.getBreaks()))
+           bonds.getLocalIndex(), bonds.getTypes(), bonds.getBreaks()))
   {
     const auto& pos1 = nodes.positions()[bond.src];
     const auto& pos2 = nodes.positions()[bond.dst];

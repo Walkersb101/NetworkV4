@@ -12,6 +12,19 @@ namespace Utils
 {
 
 template<typename T, std::size_t N>
+inline auto clamp(const Math::Vector<T, N>& _val, T _min, T _max)
+    -> Math::Vector<T, N>
+{
+  Math::Vector<T, N> clamped;
+  std::transform(_val.begin(),
+                 _val.end(),
+                 clamped.begin(),
+                 [_min, _max](const T& val)
+                 { return std::clamp(val, _min, _max); });
+  return clamped;
+}
+
+template<typename T, std::size_t N>
 auto spanView(const std::vector<Math::Vector<T, N>>& _vec) -> std::span<const T>
 {
   return std::span<const T>(reinterpret_cast<const T*>(_vec.data()),

@@ -40,7 +40,7 @@ void networkV4::network::computeForces()
 template<bool _evalBreak, bool _evalStress>
 void networkV4::network::computePass(auto _parts)
 {
-  const auto& bonds = m_bonds.getBonds();
+  const auto& bonds = m_bonds.getLocalIndex();
   auto& types = m_bonds.getTypes();
   auto& breaks = m_bonds.getBreaks();
   auto& tags = m_bonds.getTags();

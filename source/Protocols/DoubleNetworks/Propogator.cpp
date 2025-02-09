@@ -160,7 +160,7 @@ auto networkV4::protocols::propogatorDouble::getMaxDataIndex(
   size_t maxIndex = 0;
   for (const auto [i, bond, type, brk, tags] :
        ranges::views::zip(ranges::views::iota(0ul, bonds.size()),
-                          bonds.getBonds(),
+                          bonds.getLocalIndex(),
                           bonds.getTypes(),
                           bonds.getBreaks(),
                           bonds.getTags()))
@@ -185,7 +185,7 @@ void networkV4::protocols::propogatorDouble::breakMostStrained(
 {
   size_t maxIndex = getMaxDataIndex(_network, _filter);
   auto& bonds = _network.getBonds();
-  auto& binfo = bonds.getBonds()[maxIndex];
+  auto& binfo = bonds.getLocalIndex()[maxIndex];
   auto& type = bonds.getTypes()[maxIndex];
   auto& brk = bonds.getBreaks()[maxIndex];
   auto& tags = bonds.getTags()[maxIndex];
@@ -209,7 +209,7 @@ auto networkV4::protocols::propogatorDouble::breakData(const network& _network)
   const auto& box = _network.getBox();
 
   for (const auto& [bond, type, brk] : ranges::views::zip(
-           bonds.getBonds(), bonds.getTypes(), bonds.getBreaks()))
+           bonds.getLocalIndex(), bonds.getTypes(), bonds.getBreaks()))
   {
     const auto& pos1 = nodes.positions()[bond.src];
     const auto& pos2 = nodes.positions()[bond.dst];

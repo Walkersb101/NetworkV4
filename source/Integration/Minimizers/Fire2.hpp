@@ -141,31 +141,39 @@ public:
         }
 
         double scale = 0.5 * m_dt;
-#pragma omp parallel for schedule(static)
-        for (size_t i = 0; i < vels.size(); i++) {
-          pos[i] -= scale * vels[i];
-        }
+        std::transform(pos.begin(),
+                       pos.end(),
+                       vels.begin(),
+                       pos.begin(),
+                       [scale](auto& p, auto& v) { return p - scale * v; });
         nodes.zeroVelocity();
       }
 
-      double vmax = m_params.dmax / m_dt;
-#pragma omp parallel for schedule(static)
       for (size_t i = 0; i < vels.size(); i++) {
-        double fscale = m_dt / masses[i];
-        vels[i] += fscale * forces[i];
-        if (vdotf > 0.0) {
-          vels[i] = scale1 * vels[i] + scale2 * forces[i];
-          if (m_params.abc) {
-            // make sure that the displacement is not larger than dmax
-            std::transform(vels[i].begin(),
-                           vels[i].end(),
-                           vels[i].begin(),
-                           [vmax](double _v)
-                           { return std::clamp(_v, -vmax, vmax); });
-          }
-        }
-        pos[i] += m_dt * vels[i];
+        vels[i] += (m_dt / masses[i]) * forces[i];
       }
+      if (vdotf > 0.0) {
+        std::transform(vels.begin(),
+                       vels.end(),
+                       forces.begin(),
+                       vels.begin(),
+                       [scale1, scale2](auto& v, auto& f)
+                       { return scale1 * v + scale2 * f; });
+        if (m_params.abc) {
+          double vmax = m_params.dmax / m_dt;
+          std::transform(vels.begin(),
+                        vels.end(),
+                        vels.begin(),
+                        [vmax](auto& v)
+                        { return Utils::clamp(v, -vmax, vmax); });
+
+        }
+      }
+      std::transform(pos.begin(),
+                     pos.end(),
+                     vels.begin(),
+                     pos.begin(),
+                     [this](auto& p, auto& v) { return p + m_dt * v; });
 
       Eprev = Ecurr;
       _network.computeForces();

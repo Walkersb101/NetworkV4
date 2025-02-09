@@ -59,7 +59,7 @@ public:
 
     const auto matrixTag = _net.getTags().get("matrix");
 
-    const auto globalBondInfo = bonds.gatherBonds();
+    const auto globalBondInfo = bonds.gatherGlobalIndex();
     const auto globalBondType = bonds.gatherTypes();
     const auto globalBondBreak = bonds.gatherBreaks();
     const auto globalBondTags = bonds.gatherTags();
