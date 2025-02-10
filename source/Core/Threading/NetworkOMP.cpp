@@ -48,8 +48,12 @@ void networkV4::network::computePass(auto _parts)
   const auto& positions = m_nodes.positions();
   auto& forces = m_nodes.forces();
 
-#  pragma omp parallel for reduction(+ : m_energy) reduction(+ : m_stresses) \
-      reduction(+ : m_breakQueue) num_threads(_parts.size()) \
+  double passEnergy = 0.0;
+  stresses passStress = similar(m_stresses);
+  bondQueue passQueue = {};
+
+#  pragma omp parallel for reduction(+ : passEnergy) reduction(+ : passStress) \
+      reduction(+ : passQueue) num_threads(_parts.size()) \
       schedule(static, 1)
   for (const auto part : _parts) {
     for (size_t i = part.bondStart(); i < part.bondEnd(); i++) {
@@ -58,12 +62,6 @@ void networkV4::network::computePass(auto _parts)
       auto& brk = breaks[i];
       auto& bTags = tags[i];
 
-      if constexpr (!_evalBreak
-                    && std::is_same_v<Forces::VirtualBond, decltype(type)>)
-      {
-        continue;
-      }
-
       const auto& pos1 = positions[bond.src];
       const auto& pos2 = positions[bond.dst];
       const auto dist = m_box.minDist(pos1, pos2);
@@ -71,7 +69,7 @@ void networkV4::network::computePass(auto _parts)
       if constexpr (_evalBreak) {
         const bool broken = bonded::visitBreak(brk, dist);
         if (broken) {
-          m_breakQueue.emplace_back(bond, type, brk, bTags);
+          passQueue.emplace_back(bond, type, brk, bTags);
 
           type = Forces::VirtualBond {};
           brk = BreakTypes::None {};
@@ -89,15 +87,22 @@ void networkV4::network::computePass(auto _parts)
         if constexpr (_evalStress) {
           const auto stress =
               Utils::Math::tensorProduct(f, -dist) * m_box.invArea();
-          m_stresses.distribute(stress, bTags);
+          passStress.distribute(stress, bTags);
         }
       }
 
       const auto energy = bonded::visitEnergy(type, dist);
       if (energy) {
-        m_energy += energy.value();
+        passEnergy += energy.value();
       }
     }
+  }
+  m_energy += passEnergy;
+  if constexpr (_evalStress) {
+    merge(m_stresses, passStress);
+  }
+  if constexpr (_evalBreak) {
+    merge(m_breakQueue, passQueue);
   }
 }
 

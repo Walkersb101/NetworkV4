@@ -11,7 +11,9 @@ namespace networkV4
 class stresses
 {
 public:
-  stresses() {}
+  stresses() {
+    std::fill(m_values.begin(), m_values.end(), Utils::tensor2d());
+  }
 
 public:
   void clear()
@@ -98,6 +100,7 @@ private:
 
 private:
   friend void merge(stresses& _s1, const stresses& _s2);
+  friend auto similar(const stresses& _s1) -> stresses;
 };
 
 inline void merge(stresses& _s1, const stresses& _s2)
@@ -119,7 +122,13 @@ inline void merge(stresses& _s1, const stresses& _s2)
   }
 }
 
-#pragma omp declare reduction(+ : stresses : merge(omp_out, omp_in)) \
-    initializer(omp_priv = omp_orig)
+inline auto similar(const stresses& _s1) -> stresses
+{
+  stresses s;
+  s.m_stored = _s1.m_stored;
+  return s;
+}
 
+#pragma omp declare reduction(+ : stresses : merge(omp_out, omp_in)) \
+    initializer(omp_priv = similar(omp_orig))
 }  // namespace networkV4

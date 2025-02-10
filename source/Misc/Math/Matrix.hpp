@@ -27,7 +27,9 @@ struct Matrix
 
   container m_data;
 
-  Matrix() = default;
+  Matrix() {
+    std::fill(begin(), end(), T{});
+  };
   Matrix(std::initializer_list<T> init_list)
   {
     assert(init_list.size() == Rows * Cols);
