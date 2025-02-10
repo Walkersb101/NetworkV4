@@ -27,16 +27,7 @@ Matrix<T, N, M> tensorProduct(const Vector<T, N>& _a, const Vector<T, M>& _b)
 template<typename T, std::size_t N>
 auto xdoty(const std::vector<Vector<T, N>>& _x, const std::vector<Vector<T, N>>& _y) -> T
 {
-#if defined(_OPENMP)
-  T sum = 0.0;
-#  pragma omp parallel for schedule(static) reduction(+ : sum)
-  for (size_t i = 0; i < _x.size(); i++) {
-    sum += _x[i] * _y[i];
-  }
-  return sum;
-#else
   return std::inner_product(_x.begin(), _x.end(), _y.begin(), T(0));
-#endif
 }
 
 }  // namespace Math

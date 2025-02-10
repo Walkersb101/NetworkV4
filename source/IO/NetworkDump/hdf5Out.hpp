@@ -142,16 +142,15 @@ private:
         HighFive::Reference(createOrGetGroup(_file, "particles"),
                             createOrGetGroup(_file, "particles/all")));
 
-    const auto bondInfo = _net.getBonds().gatherBonds();
+    const auto bondInfo = _net.getBonds().gatherGlobalIndex();
     const auto types = _net.getBonds().gatherTypes();
     const auto breaks = _net.getBonds().gatherBreaks();
-    const auto& nodesIndex = _net.getNodes().indices();
 
     std::vector<size_t> connections;
     connections.reserve(_net.getBonds().size() * 2);
     for (const networkV4::bonded::BondInfo& bond : bondInfo) {
-      connections.emplace_back(nodesIndex[bond.src]);
-      connections.emplace_back(nodesIndex[bond.dst]);
+      connections.emplace_back(bond.src);
+      connections.emplace_back(bond.dst);
     }
     bonds.reshapeMemSpace({connections.size()}).write(connections);
 

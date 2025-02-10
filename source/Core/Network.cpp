@@ -147,7 +147,7 @@ void networkV4::network::computeForces()
 
   const auto& positions = m_nodes.positions();
 
-  for (auto&& [bond, type, brk, tags] : ranges::views::zip(m_bonds.getBonds(),
+  for (auto&& [bond, type, brk, tags] : ranges::views::zip(m_bonds.getLocalIndex(),
                                                            m_bonds.getTypes(),
                                                            m_bonds.getBreaks(),
                                                            m_bonds.getTags()))
@@ -193,7 +193,7 @@ auto networkV4::network::computeEnergy() -> double
 {
   m_energy = 0.0;
   for (const auto [bond, type] :
-       ranges::views::zip(m_bonds.getBonds(), m_bonds.getTypes()))
+       ranges::views::zip(m_bonds.getLocalIndex(), m_bonds.getTypes()))
   {
     const auto& pos1 = m_nodes.positions()[bond.src];
     const auto& pos2 = m_nodes.positions()[bond.dst];
@@ -210,7 +210,7 @@ auto networkV4::network::computeEnergy() -> double
 void networkV4::network::computeBreaks()
 {
   for (const auto& [bond, type, brk, tags] :
-       ranges::views::zip(m_bonds.getBonds(),
+       ranges::views::zip(m_bonds.getLocalIndex(),
                           m_bonds.getTypes(),
                           m_bonds.getBreaks(),
                           m_bonds.getTags()))

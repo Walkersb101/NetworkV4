@@ -105,6 +105,7 @@ void networkV4::protocols::quasiStaticStrainDouble::run(network& _network)
     auto [newNetwork, state] = findNextBreak(_network, m_errorOnNotSingleBreak);
     bool NewStrain = true;
     _network = std::move(newNetwork);
+    _network.computeForces<true, true>();
     switch (state) {
       case nextBreakState::DidNotConverge: {
         auto [maxDistAbove, breakCount] = breakData(_network);
@@ -225,7 +226,7 @@ auto networkV4::protocols::quasiStaticStrainDouble::findNextBreak(
     double a = m_deform->getStrain(resultNetwork);
     double b = std::min(a + m_maxStep, m_maxStrain);
 
-    if (a == m_maxStrain)
+    if (a >= m_maxStrain - 1e-8)
       return std::make_pair(resultNetwork, nextBreakState::MaxStrainReached);
 
     auto [fa, breakCountA] = breakData(resultNetwork);
@@ -249,7 +250,7 @@ auto networkV4::protocols::quasiStaticStrainDouble::findNextBreak(
 
     auto convergeResult =
         converge(resultNetwork, bNetwork, a, b, fa, fb, m_rootTol);
-    auto resultNetwork = convergeResult.first;
+    resultNetwork = convergeResult.first;
     auto state = convergeResult.second;
     if (state != roots::rootState::converged) {
       return std::make_pair(resultNetwork, nextBreakState::DidNotConverge);
@@ -467,7 +468,7 @@ auto networkV4::protocols::quasiStaticStrainDouble::getCounts(
   const auto& bonds = _network.getBonds();
 
   for (const auto& [bond, type, tags] :
-       ranges::views::zip(bonds.getBonds(), bonds.getTypes(), bonds.getTags()))
+       ranges::views::zip(bonds.getLocalIndex(), bonds.getTypes(), bonds.getTags()))
   {
     if (std::holds_alternative<Forces::VirtualBond>(type)) {
       continue;
@@ -545,7 +546,7 @@ auto networkV4::protocols::quasiStaticStrainDouble::breakData(
   const auto& box = _network.getBox();
 
   for (const auto& [bond, type, brk] : ranges::views::zip(
-           bonds.getBonds(), bonds.getTypes(), bonds.getBreaks()))
+           bonds.getLocalIndex(), bonds.getTypes(), bonds.getBreaks()))
   {
     const auto& pos1 = nodes.positions()[bond.src];
     const auto& pos2 = nodes.positions()[bond.dst];

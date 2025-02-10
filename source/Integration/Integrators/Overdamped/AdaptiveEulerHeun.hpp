@@ -50,10 +50,10 @@ public:
     while (iter++ < m_params.maxInnerIter) {
       const double overdampedScale = m_dt * m_invZeta;
 
-#pragma omp parallel for schedule(static)
-      for (size_t i = 0; i < nodes.size(); i++) {
-        positions[i] += forces[i] * overdampedScale;  // eq 8
-      }
+      std::transform(positions.begin(), positions.end(), forces.begin(), positions.begin(),
+             [overdampedScale](const auto& pos, const auto& force) {
+               return pos + force * overdampedScale;  // eq 8
+             });
       // Pos = r_{k+1}bar
 
       _network.computeForces();
