@@ -102,9 +102,9 @@ void networkV4::protocols::quasiStaticStrainDouble::run(network& _network)
   bool stop = false;
 
   while (!stop) {
-    auto [newNetwork, state] = findNextBreak(_network, m_errorOnNotSingleBreak);
+    auto state = nextBreakState::success;
+    std::tie(_network, state) = findNextBreak(_network, m_errorOnNotSingleBreak);
     bool NewStrain = true;
-    _network = std::move(newNetwork);
     _network.computeForces<true, true>();
     switch (state) {
       case nextBreakState::DidNotConverge: {
@@ -248,10 +248,9 @@ auto networkV4::protocols::quasiStaticStrainDouble::findNextBreak(
       continue;
     }
 
-    auto convergeResult =
+    auto state = roots::rootState::converged;
+    std::tie(resultNetwork, state) =
         converge(resultNetwork, bNetwork, a, b, fa, fb, m_rootTol);
-    resultNetwork = convergeResult.first;
-    auto state = convergeResult.second;
     if (state != roots::rootState::converged) {
       return std::make_pair(resultNetwork, nextBreakState::DidNotConverge);
     }
