@@ -38,7 +38,7 @@ public:
   }
 
 public:
-  void minimise(network& _network) override 
+  void minimise(network& _network) override
   {
     integration::AdaptiveOverdampedEulerHeun stepper(1.0, m_params, m_dt);
 
@@ -61,14 +61,9 @@ public:
       _network.computeForces();
       Ecurr = _network.getEnergy();
 
-      ediff = Ecurr - Eprev;
-      if (fabs(Ecurr - Eprev)
-          < m_Etol * 0.5 * (fabs(Ecurr) + fabs(Eprev) + EPS_ENERGY))
-        return;
-
       fdotf = Utils::Math::xdoty(_network.getNodes().forces(),
-                                        _network.getNodes().forces());
-      if (fdotf < m_Ftol * m_Ftol)
+                                 _network.getNodes().forces());
+      if (converged(fdotf, Ecurr, Eprev))
         return;
     }
   };

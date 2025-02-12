@@ -6,8 +6,8 @@
 
 #include "Integration/Integrators/Adaptive.hpp"
 #include "Integration/Minimizers/AdaptiveHeunDecent.hpp"
-#include "Integration/Minimizers/SD.hpp"
 #include "Integration/Minimizers/Fire2.hpp"
+#include "Integration/Minimizers/SD.hpp"
 #include "Misc/Config.hpp"
 #include "Misc/Roots.hpp"
 #include "Protocols/Protocol.hpp"
@@ -24,7 +24,13 @@ class quasiStaticStrainDouble : public protocolBase
 public:
   struct networkSavePoints
   {
-    networkSavePoints() : strainStep(std::nullopt), breakCount(std::nullopt), time(std::nullopt), strain(std::nullopt) {}
+    networkSavePoints()
+        : strainStep(std::nullopt)
+        , breakCount(std::nullopt)
+        , time(std::nullopt)
+        , strain(std::nullopt)
+    {
+    }
 
     std::optional<Utils::Output::stepInfo<size_t, double>> strainStep =
         std::nullopt;
@@ -37,12 +43,32 @@ public:
 
   enum class nextBreakState : std::uint8_t
   {
-    success,
-    BreakAtLowerBound,
-    DidNotConverge,
+    FoundSingleBreak,
+    FoundMultipleBreaks,
     MaxStrainReached,
-    convergedWithMoreThanOneBreak,
-    ConvergedWithZeroBreaks,
+  };
+
+  class relaxBreak : public minimisation::minimiserBase
+  {
+  public:
+    relaxBreak() = delete;
+    relaxBreak(quasiStaticStrainDouble& _protocol)
+        : minimiserBase(_protocol.m_minParams)
+        , m_params(_protocol.m_params)
+        , m_protocol(_protocol)
+    {
+    }
+
+  public:
+    void minimise(network& _network) override;
+
+  private:
+    auto hybridStep(network& _network, auto& _stepper)
+        -> tl::expected<double, lineSearch::lineSearchState>;
+
+  private:
+    integration::AdaptiveParams m_params;
+    quasiStaticStrainDouble& m_protocol;
   };
 
 private:
@@ -57,10 +83,10 @@ private:
 
   double m_maxStep;
 
-  double m_t = 0.0;
   std::size_t m_strainCount = 0;
 
   networkSavePoints m_savePoints;
+  relaxBreak m_breakMinimiser;
 
 public:
   quasiStaticStrainDouble() = delete;
@@ -85,32 +111,36 @@ public:
 
 private:
   auto evalStrain(const network& _network, double _targetStrain) -> network;
-  auto converge(const network& _aNetwork,
-                const network& _bNetwork,
+  auto converge(network& _network,
                 double _a,
                 double _b,
                 double _fa,
                 double _fb,
-                double _tol) -> std::pair<network, roots::rootState>;
+                double _tol) -> roots::rootState;
 
-  auto findNextBreak(const network& _network, bool _singleBreak = false)
-      -> std::pair<network, nextBreakState>;
+  auto findNextBreak(network& _network) -> nextBreakState;
 
   void relaxBreak(network& _network, size_t startBreaks);
 
 private:
   auto genTimeData(const network& _network,
                    const std::string& _reason,
-                   std::size_t _breakCount)
+                   std::size_t _breakCount,
+                   double _t = 0.0)
       -> std::vector<IO::timeSeries::writeableTypes>;
-  auto genBondData(const network& _network, const breakInfo& _bond)
+  auto genBondData(const network& _network, const breakInfo& _bond, double _t)
       -> std::vector<IO::timeSeries::writeableTypes>;
+  void logData(network& _network,
+               const std::string& _reason,
+               double _breakcount,
+               double _t,
+               bool _writeDump);
+
   auto getCounts(const network& _network)
       -> std::tuple<std::size_t, std::size_t, std::size_t>;
-  auto checkIfNeedToSave(const network& _network) -> std::optional<std::string>;
-  auto processBreakQueue(network& _network) -> std::size_t;
-
-  auto hybridStep(network& _network, auto& _stepper) -> tl::expected<double, lineSearch::lineSearchState>;
+  auto checkIfNeedToSave(const network& _network, double _t = 0.0)
+      -> std::optional<std::string>;
+  auto processBreakQueue(network& _network, double _t) -> std::size_t;
 
 private:
   auto breakData(const network& _network) -> std::tuple<double, size_t>;

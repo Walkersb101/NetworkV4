@@ -42,12 +42,10 @@ public:
     double Ecurr = _network.getEnergy();
     double Eprev = Ecurr;
 
-    auto h = forces;
-
     size_t iter = 0;
     for (iter = 0; iter < m_maxIter; iter++) {
       Eprev = Ecurr;
-      h = forces;
+      auto h = forces;
       auto state = lineSearch.search(h, _network);
       if (!state)
       {  // TODO: If first Step allow more errors
@@ -56,13 +54,8 @@ public:
 
       _network.computeForces();
       Ecurr = _network.getEnergy();
-      if (fabs(Ecurr - Eprev)
-          < m_Etol * 0.5 * (fabs(Ecurr) + fabs(Eprev) + EPS_ENERGY))
-        return;
-
-      fdotf = Utils::Math::xdoty(forces, forces);
-      if (fdotf < m_Ftol * m_Ftol)
-        return;
+      if (converged(fdotf, Ecurr, Eprev))
+        break;
     }
   }
 };

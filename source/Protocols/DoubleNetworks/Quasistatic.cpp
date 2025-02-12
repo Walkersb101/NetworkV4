@@ -23,6 +23,7 @@ networkV4::protocols::quasiStaticStrainDouble::quasiStaticStrainDouble(
     , m_errorOnNotSingleBreak(_errorOnNotSingleBreak)
     , m_maxStep(_maxStep)
     , m_savePoints(_savePoints)
+    , m_breakMinimiser(*this)
 {
   std::vector<IO::timeSeries::writeableTypes> dataHeader = {
       "Reason",
@@ -96,61 +97,32 @@ networkV4::protocols::quasiStaticStrainDouble::~quasiStaticStrainDouble() {}
 void networkV4::protocols::quasiStaticStrainDouble::run(network& _network)
 {
   _network = evalStrain(_network, 0.0);
-  m_dataOut->write(genTimeData(_network, "Initial", 0));
-  m_networkOut->save(_network, 0, 0.0, "Initial");
+  logData(_network, "Initial", 0, 0.0, true);
 
-  bool stop = false;
-
-  while (!stop) {
-    auto state = nextBreakState::success;
-    std::tie(_network, state) = findNextBreak(_network, m_errorOnNotSingleBreak);
-    bool NewStrain = true;
-    _network.computeForces<true, true>();
+  while (true) {
+    auto state = findNextBreak(_network);
     switch (state) {
-      case nextBreakState::DidNotConverge: {
-        auto [maxDistAbove, breakCount] = breakData(_network);
-        if (breakCount == 0) {
-          continue;
-        }
-      }
-      case nextBreakState::convergedWithMoreThanOneBreak:
+      case nextBreakState::FoundSingleBreak:
+        break;
+      case nextBreakState::FoundMultipleBreaks: {
         if (m_errorOnNotSingleBreak)
           throw std::runtime_error(
               "More than one bond above threshold and "
               "errorOnNotSingleBreak is true");
         else
           std::cout << "More than one bond above threshold" << std::endl;
-      case nextBreakState::ConvergedWithZeroBreaks: {
-        std::cout << "Converged with zero breaks" << std::endl;
-        continue;
       }
       case nextBreakState::MaxStrainReached: {
-        stop = true;
-        continue;
+        std::cout << "Max Strain Reached" << std::endl;
+        return;
       }
-      case nextBreakState::BreakAtLowerBound: {
-        std::cout << "Break at lower bound" << std::endl;
-        NewStrain = false;
-        break;
-      }
-      case nextBreakState::success: {
-        break;
-      }
-      default:
-        throw std::runtime_error("Unknown error");
     }
 
-    if (NewStrain) {
-      m_t = 0.0;
-      if (m_savePoints.time) {
-        std::visit([&](auto& info) { info.reset(); },
-                   m_savePoints.time.value());
-      }
-      m_strainCount++;
-    }
+    if (m_savePoints.time) {
+      std::visit([&](auto& info) { info.reset(); }, m_savePoints.time.value());
+    };
 
-    auto breakCount = processBreakQueue(_network);
-    relaxBreak(_network, breakCount);
+    m_breakMinimiser.minimise(_network);
     if (m_oneBreak)
       break;
   }
@@ -171,183 +143,112 @@ auto networkV4::protocols::quasiStaticStrainDouble::evalStrain(
   return result;
 }
 
-auto networkV4::protocols::quasiStaticStrainDouble::converge(
-    const network& _aNetwork,
-    const network& _bNetwork,
-    double _a,
-    double _b,
-    double _fa,
-    double _fb,
-    double _tol) -> std::pair<network, roots::rootState>
+auto networkV4::protocols::quasiStaticStrainDouble::converge(network& _network,
+                                                             double _a,
+                                                             double _b,
+                                                             double _fa,
+                                                             double _fb,
+                                                             double _tol)
+    -> roots::rootState
 {
-  auto networkB = _bNetwork;
+  auto networkA = _network;
+  auto networkB = _network;
 
   if (_a > _b)
-    return std::make_pair(networkB, roots::rootState::MinLargerThanMax);
+    return roots::rootState::MinLargerThanMax;
 
   if (_fa * _fb > 0.0)
-    return std::make_pair(networkB, roots::rootState::RootNotBracketed);
+    return roots::rootState::RootNotBracketed;
 
   roots::ITP solver(_a, _b, _tol);
 
   for (std::size_t iters = 0; iters < solver.nMax(); ++iters) {
     auto xITP = solver.guessRoot(_a, _b, _fa, _fb);
+    if (xITP <= _a || xITP >= _b) {
+      _network = networkA;
+      std::cout << "Root not bracketed: accepting lower bound" << std::endl;
+      return roots::rootState::GuessNotInBracket;
+    }
 
-    auto networkITP = evalStrain(_aNetwork, xITP);
+    auto networkITP = evalStrain(_network, xITP);
     auto [maxDistAboveITP, breakCountITP] = breakData(networkITP);
-    if (maxDistAboveITP >= 0.) {
+    if (breakCountITP > 0) {
       _b = xITP;
       _fb = maxDistAboveITP;
-      networkB = std::move(networkITP);
+      networkB = networkITP;
     } else {
       _a = xITP;
       _fa = maxDistAboveITP;
+      networkA = networkITP;
     }
 
     if (std::abs(_b - _a) < 2 * _tol) {
-      return std::make_pair(networkB, roots::rootState::converged);
+      _network = networkB;
+      return roots::rootState::converged;
     }
   }
-  return std::make_pair(networkB, roots::rootState::MaxIterationsReached);
+  std::cout << "Max iterations reached: ";
+  if (_fb > 0.0) {
+    std::cout << "fb > 0 accepting upper bound" << std::endl;
+    _network = networkB;
+  } else {
+    std::cout << "fa > 0 accepting lower bound" << std::endl;
+    _network = networkA;
+  }
+  return roots::rootState::MaxIterationsReached;
 }
 
 auto networkV4::protocols::quasiStaticStrainDouble::findNextBreak(
-    const network& _network, bool _singleBreak)
-    -> std::pair<network, nextBreakState>
+    network& _network) -> nextBreakState
 {
-  auto startStrain = m_deform->getStrain(_network);
-  auto resultNetwork = evalStrain(_network, startStrain);
-
-  if (get<size_t>(breakData(resultNetwork)) > 0)
-    return std::make_pair(resultNetwork, nextBreakState::BreakAtLowerBound);
-
   bool breakFound = false;
-  while (!breakFound) {
-    double a = m_deform->getStrain(resultNetwork);
+  while (true) {
+    double a = m_deform->getStrain(_network);
     double b = std::min(a + m_maxStep, m_maxStrain);
 
-    if (a == m_maxStrain)
-      return std::make_pair(resultNetwork, nextBreakState::MaxStrainReached);
+    if (a >= m_maxStrain - 1e-10)
+      return nextBreakState::MaxStrainReached;
 
-    auto [fa, breakCountA] = breakData(resultNetwork);
+    auto [fa, breakCountA] = breakData(_network);
+    if (breakCountA == 1)
+      return nextBreakState::FoundSingleBreak;
+    if (breakCountA > 1)
+      return nextBreakState::FoundMultipleBreaks;
 
-    if (breakCountA > 0)
-      return std::make_pair(resultNetwork, nextBreakState::BreakAtLowerBound);
-
-    auto bNetwork = evalStrain(resultNetwork, b);
+    m_strainCount++;
+    auto bNetwork = evalStrain(_network, b);
     auto [fb, breakCountB] = breakData(bNetwork);
 
     if (breakCountB == 0) {
-      resultNetwork = std::move(bNetwork);
-      m_strainCount++;
-      m_dataOut->write(genTimeData(resultNetwork, "Strain", 0));
-      auto reason = checkIfNeedToSave(resultNetwork);
-      if (reason) {
-        m_networkOut->save(resultNetwork, m_strainCount, 0.0, reason.value());
-      }
+      _network = bNetwork;
+      logData(_network, "Strain", 0, 0.0, true);
       continue;
     }
 
-    auto state = roots::rootState::converged;
-    std::tie(resultNetwork, state) =
-        converge(resultNetwork, bNetwork, a, b, fa, fb, m_rootTol);
-    if (state != roots::rootState::converged) {
-      return std::make_pair(resultNetwork, nextBreakState::DidNotConverge);
+    auto state = converge(_network, a, b, fa, fb, m_rootTol);
+    switch (state) {
+      case roots::rootState::MinLargerThanMax:
+        throw std::runtime_error("Min larger than max");
+      case roots::rootState::RootNotBracketed:
+        throw std::runtime_error("Root not bracketed");
     }
+    auto [maxDistAbove, breakCount] = breakData(_network);
+    if (breakCount == 1)
+      return nextBreakState::FoundSingleBreak;
+    if (breakCount > 1)
+      return nextBreakState::FoundMultipleBreaks;
 
-    auto [maxDistAbove, breakCount] = breakData(resultNetwork);
-
-    if (breakCount == 0) {
-      return std::make_pair(resultNetwork,
-                            nextBreakState::ConvergedWithZeroBreaks);
-    }
-    if (_singleBreak && breakCount > 1) {
-      return std::make_pair(resultNetwork,
-                            nextBreakState::convergedWithMoreThanOneBreak);
-    }
-
-    breakFound = true;
+    std::cout << "Converged with zero breaks retrying with lower bound"
+              << std::endl;
+    logData(_network, "LowerBound", 0, 0.0, false);
   }
-  return std::make_pair(resultNetwork, nextBreakState::success);
-}
-
-void networkV4::protocols::quasiStaticStrainDouble::relaxBreak(
-    network& _network, size_t startBreaks)
-{
-  _network.computeForces<true, true>();
-  auto reason = checkIfNeedToSave(_network);
-  m_dataOut->write(genTimeData(_network, "Start", startBreaks));
-  if (reason) {
-    m_networkOut->save(
-        _network, m_strainCount, 0.0, "Start-" + std::to_string(m_strainCount));
-  }
-
-  double Ecurr = _network.getEnergy();
-  double Eprev = Ecurr;
-  size_t breakCount = startBreaks;
-
-  integration::AdaptiveOverdampedEulerHeun stepper(1.0, m_params);
-
-  size_t iter = 0;
-  while (iter++ < m_minParams.maxIter) {
-    Eprev = Ecurr;
-
-    auto status = hybridStep(_network, stepper);
-    double dt = status.value_or(0.0);
-    if (!status) {
-      if (status.error() == lineSearch::lineSearchState::zeroAlpha
-          || status.error() == lineSearch::lineSearchState::zeroquad)
-      {
-        break;
-      } else {
-        throw std::runtime_error("lineSearch error");
-      }
-    }
-
-    _network.computeForces<true, false>();
-    Ecurr = _network.getEnergy();
-    m_t += dt;
-
-    bool brokenInStep = !_network.getBreakQueue().empty();
-    breakCount += processBreakQueue(_network);
-    auto reason = checkIfNeedToSave(_network);
-    if (reason) {
-      _network.computeForces<false, true>();
-      m_dataOut->write(genTimeData(_network, reason.value(), breakCount));
-      m_networkOut->save(_network, m_strainCount, m_t, reason.value());
-    }
-
-    if (!brokenInStep
-        && fabs(Ecurr - Eprev) < m_minParams.Etol * 0.5
-                * (fabs(Ecurr) + fabs(Eprev) + minimisation::EPS_ENERGY))
-    {
-      break;
-    }
-
-    double fdotf = Utils::Math::xdoty(_network.getNodes().forces(),
-                                      _network.getNodes().forces());
-    if (!brokenInStep && fdotf < m_minParams.Ftol * m_minParams.Ftol) {
-      break;
-    }
-    // std::cout << std::setprecision(10) << iter << " " << error << " "
-    //           << _network.getEnergy() << " " << integrator.getDt() << " "
-    //           << tools::maxLength(_network.getNodes().forces()) << " "
-    //           << tools::maxAbsComponent(_network.getNodes().forces())
-    //           << std::endl;
-  }
-  _network.computeForces<false, true>();
-
-  m_dataOut->write(genTimeData(_network, "End", breakCount));
-  if (reason) {
-    m_networkOut->save(
-        _network, m_strainCount, m_t, "End-" + std::to_string(m_strainCount));
-  }
-  m_t = 0.0;
 }
 
 auto networkV4::protocols::quasiStaticStrainDouble::genTimeData(
-    const network& _network, const std::string& _reason, size_t _breakCount)
-    -> std::vector<IO::timeSeries::writeableTypes>
+    const network& _network,
+    const std::string& _reason,
+    size_t _breakCount,
+    double _t) -> std::vector<IO::timeSeries::writeableTypes>
 {
   const auto& stresses = _network.getStresses();
   const auto& globalStress = stresses.total();
@@ -361,7 +262,7 @@ auto networkV4::protocols::quasiStaticStrainDouble::genTimeData(
   return {_reason,
           m_strainCount,
           _breakCount,
-          m_t,
+          _t,
           box.getLx(),
           box.getLy(),
           box.shearStrain(),
@@ -385,7 +286,7 @@ auto networkV4::protocols::quasiStaticStrainDouble::genTimeData(
 }
 
 auto networkV4::protocols::quasiStaticStrainDouble::genBondData(
-    const network& _network, const breakInfo& _bond)
+    const network& _network, const breakInfo& _bond, double _t)
     -> std::vector<IO::timeSeries::writeableTypes>
 {
   auto sacTag = _network.getTags().get("sacrificial");
@@ -421,7 +322,7 @@ auto networkV4::protocols::quasiStaticStrainDouble::genBondData(
 
   return {
       m_strainCount,
-      m_t,
+      _t,
       sacrificial ? "Sacrificial" : "Matrix",
       harmonic ? std::get<Forces::HarmonicBond>(std::get<1>(_bond)).k() : 0.0,
       strainBreak ? std::get<BreakTypes::StrainBreak>(brk).lambda() : 0.0,
@@ -455,6 +356,20 @@ auto networkV4::protocols::quasiStaticStrainDouble::genBondData(
       sacStress(1, 1)};
 }
 
+void networkV4::protocols::quasiStaticStrainDouble::logData(
+    network& _network,
+    const std::string& _reason,
+    double _breakcount,
+    double _t,
+    bool _writeDump)
+{
+  _network.computeForces<false, true>();
+  m_dataOut->write(genTimeData(_network, _reason, _breakcount, _t));
+  if (_writeDump) {
+    m_networkOut->save(_network, m_strainCount, _t, _reason);
+  }
+}
+
 auto networkV4::protocols::quasiStaticStrainDouble::getCounts(
     const network& _network)
     -> std::tuple<std::size_t, std::size_t, std::size_t>
@@ -483,12 +398,12 @@ auto networkV4::protocols::quasiStaticStrainDouble::getCounts(
 }
 
 auto networkV4::protocols::quasiStaticStrainDouble::checkIfNeedToSave(
-    const network& _network) -> std::optional<std::string>
+    const network& _network, double _t) -> std::optional<std::string>
 {
   std::optional<std::string> reason = std::nullopt;
   if (m_deform->getStrain(_network) >= m_savePoints.strain)
     reason = "Strained";
-  if (m_t >= m_savePoints.time)
+  if (_t >= m_savePoints.time)
     reason = "Time";
   if (Utils::brokenBonds(_network) >= m_savePoints.breakCount)
     reason = "Broken";
@@ -499,39 +414,18 @@ auto networkV4::protocols::quasiStaticStrainDouble::checkIfNeedToSave(
 }
 
 auto networkV4::protocols::quasiStaticStrainDouble::processBreakQueue(
-    network& _network) -> size_t
+    network& _network, double _t) -> size_t
 {
+  if (_network.getBreakQueue().empty())
+    return 0;
+  _network.computeForces<false, true>();
   size_t breakCount = _network.getBreakQueue().size();
   while (!_network.getBreakQueue().empty()) {
     const auto& broken = _network.getBreakQueue().front();
-    m_bondsOut->write(genBondData(_network, broken));
+    m_bondsOut->write(genBondData(_network, broken, _t));
     _network.getBreakQueue().pop_front();
   }
   return breakCount;
-}
-
-auto networkV4::protocols::quasiStaticStrainDouble::hybridStep(
-    network& _network, auto& _stepper)
-    -> tl::expected<double, lineSearch::lineSearchState>
-{
-  auto rk = _network.getNodes().positions();
-  double Eoriginal = _network.getEnergy();
-
-  _stepper.step(_network);
-  _network.computeForces();
-  double Ecurr = _network.getEnergy();
-  if (Ecurr < Eoriginal)
-    return _stepper.getDt();
-
-  _network.getNodes().positions() = rk;
-  _network.computeForces();
-
-  const double zeta = _stepper.getZeta();  // TODO: allow changing zeta
-  lineSearch::lineSearchQuad lineSearch(zeta * m_params.dtMax);
-  auto h = _network.getNodes().forces();
-  auto status = lineSearch.search(h, _network);
-  _network.computeForces();
-  return status;
 }
 
 auto networkV4::protocols::quasiStaticStrainDouble::breakData(
@@ -558,6 +452,92 @@ auto networkV4::protocols::quasiStaticStrainDouble::breakData(
         std::max(maxThres, bonded::visitThreshold(brk, dist).value_or(-1e10));
   }
   return {maxThres, broken};
+}
+
+//-------------------------------------------------------------------------------------------------
+
+void networkV4::protocols::quasiStaticStrainDouble::relaxBreak::minimise(
+    network& _network)
+{
+  _network.computeForces<true, true>();
+  size_t breakCount = m_protocol.processBreakQueue(_network, 0.0);
+
+  bool dump = m_protocol.checkIfNeedToSave(_network).has_value();
+  m_protocol.logData(_network, "Start", breakCount, 0.0, dump);
+
+  double Ecurr = _network.getEnergy();
+  double Eprev = Ecurr;
+
+  integration::AdaptiveOverdampedEulerHeun stepper(1.0, m_params);
+
+  double t = 0.0;
+  size_t iter = 0;
+  while (iter++ < m_maxIter) {
+    Eprev = Ecurr;
+
+    auto status = hybridStep(_network, stepper);
+    if (!status) {
+      switch (status.error()) {
+        case lineSearch::lineSearchState::DirectionNotDescent:
+          throw std::runtime_error("Direction not descent");
+        case lineSearch::lineSearchState::zeroquad:
+          throw std::runtime_error("Zero quad");
+        case lineSearch::lineSearchState::zeroAlpha:
+          throw std::runtime_error("Zero alpha");
+        case lineSearch::lineSearchState::zeroforce:
+          std::cout << "Zero force" << std::endl;
+          break;
+        default:
+          throw std::runtime_error("Error in Line Search");
+      }
+      break;
+    }
+
+    _network.computeForces<true, false>();
+    Ecurr = _network.getEnergy();
+    t += status.value();
+
+    bool brokenInStep = !_network.getBreakQueue().empty();
+    breakCount += m_protocol.processBreakQueue(_network, t);
+
+    auto reason = m_protocol.checkIfNeedToSave(_network);
+    if (reason) {
+      m_protocol.logData(_network, reason.value(), breakCount, t, true);
+    }
+    double fdotf = Utils::Math::xdoty(_network.getNodes().forces(),
+                                      _network.getNodes().forces());
+    if (!brokenInStep && converged(fdotf, Ecurr, Eprev)) {
+      break;
+    }
+  }
+  m_protocol.logData(_network, "End", breakCount, t, dump);
+}
+
+auto networkV4::protocols::quasiStaticStrainDouble::relaxBreak::hybridStep(
+    network& _network, auto& _stepper)
+    -> tl::expected<double, lineSearch::lineSearchState>
+{
+  auto rk = _network.getNodes().positions();
+  auto fk = _network.getNodes().forces();
+  double Eoriginal = _network.getEnergy();
+
+  _stepper.step(_network);
+  _network.computeForces();
+  double Ecurr = _network.getEnergy();
+  if (Ecurr < Eoriginal)
+    return _stepper.getDt();
+
+  _network.getNodes().positions() = rk;
+  _network.getNodes().forces() = fk;
+
+  const double zeta = _stepper.getZeta();  // TODO: allow changing zeta
+  lineSearch::lineSearchQuad lineSearch(zeta * m_params.dtMax);
+  auto status = lineSearch.search(fk, _network);
+  _network.computeForces();
+  if (status)
+    return status.value() / zeta;
+  else
+    return tl::make_unexpected(status.error());
 }
 
 //-------------------------------------------------------------------------------------------------

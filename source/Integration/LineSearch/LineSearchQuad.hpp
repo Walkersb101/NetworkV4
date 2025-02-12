@@ -29,10 +29,6 @@ public:
   auto search(const std::vector<Utils::Math::vec2d>& _h, network& _network)
       -> tl::expected<double, lineSearchState>
   {
-    auto& nodes = _network.getNodes();
-    auto& positions = nodes.positions();
-    auto& forces = nodes.forces();
-
     _network.computeForces();
     const double Eoriginal = _network.getEnergy();
 
@@ -46,8 +42,8 @@ public:
 
     double alphaMax = std::min(m_alphaMax, quadConfig::alphaMax);
 
-    m_rk = positions;
-    m_frk = forces;
+    m_rk = _network.getNodes().positions();
+    m_frk = _network.getNodes().forces();
 
     double alpha = alphaMax;
     double alphaprev = 0.0;
@@ -98,10 +94,13 @@ private:
                  const std::vector<Utils::Math::vec2d> _h,
                  const double _alpha) -> double
   {
-    auto& positions = _network.getNodes().positions();
-    for (size_t i = 0; i < positions.size(); i++) {
-      positions[i] = m_rk[i] + _alpha * _h[i];
-    }
+    std::transform(
+        m_rk.begin(),
+        m_rk.end(),
+        _h.begin(),
+        _network.getNodes().positions().begin(),
+        [&](const Utils::Math::vec2d& rk, const Utils::Math::vec2d& h)
+        { return rk + _alpha * h; });
     _network.computeForces();
     return _network.getEnergy();
   }

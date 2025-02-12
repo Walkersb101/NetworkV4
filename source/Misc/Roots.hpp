@@ -17,7 +17,7 @@ enum class rootState : std::uint8_t
   MinLargerThanMax,
   RootNotBracketed,
   MaxIterationsReached,
-  rootBelowLowerBound,
+  GuessNotInBracket,
 };
 
 class ITP
@@ -63,9 +63,6 @@ public:
     double xITP = std::abs(xt - xhalf) <= r ? xt : xhalf - sigma * r;
 
     m_iters++;
-    if (xITP <= _a || xITP >= _b) {
-      throw std::invalid_argument("Root not in range");
-    }
     return xITP;
   }
 

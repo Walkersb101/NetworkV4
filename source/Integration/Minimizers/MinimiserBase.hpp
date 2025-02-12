@@ -39,6 +39,14 @@ public:
   virtual void minimise(network& _network) = 0;
 
 public:
+  auto converged(double fdotf, double _Ecurr, double _Eprev) const -> bool
+  {
+    return (fabs(_Ecurr - _Eprev)
+                < m_Etol * 0.5 * (fabs(_Ecurr) + fabs(_Eprev) + EPS_ENERGY)
+            || fdotf < m_Ftol * m_Ftol);
+  }
+
+public:
   double m_Ftol = config::integrators::miminizer::Ftol;
   double m_Etol = config::integrators::miminizer::Etol;
   size_t m_maxIter = config::integrators::miminizer::maxIter;
