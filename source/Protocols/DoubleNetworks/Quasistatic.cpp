@@ -111,6 +111,7 @@ void networkV4::protocols::quasiStaticStrainDouble::run(network& _network)
               "errorOnNotSingleBreak is true");
         else
           std::cout << "More than one bond above threshold" << std::endl;
+        break;
       }
       case nextBreakState::MaxStrainReached: {
         std::cout << "Max Strain Reached" << std::endl;
