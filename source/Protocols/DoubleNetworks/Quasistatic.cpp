@@ -207,8 +207,8 @@ auto networkV4::protocols::quasiStaticStrainDouble::findNextBreak(
     double a = m_deform->getStrain(_network);
     double b = std::min(a + m_maxStep, m_maxStrain);
 
-    if (a >= m_maxStrain - 1e-10)
-      return nextBreakState::MaxStrainReached;
+    if (a >= m_maxStrain - 1e-8)
+      return std::make_pair(resultNetwork, nextBreakState::MaxStrainReached);
 
     auto [fa, breakCountA] = breakData(_network);
     if (breakCountA == 1)
