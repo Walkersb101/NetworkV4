@@ -54,6 +54,7 @@ public:
 
       _network.computeForces();
       Ecurr = _network.getEnergy();
+      fdotf = Utils::Math::xdoty(forces, forces);
       if (converged(fdotf, Ecurr, Eprev))
         break;
     }

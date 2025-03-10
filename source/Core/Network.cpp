@@ -172,7 +172,7 @@ void networkV4::network::computeForces()
 
     const auto force = bonded::visitForce(type, dist);
     if (force) {
-      applyforce(bond, dist, force.value(), tags, _evalStress);
+      applyforce<_evalStress>(bond, dist, force.value(), tags);
     }
 
     const auto energy = bonded::visitEnergy(type, dist);
@@ -240,17 +240,17 @@ void networkV4::network::evalBreak(const Utils::Math::vec2d& _dist,
   }
 }
 
+template<bool _evalStress>
 void networkV4::network::applyforce(const bonded::BondInfo& _binfo,
                                     const Utils::Math::vec2d& _dist,
                                     const Utils::Math::vec2d& _force,
-                                    const Utils::Tags::tagFlags& _tags,
-                                    bool _evalStress)
+                                    const Utils::Tags::tagFlags& _tags)
 {
   auto& forces = m_nodes.forces();
   forces[_binfo.src] += _force;
   forces[_binfo.dst] -= _force;
 
-  if (_evalStress) {
+  if constexpr (_evalStress) {
     const auto stress =
         Utils::Math::tensorProduct(_force, -_dist) * m_box.invArea();
     m_stresses.distribute(stress, _tags);

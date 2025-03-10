@@ -74,11 +74,11 @@ private:
                  bonded::breakTypes& _break,
                  Utils::Tags::tagFlags& _tags);
 
+  template <bool _evalBreak = false>
   void applyforce(const bonded::BondInfo& _binfo,
                   const Utils::Math::vec2d& _dist,
                   const Utils::Math::vec2d& _force,
-                    const Utils::Tags::tagFlags& _tags,
-                    bool _evalStress = false);
+                    const Utils::Tags::tagFlags& _tags);
 
 #if defined(_OPENMP)
 private:
