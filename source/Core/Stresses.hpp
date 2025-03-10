@@ -120,6 +120,6 @@ inline void merge(stresses& _s1, const stresses& _s2)
 }
 
 #pragma omp declare reduction(+ : stresses : merge(omp_out, omp_in)) \
-    initializer(omp_priv = omp_orig)
+    initializer(omp_priv = stresses())
 
 }  // namespace networkV4
