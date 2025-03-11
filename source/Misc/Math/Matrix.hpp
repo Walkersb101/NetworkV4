@@ -27,7 +27,7 @@ struct Matrix
 
   container m_data;
 
-  Matrix() = default;
+  Matrix() { std::fill(begin(), end(), T()); }
   Matrix(std::initializer_list<T> init_list)
   {
     assert(init_list.size() == Rows * Cols);
@@ -69,34 +69,44 @@ using mat33 = Matrix<T, 3, 3>;
 using mat33d = mat33<double>;
 using mat33f = mat33<float>;
 
-template <typename T, std::size_t M, std::size_t N>
-Utils::Math::Vector<T, M * N> flatten(Matrix<T, M, N> const &m) {
+template<typename T, std::size_t M, std::size_t N>
+Utils::Math::Vector<T, M * N> flatten(Matrix<T, M, N> const& m)
+{
   return Utils::Math::Vector<T, M * N>(m.begin(), m.end());
 }
 
 // ---- Helper functions ----
 
-template<std::size_t Rows, std::size_t Cols, typename T, typename U, typename Op>
-auto broadcast(Matrix<T, Rows, Cols> const& a, Matrix<U, Rows, Cols> const& b, Op op)
+template<std::size_t Rows,
+         std::size_t Cols,
+         typename T,
+         typename U,
+         typename Op>
+auto broadcast(Matrix<T, Rows, Cols> const& a,
+               Matrix<U, Rows, Cols> const& b,
+               Op op)
 {
   using R = decltype(op(std::declval<T>(), std::declval<U>()));
   Matrix<R, Rows, Cols> ret;
 
-  std::transform(
-      a.begin(), a.end(), b.begin(), ret.begin(), op);
+  std::transform(a.begin(), a.end(), b.begin(), ret.begin(), op);
 
   return ret;
 }
 
 template<std::size_t Rows, std::size_t Cols, typename T, typename Op>
-Matrix<T, Rows, Cols>& broadcast_assign(Matrix<T, Rows, Cols>& a, Matrix<T, Rows, Cols> const& b, Op op)
+Matrix<T, Rows, Cols>& broadcast_assign(Matrix<T, Rows, Cols>& a,
+                                        Matrix<T, Rows, Cols> const& b,
+                                        Op op)
 {
   std::transform(a.begin(), a.end(), b.begin(), a.begin(), op);
   return a;
 }
 
 template<std::size_t Rows, std::size_t Cols, typename T, typename Op>
-constexpr bool all_of(Matrix<T, Rows, Cols> const& a, Matrix<T, Rows, Cols> const& b, Op op)
+constexpr bool all_of(Matrix<T, Rows, Cols> const& a,
+                      Matrix<T, Rows, Cols> const& b,
+                      Op op)
 {
   return std::all_of(a.begin(),
                      a.end(),
@@ -106,37 +116,43 @@ constexpr bool all_of(Matrix<T, Rows, Cols> const& a, Matrix<T, Rows, Cols> cons
 }
 
 template<std::size_t Rows, std::size_t Cols, typename T>
-constexpr bool operator<(Matrix<T, Rows, Cols> const& a, Matrix<T, Rows, Cols> const& b)
+constexpr bool operator<(Matrix<T, Rows, Cols> const& a,
+                         Matrix<T, Rows, Cols> const& b)
 {
   return all_of(a, b, std::less<T>());
 }
 
 template<std::size_t Rows, std::size_t Cols, typename T>
-constexpr bool operator>(Matrix<T, Rows, Cols> const& a, Matrix<T, Rows, Cols> const& b)
+constexpr bool operator>(Matrix<T, Rows, Cols> const& a,
+                         Matrix<T, Rows, Cols> const& b)
 {
   return all_of(a, b, std::greater<T>());
 }
 
 template<std::size_t Rows, std::size_t Cols, typename T>
-constexpr bool operator<=(Matrix<T, Rows, Cols> const& a, Matrix<T, Rows, Cols> const& b)
+constexpr bool operator<=(Matrix<T, Rows, Cols> const& a,
+                          Matrix<T, Rows, Cols> const& b)
 {
   return all_of(a, b, std::less_equal<T>());
 }
 
 template<std::size_t Rows, std::size_t Cols, typename T>
-constexpr bool operator>=(Matrix<T, Rows, Cols> const& a, Matrix<T, Rows, Cols> const& b)
+constexpr bool operator>=(Matrix<T, Rows, Cols> const& a,
+                          Matrix<T, Rows, Cols> const& b)
 {
   return all_of(a, b, std::greater_equal<T>());
 }
 
 template<std::size_t Rows, std::size_t Cols, typename T>
-constexpr bool operator==(Matrix<T, Rows, Cols> const& a, Matrix<T, Rows, Cols> const& b)
+constexpr bool operator==(Matrix<T, Rows, Cols> const& a,
+                          Matrix<T, Rows, Cols> const& b)
 {
   return all_of(a, b, std::equal_to<T>());
 }
 
 template<std::size_t Rows, std::size_t Cols, typename T>
-constexpr bool operator!=(Matrix<T, Rows, Cols> const& a, Matrix<T, Rows, Cols> const& b)
+constexpr bool operator!=(Matrix<T, Rows, Cols> const& a,
+                          Matrix<T, Rows, Cols> const& b)
 {
   return not(a == b);
 }
@@ -150,7 +166,8 @@ auto operator+(Matrix<T, Rows, Cols> const& a, Matrix<U, Rows, Cols> const& b)
 }
 
 template<std::size_t Rows, std::size_t Cols, typename T>
-Matrix<T, Rows, Cols>& operator+=(Matrix<T, Rows, Cols>& a, Matrix<T, Rows, Cols> const& b)
+Matrix<T, Rows, Cols>& operator+=(Matrix<T, Rows, Cols>& a,
+                                  Matrix<T, Rows, Cols> const& b)
 {
   return broadcast_assign(a, b, std::plus<T>());
 }
@@ -170,24 +187,31 @@ Matrix<T, Rows, Cols> operator-(Matrix<T, Rows, Cols> const& a)
 }
 
 template<std::size_t Rows, std::size_t Cols, typename T>
-Matrix<T, Rows, Cols>& operator-=(Matrix<T, Rows, Cols>& a, Matrix<T, Rows, Cols> const& b)
+Matrix<T, Rows, Cols>& operator-=(Matrix<T, Rows, Cols>& a,
+                                  Matrix<T, Rows, Cols> const& b)
 {
   return broadcast_assign(a, b, std::minus<T>());
 }
 
 // Scalar multiplication and division
-template<std::size_t Rows, std::size_t Cols, typename T, class U,
+template<std::size_t Rows,
+         std::size_t Cols,
+         typename T,
+         class U,
          std::enable_if_t<std::is_arithmetic_v<U>, bool> = true>
 auto operator*(U const& a, Matrix<T, Rows, Cols> const& b)
 {
   using R = decltype(a * std::declval<T>());
   Matrix<R, Rows, Cols> ret;
-  std::transform(b.begin(), b.end(), ret.begin(),
-                [a](T const& val) { return a * val; });
+  std::transform(
+      b.begin(), b.end(), ret.begin(), [a](T const& val) { return a * val; });
   return ret;
 }
 
-template<std::size_t Rows, std::size_t Cols, typename T, class U,
+template<std::size_t Rows,
+         std::size_t Cols,
+         typename T,
+         class U,
          std::enable_if_t<std::is_arithmetic_v<U>, bool> = true>
 auto operator*(Matrix<T, Rows, Cols> const& b, U const& a)
 {
@@ -197,8 +221,8 @@ auto operator*(Matrix<T, Rows, Cols> const& b, U const& a)
 template<std::size_t Rows, std::size_t Cols, typename T>
 Matrix<T, Rows, Cols>& operator*=(Matrix<T, Rows, Cols>& b, T const& a)
 {
-  std::transform(b.begin(), b.end(), b.begin(),
-                [a](T const& val) { return a * val; });
+  std::transform(
+      b.begin(), b.end(), b.begin(), [a](T const& val) { return a * val; });
   return b;
 }
 
@@ -206,8 +230,8 @@ template<std::size_t Rows, std::size_t Cols, typename T>
 Matrix<T, Rows, Cols> operator/(Matrix<T, Rows, Cols> const& a, T const& b)
 {
   Matrix<T, Rows, Cols> ret;
-  std::transform(a.begin(), a.end(), ret.begin(),
-                [b](T const& val) { return val / b; });
+  std::transform(
+      a.begin(), a.end(), ret.begin(), [b](T const& val) { return val / b; });
   return ret;
 }
 
@@ -215,16 +239,16 @@ template<std::size_t Rows, std::size_t Cols, typename T>
 Matrix<T, Rows, Cols> operator/(T const& a, Matrix<T, Rows, Cols> const& b)
 {
   Matrix<T, Rows, Cols> ret;
-  std::transform(b.begin(), b.end(), ret.begin(),
-                [a](T const& val) { return a / val; });
+  std::transform(
+      b.begin(), b.end(), ret.begin(), [a](T const& val) { return a / val; });
   return ret;
 }
 
 template<std::size_t Rows, std::size_t Cols, typename T>
 Matrix<T, Rows, Cols>& operator/=(Matrix<T, Rows, Cols>& a, T const& b)
 {
-  std::transform(a.begin(), a.end(), a.begin(),
-                [b](T const& val) { return val / b; });
+  std::transform(
+      a.begin(), a.end(), a.begin(), [b](T const& val) { return val / b; });
   return a;
 }
 

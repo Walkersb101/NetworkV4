@@ -12,6 +12,11 @@ class stresses
 {
 public:
   stresses() {}
+  stresses(const std::bitset<NUM_TAGS>& _tags,
+           const Utils::tensor2d& _value = Utils::tensor2d())
+  {
+    init(_tags, _value);
+  }
 
 public:
   void clear()
@@ -68,8 +73,8 @@ public:
 
   void zero()
   {
-    std::fill(m_values.begin(), m_values.end(), Utils::tensor2d());
     m_totalStress = Utils::tensor2d();
+    std::fill(m_values.begin(), m_values.end(), Utils::tensor2d());
   }
 
   void distribute(const Utils::tensor2d& _stress,
@@ -109,17 +114,14 @@ inline void merge(stresses& _s1, const stresses& _s2)
 
   for (size_t i = 0; i < NUM_TAGS; ++i) {
     if (s2init.test(i)) {
-      if (s1init.test(i)) {
-        _s1.m_values[i] += _s2.m_values[i];
-      } else {
+      if (!s1init.test(i)) {
         _s1.m_stored.set(i);
-        _s1.m_values[i] = _s2.m_values[i];
       }
+      _s1.m_values[i] += _s2.m_values[i];
     }
   }
 }
 
 #pragma omp declare reduction(+ : stresses : merge(omp_out, omp_in)) \
-    initializer(omp_priv = stresses())
-
+    initializer(omp_priv = stresses(omp_orig.getInitilised()))
 }  // namespace networkV4

@@ -22,6 +22,8 @@
 
 networkV4::partition::Partitions networkV4::OMP::threadPartitions;
 size_t networkV4::OMP::passes;
+std::vector<networkV4::stresses> networkV4::OMP::localStresses;
+std::vector<networkV4::bondQueue> networkV4::OMP::localBreaks;
 
 template<bool _evalBreak, bool _evalStress>
 void networkV4::network::computeForces()
@@ -48,10 +50,22 @@ void networkV4::network::computePass(auto _parts)
   const auto& positions = m_nodes.positions();
   auto& forces = m_nodes.forces();
 
-#  pragma omp parallel for reduction(+ : m_energy) reduction(+ : m_stresses) \
-      reduction(+ : m_breakQueue) num_threads(_parts.size()) \
+#  pragma omp parallel for reduction(+ : m_energy) num_threads(_parts.size()) \
       schedule(static, 1)
   for (const auto part : _parts) {
+    size_t threadID = omp_get_thread_num();
+    auto& localStresses = OMP::localStresses[threadID];
+    auto& localBreaks = OMP::localBreaks[threadID];
+
+    if constexpr (_evalStress) {
+      localStresses.zero();
+      localStresses.init(m_stresses.getInitilised());
+    }
+
+    if constexpr (_evalBreak) {
+      localBreaks.clear();
+    }
+
     for (size_t i = part.bondStart(); i < part.bondEnd(); i++) {
       const auto& bond = bonds[i];
       auto& type = types[i];
@@ -71,7 +85,7 @@ void networkV4::network::computePass(auto _parts)
       if constexpr (_evalBreak) {
         const bool broken = bonded::visitBreak(brk, dist);
         if (broken) {
-          m_breakQueue.emplace_back(bond, type, brk, bTags);
+          localBreaks.emplace_back(bond, type, brk, bTags);
 
           type = Forces::VirtualBond {};
           brk = BreakTypes::None {};
@@ -89,7 +103,7 @@ void networkV4::network::computePass(auto _parts)
         if constexpr (_evalStress) {
           const auto stress =
               Utils::Math::tensorProduct(f, -dist) * m_box.invArea();
-          m_stresses.distribute(stress, bTags);
+          localStresses.distribute(stress, bTags);
         }
       }
 
@@ -97,6 +111,16 @@ void networkV4::network::computePass(auto _parts)
       if (energy) {
         m_energy += energy.value();
       }
+    }
+
+    if constexpr (_evalStress) {
+#  pragma omp critical
+      merge(m_stresses, localStresses);
+    }
+
+    if constexpr (_evalBreak) {
+#  pragma omp critical
+      merge(m_breakQueue, localBreaks);
     }
   }
 }

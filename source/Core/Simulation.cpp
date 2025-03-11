@@ -40,10 +40,8 @@ void networkV4::tomlLoad::readProtocol()
   if (m_config.contains("QuasiStaticStrain")) {
     m_protocolReader =
         std::make_unique<protocols::quasiStaticStrainDoubleReader>();
-  } 
-  else if (m_config.contains("Propogator")) {
-    m_protocolReader =
-        std::make_unique<protocols::propogatorDoubleReader>();
+  } else if (m_config.contains("Propogator")) {
+    m_protocolReader = std::make_unique<protocols::propogatorDoubleReader>();
   } else {
     throw std::runtime_error("No protocol found in config file");
   }
@@ -186,14 +184,17 @@ void networkV4::Simulation::initNetwork()
   partGen.sortBonds(bonds, nodes);
   partGen.checkPasses(bonds);
 
-auto test = bonds.gatherBonds();
+  auto test = bonds.gatherBonds();
 
 #if defined(_OPENMP)
+  size_t threadCount = omp_get_max_threads();
   OMP::threadPartitions = partGen.generatePartitions(nodes, bonds);
   OMP::passes = partGen.getPasses();
+  OMP::localStresses.resize(threadCount);
+  OMP::localBreaks.resize(threadCount);
 #endif
 
-  m_network.computeForces();
+  m_network.computeForces<false, true>();
 }
 
 /*
