@@ -19,14 +19,14 @@ See the [CONTRIBUTING](CONTRIBUTING.md) document.
 
 # Planned Updates
 
-- [] Add 3 body bending interations
-- [] Update to support more bond types
-- [] Add multitheaded Random Number Generator
-- [] Add Temperature dependent physics
-    - [] Langevin dynamics
-    - [] Brownina Dynamics
-    - [] Thermally dependent breaking conditions
-- [] Add The spdlog Logging libary
-- [] Documentation for input format
-- [] Support more standard IO types
-- [] Unit tests
+- [ ] Add 3 body bending interations
+- [ ] Update to support more bond types
+- [ ] Add multitheaded Random Number Generator
+- [ ] Add Temperature dependent physics
+    - [ ] Langevin dynamics
+    - [ ] Brownina Dynamics
+    - [ ] Thermally dependent breaking conditions
+- [ ] Add The spdlog Logging libary
+- [ ] Documentation for input format
+- [ ] Support more standard IO types
+- [ ] Unit tests
