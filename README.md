@@ -1,9 +1,10 @@
 
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPL_v3-blue.svg)](https://www.gnu.org/licenses/agpl-3.0)
 
-# networkV4
+# NetworkV4
 
 This is the spring network simulation used for my thesis at the university of Durham.
+The V4 stands for the fourth (and hopefully final) version of this codebase.
 
 # Building and installing
 
